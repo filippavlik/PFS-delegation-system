@@ -75,22 +75,8 @@ namespace AdminPart.Controllers
     			return StatusCode(400, "Rozhodčí se stejným jménem nebo e-mailem,nebo FačrId již existuje");
 		}
 
-                var referee = new Referee
-                {
-                    FacrId = request.FacrId,
-                    Name = request.Name,
-                    Surname = request.Surname,
-                    Email = request.Email,
-                    League = request.League,
-                    Age = request.Age,
-                    Ofs = request.Ofs,
-                    Note = request.Note,
-                    CarAvailability = request.CarAvailability,
-                    PragueZone = request.Place==null ? "0" : request.Place,
-                    TimestampChange = TimeZoneInfo.ConvertTimeFromUtc
-                                (DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) //we want to have timestamp for Prague time
-                };
-                if (!string.IsNullOrWhiteSpace(request.Email))
+                var referee = ToReferee(request);
+		if (!string.IsNullOrWhiteSpace(request.Email))
                 {
                         var emails = new List<string> { request.Email };
                         var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emails)).GetDataOrThrow();
@@ -481,5 +467,25 @@ namespace AdminPart.Controllers
                 return new List<Match>();
             }
         }
+        private static Referee ToReferee( DTOs.RefereeAddRequest request)
+        {
+            return new Referee
+            {
+                FacrId = request.FacrId,
+                Name = request.Name,
+                Surname = request.Surname,
+                Email = request.Email,
+                League = request.League,
+                Age = request.Age,
+                Ofs = request.Ofs,
+                Note = request.Note,
+                CarAvailability = request.CarAvailability,
+                PragueZone = request.Place ?? "0",
+                TimestampChange = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.UtcNow,
+                    TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"))
+            };
+        }
+
     }
 }
