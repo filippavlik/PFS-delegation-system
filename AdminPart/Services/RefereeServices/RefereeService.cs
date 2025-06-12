@@ -2,6 +2,7 @@
 using AdminPart.DTOs;
 using AdminPart.Models;
 using AdminPart.Services.FileParsers;
+using AdminPart.Services.RouteServices;
 using AdminPart.Views.ViewModels;
 using Aspose.Cells.Drawing.Equations;
 using Microsoft.Maui.ApplicationModel;
@@ -15,14 +16,20 @@ namespace AdminPart.Services.RefereeServices
     public class RefereeService : IRefereeService
     {
         private readonly ILogger<RefereeService> _logger;
+	private readonly Data.IAdminRepo _adminRepo;
+        private readonly Services.RouteServices.IRouteBusPlanner _routeBusPlanner;
+        private readonly Services.RouteServices.IRouteCarPlanner _routeCarPlanner;
 
         private readonly int waitingTimeBeforeMatch = 45;
         private readonly int reserveAfterMatches = 30;
         private readonly int travellingMaximumPeriod = 90;
 	private readonly int locationToBeRelevantTimeGap = 4;
 
-        public RefereeService(ILogger<RefereeService> logger, Data.IRefereeRepo refereeRepo)
+        public RefereeService(Data.IAdminRepo adminRepo, Services.RouteServices.IRouteCarPlanner routeCarPlanner, Services.RouteServices.IRouteBusPlanner routeBusPlanner,ILogger<RefereeService> logger, Data.IRefereeRepo refereeRepo)
         {
+	    _adminRepo = adminRepo;
+	    _routeCarPlanner = routeCarPlanner;
+            _routeBusPlanner = routeBusPlanner;
             _logger = logger;
         }
 
@@ -189,6 +196,118 @@ namespace AdminPart.Services.RefereeServices
             {
                 _logger.LogError(ex, "[AddRefereeTimeOptionsAsync] Error getting time options of referees");
                 return ServiceResult<RefereeWithTimeOptions>.Failure("Nepodařilo se získat časové možnosti rozhodčího!");
+            }
+        }
+	public async Task<ServiceResult<TransportBetweenMatchesViewModel>> CalculateTransfersWhenAssigningAsync(Models.Match matchToCheck, RefereeWithTimeOptions refereeToAssign,bool force)
+        {
+            try
+            {
+                //find out if there is longtitute and latitude of play field
+                Tuple<bool, double, Transfer> isManageableWTransferPreMatch = null!;
+                Tuple<bool, double, Transfer> isManageableWTransferPostMatch = null!;
+                Tuple<DateTime, string?> startOfNextMatch = null!;
+                Tuple<DateTime, string?> endOfPreviousMatch = null!;
+                Transfer transferPre = null!;
+                Transfer transferPost = null!;
+                bool succesfullyCalculatedRoutePre = true;
+                bool succesfullyCalculatedRoutePost = true;
+
+
+
+                //find if the location is not set
+                float longtitude = matchToCheck.Field.Longitude;
+                float latitude = matchToCheck.Field.Latitude;
+                const float epsilon = 0.001f;
+
+                bool isLatLonZero = Math.Abs(longtitude) < epsilon || Math.Abs(latitude) < epsilon;
+
+                if (!isLatLonZero)
+                {
+                    startOfNextMatch = GetFirstNextMatchDateTime(refereeToAssign, matchToCheck).GetDataOrThrow();
+                    endOfPreviousMatch = GetFirstPreviousMatchDateTime(refereeToAssign, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime)).GetDataOrThrow();
+
+                    bool hasCarOverall = refereeToAssign.Referee.CarAvailability;
+                    //referee is using car or public transport at the moment?
+                    bool? hasCarDuring = CheckCarAvailabilityOfReferee(refereeToAssign, matchToCheck).GetDataOrThrow();
+
+                    bool actuallCarAvailability = hasCarDuring.HasValue ? hasCarDuring.Value : hasCarOverall;
+                    //calculate the possible route with km and time if the match is less than 1 hour and half from the beggining of actuall
+                    if (startOfNextMatch != null)
+                    {
+                        var nextMatch = (await _adminRepo.GetMatchByIdAsync(startOfNextMatch.Item2)).GetDataOrThrow();
+
+                        bool isEndingLatLonZero = Math.Abs(nextMatch.Field.Longitude) < epsilon || Math.Abs(nextMatch.Field.Latitude) < epsilon;
+                        try
+                        {
+                            if (!isEndingLatLonZero && actuallCarAvailability)
+                            {
+                                var result = (await _routeCarPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude)).GetDataOrThrow();
+                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
+                                transferPost = isManageableWTransferPostMatch.Item3;
+                            }
+                            else if (!isEndingLatLonZero && !actuallCarAvailability)
+                            {
+                                var result = (await _routeBusPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(135))).GetDataOrThrow();
+                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
+                                transferPost = isManageableWTransferPostMatch.Item3;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            succesfullyCalculatedRoutePost = false;
+                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
+                        }
+                    }
+                    if (endOfPreviousMatch != null)
+                    {
+                        try
+                        {
+                            var previousMatch = (await _adminRepo.GetMatchByIdAsync(endOfPreviousMatch.Item2)).GetDataOrThrow();
+
+                            bool isEndingLatLonZero = Math.Abs(previousMatch.Field.Longitude) < epsilon || Math.Abs(previousMatch.Field.Latitude) < epsilon;
+                            if (!isEndingLatLonZero && actuallCarAvailability)
+                            {
+                                var result = (await _routeCarPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude)).GetDataOrThrow();
+                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
+                                transferPre = isManageableWTransferPreMatch.Item3;
+                            }
+                            else if (!isEndingLatLonZero && !actuallCarAvailability)
+                            {
+                                var result = (await _routeBusPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude, endOfPreviousMatch.Item1)).GetDataOrThrow();
+                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
+                                transferPre = isManageableWTransferPreMatch.Item3;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            succesfullyCalculatedRoutePre = false;
+                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
+                        }
+                    }
+                }
+                if (isManageableWTransferPostMatch != null && succesfullyCalculatedRoutePost)
+                {
+                    if (!force && !isManageableWTransferPostMatch.Item1)
+                    {
+
+                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na zápas z předzápasu o " + isManageableWTransferPostMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
+                    }
+                }
+                if (isManageableWTransferPreMatch != null && succesfullyCalculatedRoutePre)
+                {
+                    if (!force && !isManageableWTransferPreMatch.Item1)
+                    {
+                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na následující zápas z tohoto zápasu o" + isManageableWTransferPreMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
+                    }
+                }
+                return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(true, "",transferPre,transferPost));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AddRefereeToTheMatch] Error calculating transfer when delegating referee");
+                return ServiceResult<TransportBetweenMatchesViewModel>.Failure("Neočekávaná chyba při vypočítávání trasy mezi zápasy rozhodčímu!");
+
             }
         }
         public async Task<ServiceResult<List<RefereeWithTimeOptions>>> AddRefereesTimeOptionsAsync(List<Referee> listWithReferees, List<MatchViewModel> listOfMatches, List<Transfer> listOfTransfers, DateOnly firstGameDay)

@@ -168,47 +168,31 @@ namespace AdminPart.Controllers
                         };
                     })
                     .ToList();
+		const float epsilon = 1e-6f;
+		bool matchFieldNotSet = false;
+                if (Math.Abs(match.Field.Latitude) < epsilon || Math.Abs(match.Field.Longitude) < epsilon)
+                {
+                                matchFieldNotSet=true;
+		}
+            	foreach (var refereeId in refereeIds)
+		{
+    			if (matchFieldNotSet)
+    			{
+        			distanceDictionary[refereeId] = 0;
+    			}
+    			else
+    			{
+        			var matchesForReferee = listOfMatches
+        			.Where(match => match.RefereeId == refereeId)
+        			.ToList();
 
-                foreach (var refereeId in refereeIds) {
-                    var matchesForReferee = listOfMatches
-                        .Where(match => match.RefereeId == refereeId)
-                        .ToList();
+			        var locationBefore = _refereeService.GetLocationBeforeMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
+        			var locationAfter = _refereeService.GetLocationAfterMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
 
-                    var locationBefore = _refereeService.GetLocationBeforeMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
-                    var locationAfter = _refereeService.GetLocationAfterMatch(matchesForReferee,match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
-
-                    int kmCalculationBefore = 0;
-                    int kmCalculationAfter = 0;
-                    int kmTogether = 0;
-                    int count = 0;
-                    if (locationBefore != null) {
-                        count++;
-                        var sCoord = new GeoCoordinate(locationBefore.Item1, locationBefore.Item2);
-                        var eCoord = new GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
-
-                        kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
-                        kmTogether += kmCalculationBefore;
-                    }
-                    if (locationAfter != null)
-                    {
-                        count++;
-                        var sCoord = new GeoCoordinate(locationAfter.Item1, locationAfter.Item2);
-                        var eCoord = new GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
-
-                        kmCalculationAfter = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
-                        kmTogether += kmCalculationAfter;
-
-                    }
-
-                    if (count == 0)
-                    {
-                        distanceDictionary[refereeId] = 0;
-                    }
-                    else
-                    {
-                        distanceDictionary[refereeId] = kmTogether / count; //average
-                    }
-                }
+    				distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
+    			}
+		}
+	    
 
                 var result = _refereeService.CalculatePointsForReferees(refereeIds, resultHomeTeam, resultAwayTeam, resultTotal, distanceDictionary).GetDataOrThrow();
                 return Ok(result);

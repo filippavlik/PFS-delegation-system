@@ -509,36 +509,32 @@
                 <div class="row">
                     <div class="col-1">
                         <div class="border bg-secondary" style="width: 15px; height: 15px;"></div>
+    			<div style="text-align: center;">0</div>
                     </div>
                     <div class="col-1">
                         <div class="border " style="width: 15px; height: 15px;background-color:forestgreen;"></div>
+			<div style="text-align: center;">1</div>
                     </div>
                     <div class="col-1">
                         <div class="border " style="width: 15px; height: 15px;background-color:pink;"></div>
-                    </div>
+                   	<div style="text-align: center;">2</div>
+		    </div>
                     <div class="col-1">
                         <div class="border" style="width: 15px; height: 15px;background-color:orange;"></div>
-                    </div>
+                        <div style="text-align: center;">3</div>
+		    </div>
                     <div class="col-1">
                         <div class="border" style="width: 15px; height: 15px;background-color:orangered;"></div>
-                    </div>
+                    	<div style="text-align: center;">4</div>
+		    </div>
                     <div class="col-1">
                         <div class="border" style="width: 15px; height: 15px;background-color:darkred;"></div>
-                    </div>
+                        <div style="text-align: center;">5</div>
+		    </div>
                     <div class="col-1">
                         <div class="border" style="width: 15px; height: 15px;background-color:black;"></div>
-                    </div>
-                    <div class="col-8">
-                        <div class="d-flex justify-content-between medium">
-                            <span>0</span>
-                            <span>1</span>
-                            <span>2</span>
-                            <span>3</span>
-                            <span>4</span>
-                            <span>5</span>
-                            <span>6+ (veto)</span>
-                        </div>
-                    </div>
+                        <div style="text-align: center;">6+ (veto)</div>
+		    </div>
                 </div>
             </div>
 
@@ -788,6 +784,10 @@
         	} else {
             		console.error("WebSockets are NOT supported by this browser");
         	}
+	     	// Dynamically set max year for birth year input
+            	const currentYear = new Date().getFullYear();
+            	$('#age').attr('max', currentYear);
+
             $('#refereesTabs .nav-link').on('click', function() {
                 $('#refereesTabs .nav-link').removeClass('active');
                 $('.tab-pane').removeClass('show active');

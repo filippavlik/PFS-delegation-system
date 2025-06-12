@@ -302,9 +302,11 @@ namespace AdminPart.Data
         {
             try
             {
+		DateOnly startDateOfGamePeriod  = GetStartGameDate().GetDataOrThrow();
                 var matches = await _context.Matches
                     .Include(m => m.Competition)
                     .Include(m => m.Field)
+		    .Where(m => m.MatchDate >= startDateOfGamePeriod.AddDays(-1) && m.MatchDate <= startDateOfGamePeriod.AddDays(3))
                 //production .Where(m => m.StartDate.ToDateTime(m.StartTime) > DateTime.Now())
                 .ToListAsync();
 
@@ -712,7 +714,10 @@ namespace AdminPart.Data
                         {
                             match.RefereeId = refereeId;
                         }
-                    }
+                    }else
+		    {
+		    	match.RefereeId = null;
+		    }
 
                     if (!string.IsNullOrEmpty(filledMatch.IdOfAr1))
                     {
@@ -720,6 +725,9 @@ namespace AdminPart.Data
                         {
                             match.Ar1Id = ar1Id;
                         }
+                    }else
+                    {
+                        match.Ar1Id = null;
                     }
 
                     if (!string.IsNullOrEmpty(filledMatch.IdOfAr2))
@@ -728,6 +736,9 @@ namespace AdminPart.Data
                         {
                             match.Ar2Id = ar2Id;
                         }
+                    }else
+                    {
+                        match.Ar2Id = null;
                     }
 
                     match.AlreadyPlayed = true;

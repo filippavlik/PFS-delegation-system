@@ -23,7 +23,9 @@ $(function () {
 
 });
 
-
+$(document).on("click", "#logOutTheUser", function () {
+	 logout();
+});
 $(document).on("click", ".referee-button", function () {
     $('.referee-button').removeClass('selected');
 
@@ -487,7 +489,7 @@ $(document).on("submit", "#newRefereeForm", function (e) {
             form.removeClass('was-validated');
         },
         error: function (xhr, status, error) {
-            if (xhr.status === 500) {
+            if (xhr.status === 500 || xhr.status === 400) {
                 showAlert("Error: " + xhr.responseText, "danger");
             } else {
                 showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
@@ -1330,15 +1332,15 @@ function loadAllCompetitions() {
     $('#vetoCompetitionName').append(
         $('<option>', {
             value: "all",
-            text: "všechny soutěže",
-            'data-id': "všechny soutěže"
+            text: "all",
+            'data-id': "all"
         })
     );
     $('#vetoCompetitionId').append(
         $('<option>', {
             value: "all",
-            text: "všechny soutěže",
-            'data-name': "všechny soutěže"
+            text: "all",
+            'data-name': "all"
         })
     );
 
@@ -1370,6 +1372,7 @@ function loadAllCompetitions() {
                 $('#vetoCompetitionName').on('change', function () {
                     let dataId = $('#vetoCompetitionName option:selected').data('id');
                     $('#vetoCompetitionId').val(dataId);
+			
                 });
 
                 $('#vetoCompetitionId').on('change', function () {
@@ -1451,3 +1454,23 @@ function getColorForValue(value) {
 
     return rgbToHex(r, g, b);
 }
+function deleteAllCookies() {
+        $.each(document.cookie.split(";"), function (i, cookie) {
+            var cookieName = $.trim(cookie.split("=")[0]);
+
+            // Delete cookie for current path
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+            // Optional: delete for parent domain too
+            var domainParts = window.location.hostname.split(".");
+            if (domainParts.length > 1) {
+                var rootDomain = "." + domainParts.slice(-2).join(".");
+                document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + rootDomain + ";";
+            }
+        });
+    }
+
+function logout() {
+        deleteAllCookies();
+        window.location.href = "https://rozhodcipraha.cz"; 
+	}

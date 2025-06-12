@@ -86,7 +86,7 @@ namespace YourService.Controllers
                         return Forbid("Chybějící role, kontaktujte administrátora!");
                 }
 
-                if (roleClaim.Value != "Admin")
+                if (roleClaim.Value != "Admin" && roleClaim.Value != "MainAdmin")
                 {
                         _logger.LogWarning("Different role as expected.");
                         return Forbid("Nedostatečné oprávnení!");
