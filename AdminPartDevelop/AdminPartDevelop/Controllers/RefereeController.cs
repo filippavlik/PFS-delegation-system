@@ -27,8 +27,7 @@ namespace AdminPartDevelop.Controllers
         private readonly Services.EmailsSender.IEmailsToLoginDbSender _emailSender;
         private readonly Services.RefereeServices.IRefereeService _refereeService;
         private readonly IAdminService _adminService;
-        private readonly Services.RouteServices.IRouteBusPlanner _routeBusPlanner;
-        private readonly Services.RouteServices.IRouteCarPlanner _routeCarPlanner;
+        
 
 
         private readonly Microsoft.AspNetCore.SignalR.IHubContext<HubForReendering> _hubContext;
@@ -38,7 +37,7 @@ namespace AdminPartDevelop.Controllers
 
         private readonly Data.IRefereeRepo _refereeRepo;
         private readonly Data.IAdminRepo _adminRepo;
-        public RefereeController(Data.IRefereeRepo refereeRepo, Data.IAdminRepo adminRepo, Services.RouteServices.IRouteCarPlanner routeCarPlanner, Services.RouteServices.IRouteBusPlanner routeBusPlanner,
+        public RefereeController(Data.IRefereeRepo refereeRepo, Data.IAdminRepo adminRepo,
             Services.FileParsers.IExcelParser excelParser, Services.EmailsSender.IEmailsToLoginDbSender emailSender,
             Services.RefereeServices.IRefereeService refereeService, IAdminService adminService,
             Microsoft.AspNetCore.SignalR.IHubContext<HubForReendering> hubContext, IMemoryCache memoryCache, ILogger<RefereeController> logger)
@@ -48,8 +47,6 @@ namespace AdminPartDevelop.Controllers
             _emailSender = emailSender;
             _refereeService = refereeService;
             _adminService = adminService;
-            _routeCarPlanner = routeCarPlanner;
-            _routeBusPlanner = routeBusPlanner;
             _refereeRepo = refereeRepo;
             _adminRepo = adminRepo;
             _hubContext = hubContext;
@@ -73,24 +70,9 @@ namespace AdminPartDevelop.Controllers
                 return BadRequest(validationResults);
             }
 
-
             try
             {
-                var referee = new Referee
-                {
-                    FacrId = request.FacrId,
-                    Name = request.Name,
-                    Surname = request.Surname,
-                    Email = request.Email,
-                    League = request.League,
-                    Age = request.Age,
-                    Ofs = request.Ofs,
-                    Note = request.Note,
-                    CarAvailability = request.CarAvailability,
-                    PragueZone = request.Place == null ? "0" : request.Place,
-                    TimestampChange = TimeZoneInfo.ConvertTimeFromUtc
-                                (DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) //we want to have timestamp for Prague time
-                };
+                var referee = ToReferee(request);
                 if (!string.IsNullOrWhiteSpace(request.Email))
                 {
                     var emails = new List<string> { request.Email };
@@ -133,6 +115,7 @@ namespace AdminPartDevelop.Controllers
                 RefereeWithTimeOptions referee = (await _refereeService.AddRefereeTimeOptionsAsync(refereeFromId, listOfMatches, listOfTransfers, firstGameDay)).GetDataOrThrow();
 
                 Match matchToCheck = (await _adminRepo.GetMatchByIdAsync(matchId)).GetDataOrThrow();
+
                 //check time availability and vetoes of the referee
                 if (!force)
                 {
@@ -149,108 +132,20 @@ namespace AdminPartDevelop.Controllers
                         return StatusCode(400, "Daný rozhodčí je v daný čas zápasu nedostupný (zkontrolujte v okně rozhodčího)!");
                     }
                 }
-
-                //find out if there is longtitute and latitude of play field
-                Tuple<bool, double, Transfer> isManageableWTransferPreMatch = null!;
-                Tuple<bool, double, Transfer> isManageableWTransferPostMatch = null!;
-                Tuple<DateTime, string?> startOfNextMatch = null!;
-                Tuple<DateTime, string?> endOfPreviousMatch = null!;
-                Transfer transferPre = null!;
-                Transfer transferPost = null!;
-                bool succesfullyCalculatedRoutePre = true;
-                bool succesfullyCalculatedRoutePost = true;
-
-
-
-                //find if the location is not set
-                float longtitude = matchToCheck.Field.Longitude;
-                float latitude = matchToCheck.Field.Latitude;
-                const float epsilon = 0.001f;
-
-                bool isLatLonZero = Math.Abs(longtitude) < epsilon || Math.Abs(latitude) < epsilon;
-
-                if (!isLatLonZero)
-                {
-                    startOfNextMatch = _refereeService.GetFirstNextMatchDateTime(referee, matchToCheck).GetDataOrThrow();
-                    endOfPreviousMatch = _refereeService.GetFirstPreviousMatchDateTime(referee, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime)).GetDataOrThrow();
-
-                    bool hasCarOverall = referee.Referee.CarAvailability;
-                    //referee is using car or public transport at the moment?
-                    bool? hasCarDuring = _refereeService.CheckCarAvailabilityOfReferee(referee, matchToCheck).GetDataOrThrow();
-
-                    bool actuallCarAvailability = hasCarDuring.HasValue ? hasCarDuring.Value : hasCarOverall;
-                    //calculate the possible route with km and time if the match is less than 1 hour and half from the beggining of actuall
-                    if (startOfNextMatch != null)
-                    {
-                        var nextMatch = (await _adminRepo.GetMatchByIdAsync(startOfNextMatch.Item2)).GetDataOrThrow();
-
-                        bool isEndingLatLonZero = Math.Abs(nextMatch.Field.Longitude) < epsilon || Math.Abs(nextMatch.Field.Latitude) < epsilon;
-                        try
-                        {
-                            if (!isEndingLatLonZero && actuallCarAvailability)
-                            {
-                                var result = (await _routeCarPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude)).GetDataOrThrow();
-                                isManageableWTransferPostMatch = _refereeService.CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeId, false, true).GetDataOrThrow();
-                                transferPost = isManageableWTransferPostMatch.Item3;
-                            }
-                            else if (!isEndingLatLonZero && !actuallCarAvailability)
-                            {
-                                var result = (await _routeBusPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(135))).GetDataOrThrow();
-                                isManageableWTransferPostMatch = _refereeService.CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeId, false, true).GetDataOrThrow();
-                                transferPost = isManageableWTransferPostMatch.Item3;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            succesfullyCalculatedRoutePost = false;
-                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
-                        }
-                    }
-                    if (endOfPreviousMatch != null)
-                    {
-                        try
-                        {
-                            var previousMatch = (await _adminRepo.GetMatchByIdAsync(endOfPreviousMatch.Item2)).GetDataOrThrow();
-
-                            bool isEndingLatLonZero = Math.Abs(previousMatch.Field.Longitude) < epsilon || Math.Abs(previousMatch.Field.Latitude) < epsilon;
-                            if (!isEndingLatLonZero && actuallCarAvailability)
-                            {
-                                var result = (await _routeCarPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude)).GetDataOrThrow();
-                                isManageableWTransferPreMatch = _refereeService.CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeId, true, true).GetDataOrThrow();
-                                transferPre = isManageableWTransferPreMatch.Item3;
-                            }
-                            else if (!isEndingLatLonZero && !actuallCarAvailability)
-                            {
-                                var result = (await _routeBusPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude, endOfPreviousMatch.Item1)).GetDataOrThrow();
-                                isManageableWTransferPreMatch = _refereeService.CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeId, true, true).GetDataOrThrow();
-                                transferPre = isManageableWTransferPreMatch.Item3;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            succesfullyCalculatedRoutePre = false;
-                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
-                        }
-                    }
-                }
-                if (isManageableWTransferPostMatch != null && succesfullyCalculatedRoutePost)
-                {
-                    if (!force && !isManageableWTransferPostMatch.Item1)
-                    {
-                        return StatusCode(400, "Daný rozhodčí nestíhá přijít na zápas z předzápasu o " + isManageableWTransferPostMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!");
-                    }
-                    var resultOfTransferPostTrans = await _adminRepo.AddTransfer(transferPost);
-                }
-                if (isManageableWTransferPreMatch != null && succesfullyCalculatedRoutePre)
-                {
-                    if (!force && !isManageableWTransferPreMatch.Item1)
-                    {
-                        return StatusCode(400, "Daný rozhodčí nestíhá přijít na následující zápas z tohoto zápasu o" + isManageableWTransferPreMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!");
-                    }
-                    var resultOfTransferPreTrans = await _adminRepo.AddTransfer(transferPre);
-                }
+                var calculatedTransfers = (await _refereeService.CalculateTransfersWhenAssigningAsync(matchToCheck, referee, force)).GetDataOrThrow();
+                if(!calculatedTransfers.IsManageable)
+                    return StatusCode(400, calculatedTransfers.Message);
 
                 var resultOfTransaction = await _adminRepo.AddRefereeToTheMatch(refereeId, matchId, role, user);
+                //if these two add fails it is not that important to have transfers stored 
+                if (calculatedTransfers.PreMatch != null)
+                {
+                    await _adminRepo.AddTransfer(calculatedTransfers.PreMatch);
+                }
+                if (calculatedTransfers.PostMatch != null)
+                {
+                     await _adminRepo.AddTransfer(calculatedTransfers.PostMatch);
+                }
 
                 if (resultOfTransaction.Success)
                 {
@@ -569,6 +464,25 @@ namespace AdminPartDevelop.Controllers
                 _logger.LogError(ex, "[UploadRefreshedMatchToCache] Error referee controller");
                 return new List<Match>();
             }
+        }
+        private static Referee ToReferee( DTOs.RefereeAddRequest request)
+        {
+            return new Referee
+            {
+                FacrId = request.FacrId,
+                Name = request.Name,
+                Surname = request.Surname,
+                Email = request.Email,
+                League = request.League,
+                Age = request.Age,
+                Ofs = request.Ofs,
+                Note = request.Note,
+                CarAvailability = request.CarAvailability,
+                PragueZone = request.Place ?? "0",
+                TimestampChange = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.UtcNow,
+                    TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"))
+            };
         }
     }
 }
