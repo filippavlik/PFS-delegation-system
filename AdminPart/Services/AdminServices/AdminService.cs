@@ -104,6 +104,53 @@ namespace AdminPart.Services.AdminServices
                 return ServiceResult<List<Models.Match>>.Failure("Nepodařilo se spracovat zápasy!");
             }
         }
+	    public ServiceResult<int> CalculateAverageDistance(Tuple<float,float> ? locationBefore, Tuple<float, float>? locationAfter,Models.Match match) {
+            try
+            {
+                int kmCalculationBefore = 0;
+                int kmCalculationAfter = 0;
+                int kmTogether = 0;
+                int count = 0;
+                const float epsilon = 1e-6f;
+                if (locationBefore != null && Math.Abs(locationBefore.Item1) > epsilon &&
+                    Math.Abs(locationBefore.Item2) > epsilon)
+                {
+                    count++;
+                    var sCoord = new System.Device.Location.GeoCoordinate(locationBefore.Item1, locationBefore.Item2);
+                    var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
+
+                    kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
+                    kmTogether += kmCalculationBefore;
+                }
+
+                if (locationAfter != null && Math.Abs(locationAfter.Item1) > epsilon &&
+                    Math.Abs(locationAfter.Item2) > epsilon)
+                {
+                    count++;
+                    var sCoord = new System.Device.Location.GeoCoordinate(locationAfter.Item1, locationAfter.Item2);
+                    var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
+
+                    kmCalculationAfter = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
+                    kmTogether += kmCalculationAfter;
+
+                }
+
+                if (count == 0)
+                {
+                    return ServiceResult<int>.Success(0);
+                }
+                else
+                {
+                    return ServiceResult<int>.Success(kmTogether / count); //average
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "[CalculateAverageDistance] Error in calculating aproximated distance");
+                return ServiceResult<int>.Failure("Chyba při získávání přibližné vzdálenosti u rozhodčích");
+            }
+        }
+
         public async Task<ServiceResult<List<RefereesTeamsMatchesResponseDto>>> GetRefereeMatchStatsAsync(RefereesTeamsMatchesRequestDto request)
         {
             try

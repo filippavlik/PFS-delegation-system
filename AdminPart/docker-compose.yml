@@ -11,6 +11,7 @@ services:
   admin-application-container:
     container_name: admin-application-container
     image: adminpart
+    restart: on-failure
     environment:
       - POSTGRES_DB=mydb
     networks:

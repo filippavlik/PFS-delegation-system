@@ -134,8 +134,7 @@ builder.Services.AddHttpClient("MapyClient", client =>
 });
 
 // Register route planning services as singletons (long-lived instances)
-// Car route planning service
-builder.Services.AddSingleton<RouteByCarPlanner>(sp =>
+builder.Services.AddSingleton<IRouteCarPlanner,RouteByCarPlanner>(sp =>
    new RouteByCarPlanner(
        sp.GetRequiredService<ILogger<RouteByCarPlanner>>(),
        sp.GetRequiredService<IHttpClientFactory>(),
@@ -144,15 +143,15 @@ builder.Services.AddSingleton<RouteByCarPlanner>(sp =>
 );
 
 // Bus route planning service
-builder.Services.AddSingleton<RouteByBusPlanner>(sp =>
+builder.Services.AddSingleton<IRouteBusPlanner,RouteByBusPlanner>(sp =>
    new RouteByBusPlanner(
        sp.GetRequiredService<ILogger<RouteByBusPlanner>>(),
        sp.GetRequiredService<IHttpClientFactory>(),
-       mapsgoogleapikey
+     mapsgoogleapikey
    )
 );
 
-// Register scoped services (one instance per request)
+// Register scoped services ()
 builder.Services.AddScoped<IExcelParser, GetData>();       // Excel data import
 builder.Services.AddScoped<IExcelExporter, ExportData>();  // Excel data export
 builder.Services.AddScoped<EmailsToLoginDbSender>();       //Email sender to login database

@@ -12,7 +12,7 @@ namespace AdminPart.Services.RouteServices
     /// Implements the IRoutePlanner interface to calculate routes using public transportation
     /// via the Google Maps Directions API.
     /// </summary>
-    public class RouteByBusPlanner : IRoutePlanner
+    public class RouteByBusPlanner : IRouteBusPlanner
     {
         private readonly ILogger<RouteByBusPlanner> _logger;        
         private readonly HttpClient _httpClient;                    // HTTP client for making API requests (managed by HttpClientFactory)

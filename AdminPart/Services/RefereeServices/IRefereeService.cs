@@ -20,6 +20,28 @@ namespace AdminPart.Services.RefereeServices
         /// <returns>A ServiceResult containing a list of referees with their time availability options</returns>
         Task<ServiceResult<List<RefereeWithTimeOptions>>> AddRefereesTimeOptionsAsync(List<Referee> listWithReferees,List<MatchViewModel> listOfMatches,List<Transfer> listOfTransfers, DateOnly firstGameDay);
         /// <summary>
+        /// Calculates and validates transfer routes when assigning a referee to a match,
+        /// considering previous and next match locations, transportation methods, and time constraints.
+        /// Creates transfer records for route planning between consecutive match assignments.
+        /// </summary>
+        /// <param name="matchToCheck">The target match where the referee is being assigned</param>
+        /// <param name="refereeToAssign">Referee entity with time availability options and constraints</param>
+        /// <param name="force">When true, bypasses time constraint validations and assigns referee regardless of conflicts</param>
+        /// <returns>
+        /// A ServiceResult containing a tuple with:
+        /// - bool: True if assignment is valid/successful, false if time conflicts exist
+        /// - string: Error message describing any time conflicts or constraints, empty if successful
+        /// </returns>
+        /// <remarks>
+        /// This method performs several key operations:
+        /// - Validates field coordinates are available for route calculation
+        /// - Determines referee's transportation method (car vs public transport)
+        /// - Calculates routes and travel times to/from previous and next matches
+        /// - Creates transfer records in the database for approved routes
+        /// - Returns detailed error messages for scheduling conflicts when force=false
+        /// </remarks>
+        Task<ServiceResult<TransportBetweenMatchesViewModel>> CalculateTransfersWhenAssigningAsync(Match matchToCheck, RefereeWithTimeOptions refereeToAssign, bool force);
+	/// <summary>
         /// Processes a single referee's availability in relation to matches,excuses and transfers,
         /// creating a RefereeWithTimeOptions object with availability data.
         /// </summary>
