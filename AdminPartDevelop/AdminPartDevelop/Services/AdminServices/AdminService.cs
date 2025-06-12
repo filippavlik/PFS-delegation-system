@@ -4,6 +4,7 @@ using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Services.RefereeServices;
 using AdminPartDevelop.Views.ViewModels;
+using System.Device.Location;
 using AdminPartDevelop.Services.AdminServices;
 using Aspose.Cells.Charts;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Nest;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography.Xml;
@@ -74,8 +74,11 @@ namespace AdminPartDevelop.Services.AdminServices
                     var competition = _adminRepo.DoesCompetitionExist(competitionCode).GetDataOrThrow(); //it will return competition or default competition 1
                     var resultWithField = _adminRepo.GetOrSaveTheField(matchDto.GameField).GetDataOrThrow();
 
-                    var doesHomeTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdHomeRaw, matchDto.NameHome).GetDataOrThrow;
-                    var doesAwayTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdAwayRaw, matchDto.NameAway).GetDataOrThrow;
+                    var doesHomeTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdHomeRaw, matchDto.NameHome);
+                    var doesAwayTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdAwayRaw, matchDto.NameAway);
+                    doesHomeTeamExists.GetDataOrThrow();
+                    doesAwayTeamExists.GetDataOrThrow();
+
 
                     var matchDate = DateOnly.FromDateTime(matchDto.DateOfGame);
                     var matchTime = TimeOnly.FromDateTime(matchDto.DateOfGame);
@@ -96,7 +99,12 @@ namespace AdminPartDevelop.Services.AdminServices
                         Locked = false,
                         LastChangedBy = user,
                         LastChanged = timestampAdded,
-                        Competition = competition
+                        Competition = competition,
+                        Teams = new List<Team>
+                        {
+                            doesHomeTeamExists.Data,
+                            doesAwayTeamExists.Data
+                        }
                     };
 
                     resultList.Add(match);
@@ -187,6 +195,52 @@ namespace AdminPartDevelop.Services.AdminServices
             }
 
 
+        }
+        public ServiceResult<int> CalculateAverageDistance(Tuple<float,float> ? locationBefore, Tuple<float, float>? locationAfter,Models.Match match) {
+            try
+            {
+                int kmCalculationBefore = 0;
+                int kmCalculationAfter = 0;
+                int kmTogether = 0;
+                int count = 0;
+                const float epsilon = 1e-6f;
+                if (locationBefore != null && Math.Abs(locationBefore.Item1) > epsilon &&
+                    Math.Abs(locationBefore.Item2) > epsilon)
+                {
+                    count++;
+                    var sCoord = new System.Device.Location.GeoCoordinate(locationBefore.Item1, locationBefore.Item2);
+                    var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
+
+                    kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);                
+                    kmTogether += kmCalculationBefore;
+                }
+
+                if (locationAfter != null && Math.Abs(locationAfter.Item1) > epsilon &&
+                    Math.Abs(locationAfter.Item2) > epsilon)
+                {
+                    count++;
+                    var sCoord = new System.Device.Location.GeoCoordinate(locationAfter.Item1, locationAfter.Item2);
+                    var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
+
+                    kmCalculationAfter = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
+                    kmTogether += kmCalculationAfter;
+
+                }
+
+                if (count == 0)
+                {
+                    return ServiceResult<int>.Success(0);
+                }
+                else
+                {
+                    return ServiceResult<int>.Success(kmTogether / count); //average
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "[CalculateAverageDistance] Error in calculating aproximated distance");
+                return ServiceResult<int>.Failure("Chyba při získávání přibližné vzdálenosti u rozhodčích"); 
+            }       
         }
         public ServiceResult<List<MatchViewModel>> MakeConnectionsOfMatches(List<MatchViewModel> matches)
         {
