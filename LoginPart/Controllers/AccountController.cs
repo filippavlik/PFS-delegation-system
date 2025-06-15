@@ -43,7 +43,7 @@ namespace UsersApp.Controllers
         #region PRIVATE METHODS
 
         //access databaze of emails from Pfs and return the privileges for the email
-        private async Task<string?> GetRoleForEmail(string email)
+        private async Task<List<string>> GetRolesForEmail(string email)
         {
             var roleMapping = new Dictionary<int, string>
                     {
@@ -52,12 +52,15 @@ namespace UsersApp.Controllers
                         { 2, "Referee" }
                     };
 
-            var role = await m_appDbContext.AllowedEmailAddresses
-                .Where(a => a.Email == email)
-                .Select(a => new{ a.Role })
-                .FirstOrDefaultAsync();
+    	var roles = await m_appDbContext.AllowedEmailAddresses
+        	.Where(a => a.Email == email)
+        	.Select(a => a.Role)
+        	.ToListAsync();
 
-            return role != null && roleMapping.ContainsKey(role.Role) ? roleMapping[role.Role] : null;
+    	return roles
+        	.Where(r => roleMapping.ContainsKey(r))
+        	.Select(r => roleMapping[r])
+        	.ToList();
         }
 
         //read secret from file
@@ -93,20 +96,29 @@ namespace UsersApp.Controllers
 
                 		if (result.Succeeded)
                 		{
-                    			var role = await GetRoleForEmail(model.Email);
+					// Get all roles for the email from your AllowedEmailAddresses table
+    					var roles = await GetRolesForEmail(model.Email);
 
-                    			if (role != null)
+    					if (roles.Any())
                     			{
-                        			if (!await m_userManager.IsInRoleAsync(user, role))
-                                		{
-                                    			await m_userManager.AddToRoleAsync(user, role);
-                                		}
-                                		var roles = await m_userManager.GetRolesAsync(user);
+                                		 // Get the user's current roles
+        					var userRoles = await m_userManager.GetRolesAsync(user);
+        
+        					// Add any missing roles to the user
+        					foreach (var role in roles)
+        					{
+            						if (!userRoles.Contains(role))
+            						{
+                						await m_userManager.AddToRoleAsync(user, role);
+            						}
+        					}
+						// Refresh the roles list after potentially adding new roles
+					        var updatedRoles = await m_userManager.GetRolesAsync(user);
 
-                                		if (roles.Any())
+                                		if (updatedRoles.Any())
                                 		{
                                         		// Determine the redirect URL based on the user's role
-                                        		if (roles.Contains("Referee") && model.UserType == "referee")
+                                        		if (updatedRoles.Contains("Referee") && model.UserType == "referee")
                                         		{
                                                 		// Use your existing method to generate the token
                                                 		var token = m_jwtTokenService.GenerateToken(user,"Referee");
@@ -122,28 +134,28 @@ namespace UsersApp.Controllers
                                                         		Path = "/" // Ensures the cookie is accessible across all paths in the domain
                                                 		});
                                                 		return Redirect(m_redirectReferee); // RefereePart container
-                                	}
-                                	else if (roles.Contains("MainAdmin") || roles.Contains("Admin"))
-                                	{
-                                        string token;
-                                        if(roles.Contains("MainAdmin"))
-                                                token = m_jwtTokenService.GenerateToken(user,"MainAdmin");
-                                        else
-                                                token = m_jwtTokenService.GenerateToken(user,"Admin");
+                                			}
+                                			else if (updatedRoles.Contains("MainAdmin") || updatedRoles.Contains("Admin"))
+                                			{
+                                        			string token;
+                                        			if(updatedRoles.Contains("MainAdmin"))
+                                                			token = m_jwtTokenService.GenerateToken(user,"MainAdmin");
+                                        			else
+                                                			token = m_jwtTokenService.GenerateToken(user,"Admin");
 
-                                                // Set token in HTTP-only cookie
-                                        Response.Cookies.Append("auth_token", token, new CookieOptions
-                                                {
-                                                        HttpOnly = true,
-                                                        Secure = true,
-                                                        SameSite = SameSiteMode.Lax,
-                                                        Expires = DateTime.Now.AddMinutes(30), // Match the token expiration time
-                                                        Domain = ".rozhodcipraha.cz", // Allow sharing across subdomains
-                                                        Path = "/" // Ensures the cookie is accessible across all paths in the domain
-                                                });
-                                        return Redirect(m_redirectAdmin); // AdminPart container
-                                }
-                        }
+                                                		// Set token in HTTP-only cookie
+                                        			Response.Cookies.Append("auth_token", token, new CookieOptions
+                                                		{
+                                                        		HttpOnly = true,
+                                                        		Secure = true,
+                                                        		SameSite = SameSiteMode.Lax,
+                                                        		Expires = DateTime.Now.AddMinutes(60), // Match the token expiration time
+                                                        		Domain = ".rozhodcipraha.cz", // Allow sharing across subdomains
+                                                        		Path = "/" // Ensures the cookie is accessible across all paths in the domain
+                                                		});
+                                        			return Redirect(m_redirectAdmin); // AdminPart container
+                                			}
+                        			}
 
                         return RedirectToAction("Index", "Home");
                     }
@@ -181,11 +193,11 @@ namespace UsersApp.Controllers
         {
             return View();
         }
-
-        [HttpPost]
+	
+	[HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-	  try{
+          try{
             if (ModelState.IsValid)
             {
                 Users user = new Users
@@ -195,48 +207,56 @@ namespace UsersApp.Controllers
                     UserName = model.Email,
                 };
 
-                var result = await m_userManager.CreateAsync(user, model.Password);
+                // Get all roles for the email from your AllowedEmailAddresses table
+                var roles = await GetRolesForEmail(model.Email);
+                if(roles.Any()){
+                        var result = await m_userManager.CreateAsync(user, model.Password);
 
-                if (result.Succeeded)
-                {
+                        if (result.Succeeded)
+                        {
 
-                    try
-                    {
-                        // Generate email confirmation token
-                        var token = await m_userManager.GenerateEmailConfirmationTokenAsync(user);
+                                try
+                                {
+                                        // Generate email confirmation token
+                                        var token = await m_userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                        // Create confirmation link
-                        var confirmationLink = Url.Action("ConfirmEmail", "Account",
-                                new { userId = user.Id, token = token }, Request.Scheme);
+                                        // Create confirmation link
+                                        var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                                                new { userId = user.Id, token = token }, Request.Scheme);
 
-                        // Send email with confirmation link
-                        await m_emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                                $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
-                    }
-                    catch(Exception emptySendGrid)
-                    {
-                        ModelState.AddModelError("", "Error in proccess of sending email , please contact the support!");
-                        return View(model);
-                    }
+                                        // Send email with confirmation link
+                                        await m_emailSender.SendEmailAsync(user.Email, "Confirm your email",
+                                                $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
+                                }
+                                catch(Exception emptySendGrid)
+                                {
+                                        ModelState.AddModelError("", "Error in proccess of sending email , please contact the support!");
+                                        return View(model);
+                                }
 
-                    // Redirect to a page that tells the user to check their email
-                    return RedirectToAction("RegisterConfirmation", "Account", new { email = user.Email });
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Error in proccess of creating user , please contact the support!");
-                            return View(model);
+                                // Redirect to a page that tells the user to check their email
+                                return RedirectToAction("RegisterConfirmation", "Account", new { email = user.Email });
+                        }
+                        else
+                        {
+                                ModelState.AddModelError("", "Error in proccess of creating user , please contact the support!");
+                                return View(model);
+                        }
+                }else{
+                    ModelState.AddModelError("", "Neexistuje role (admin, rozhodčí) navázaná na tento email!");
+                                return View(model);
                 }
             }
             return View(model);
-	}catch (Exception ex)
-	{
-    		 m_logger.LogError(ex, "[Login] Error login controller");
+        }catch (Exception ex)
+        {
+                 m_logger.LogError(ex, "[Login] Error login controller");
                  ModelState.AddModelError("", "Error on server side.");
                  return View(model);
 
-	}
         }
+        }
+
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
