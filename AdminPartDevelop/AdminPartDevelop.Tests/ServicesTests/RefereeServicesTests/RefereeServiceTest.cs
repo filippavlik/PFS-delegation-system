@@ -9,20 +9,26 @@ using System.Linq;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Views.ViewModels;
 using AdminPartDevelop.DTOs;
+using AdminPartDevelop.Services.RouteServices;
 
 namespace AdminPartDevelop.Tests.Services.RefereeServices
 {
     public class RefereeServiceTests
     {
         private readonly Mock<ILogger<RefereeService>> _loggerMock;
-        private readonly Mock<Data.IRefereeRepo> _refereeRepoMock;
+        private readonly Mock<Data.IAdminRepo> _AdminRepoMock;
         private readonly RefereeService _refereeService;
+        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IRouteBusPlanner> _mockBus;
 
         public RefereeServiceTests()
         {
             _loggerMock = new Mock<ILogger<RefereeService>>();
-            _refereeRepoMock = new Mock<Data.IRefereeRepo>();
-            _refereeService = new RefereeService(_loggerMock.Object, _refereeRepoMock.Object);
+            _AdminRepoMock = new Mock<Data.IAdminRepo>();
+            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockBus = new Mock<IRouteBusPlanner>();
+
+            _refereeService = new RefereeService(_AdminRepoMock.Object, _mockCar.Object, _mockBus.Object, _loggerMock.Object);
         }
 
         [Fact]

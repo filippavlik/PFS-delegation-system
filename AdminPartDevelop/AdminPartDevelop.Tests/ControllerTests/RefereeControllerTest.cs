@@ -87,7 +87,7 @@ namespace AdminPartDevelop.Tests.Controllers
 
 
             _adminService = new AdminService(_adminRepo,mockAdminServiceLogger.Object);
-            _refereeService = new RefereeService(mockRefereeServiceLogger.Object,_refereeRepo);
+            _refereeService = new RefereeService(_adminRepo, _mockCar.Object, _mockBus.Object, mockRefereeServiceLogger.Object);
             _excelParser = new GetData(mockGetDataServiceLogger.Object);
             _mockHubContext = new Mock<IHubContext<HubForReendering>>();
 
@@ -96,9 +96,7 @@ namespace AdminPartDevelop.Tests.Controllers
             // Create controller
             _controller = new RefereeController(
                 _refereeRepo,
-                _adminRepo,
-                _mockCar.Object,
-                _mockBus.Object,
+                _adminRepo,             
                 _excelParser,
                 _emailsSender.Object,
                 _refereeService,

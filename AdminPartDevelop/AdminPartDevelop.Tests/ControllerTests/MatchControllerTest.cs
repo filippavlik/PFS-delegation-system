@@ -6,6 +6,7 @@ using AdminPartDevelop.Models;
 using AdminPartDevelop.Services.AdminServices;
 using AdminPartDevelop.Services.FileParsers;
 using AdminPartDevelop.Services.RefereeServices;
+using AdminPartDevelop.Services.RouteServices;
 using AdminPartDevelop.TestData;
 using AdminPartDevelop.Views.ViewModels;
 using Microsoft.AspNetCore.Http;
@@ -34,6 +35,8 @@ namespace AdminPartDevelop.Tests.Controllers
         private readonly RefereeRepo _refereeRepo;
         private readonly IAdminService _adminService;
         private readonly IRefereeService _refereeService;
+        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IRouteBusPlanner> _mockBus;
         private readonly IExcelParser _excelParser;
         private readonly IExcelExporter _excelExporter;
         private readonly Mock<IHubContext<HubForReendering>> _mockHubContext;
@@ -66,10 +69,13 @@ namespace AdminPartDevelop.Tests.Controllers
             var mockRefereeServiceLogger = new Mock<ILogger<RefereeService>>();
             var mockGetDataServiceLogger = new Mock<ILogger<GetData>>();
             var mockExportDataServiceLogger = new Mock<ILogger<ExportData>>();
+            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockBus = new Mock<IRouteBusPlanner>();
+
 
 
             _adminService = new AdminService(_adminRepo,mockAdminServiceLogger.Object);
-            _refereeService = new RefereeService(mockRefereeServiceLogger.Object,_refereeRepo);
+            _refereeService = new RefereeService( _adminRepo,_mockCar.Object,_mockBus.Object, mockRefereeServiceLogger.Object);
             _excelParser = new GetData(mockGetDataServiceLogger.Object);
             _excelExporter = new ExportData(mockExportDataServiceLogger.Object);
             _mockHubContext = new Mock<IHubContext<HubForReendering>>();
