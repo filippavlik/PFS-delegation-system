@@ -38,7 +38,7 @@ namespace AdminPartDevelop.Controllers
         private readonly Data.IRefereeRepo _refereeRepo;
         private readonly Data.IAdminRepo _adminRepo;
         public RefereeController(Data.IRefereeRepo refereeRepo, Data.IAdminRepo adminRepo,
-            Services.FileParsers.IExcelParser excelParser, Services.EmailsSender.IEmailsToLoginDbSender emailSender,
+             Services.FileParsers.IExcelParser excelParser, Services.EmailsSender.IEmailsToLoginDbSender emailSender,
             Services.RefereeServices.IRefereeService refereeService, IAdminService adminService,
             Microsoft.AspNetCore.SignalR.IHubContext<HubForReendering> hubContext, IMemoryCache memoryCache, ILogger<RefereeController> logger)
         {
