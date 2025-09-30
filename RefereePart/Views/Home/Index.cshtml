@@ -1,0 +1,212 @@
+﻿@using RefereePart.Models.ViewModels
+@model UserViewModel
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <!-- flatpickr plugin-->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+
+    <script src="~/js/index.js" defer></script>
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="css/globals.css"/>
+    <link rel="stylesheet" href="css/styleguide.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <div class="landing-page">
+        <div class="div">
+            <div class="overlap">
+                <img class="image" src="https://c.animaapp.com/m87rflk6itqDXj/img/image-1.png" />
+
+                <div class="overlap-group">
+                    <img class="line" />
+                    <div class="horizontal-card" id="userInfo">
+                        <div class="content">
+                            <div class="content-2">
+                                <div class="avatar"><div class="initial"></div></div>
+                                <div class="text">
+				    <input type="hidden" id="userId" value="@Model.UserId" readonly/>
+                                    <div class="header">Vitaj , @Model.Username</div>
+                                    <div class="subhead">Tvoja rola je : @Model.Role</div>
+                                </div>
+                            </div>
+                            <div class="user-options">
+                                <div class="option">
+                                    <img id="showExcusesOfUser" class="schedule" src="https://c.animaapp.com/m87rflk6itqDXj/img/schedule.svg" alt="Image Button" style="cursor: pointer;" />
+                                    <div class="text-wrapper-2">Zobraz zadané omluvy</div>
+                                </div>
+                                <div class="option">
+                                    <img id="showVehicleAvailabilityOfUser" src="https://c.animaapp.com/m87rflk6itqDXj/img/commute.svg" alt="Image Button" style="cursor: pointer;" />
+                                    <div class="text-wrapper">Zobrazit možnosti vozidla</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="background"><div class="state-layer"></div></div>
+                    </div>                   
+                </div>
+                <!-- Button with an icon -->
+                <button class="btn btn-primary account" id="showUserInfo">
+                    <i class="fa fa-user-circle"></i> Account
+                </button>
+		<button id="logOutTheUser" class="btn btn-primar log-out" style="background-color:white">
+		    <i class="fa fa-sign-out"></i>
+		</button>
+            </div>
+
+            <div class="action-buttons">
+                <div class="action-item">                   
+                    <button id="addNewExcuse" class="action-icon" style="background-color:white">
+                        <img class="add-circle" src="https://c.animaapp.com/m87rflk6itqDXj/img/add-circle.svg" />
+                        <img class="schedule-2" src="https://c.animaapp.com/m87rflk6itqDXj/img/schedule.svg" />
+                    </button>
+                    <div class="text-wrapper-3">Zadat novou omluvu</div>
+                </div>
+
+                <div class="action-item">
+                    <button id="addNewVehicleOptions" class="action-icon" style="background-color:white">
+                        <img class="add-circle-2" src="https://c.animaapp.com/m87rflk6itqDXj/img/add-circle.svg" />
+                        <img class="directions-car" src="https://c.animaapp.com/m87rflk6itqDXj/img/directions-car.svg" />
+                    </button>
+                    <div class="text-wrapper-4">Zadat nové možnosti vozidla</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="overlay-backdrop" style="visibility:hidden"></div>
+    <div class="card" id="excuseCard" style="visibility:hidden">
+        <h2>Přidejte novou omluvu</h2>
+        <form class="cardForm">
+            <label for="inputDateTime">Zadejte časové rozmězí omluvy</label>
+            <div id="inputDateTime" class="flatpickr-wrapper">
+                <input type="text" class="datepicker" placeholder="vyberte dátum a čas" data-input>
+                <a class="input-button" title="toggle" data-toggle>
+                    <i class="fa fa-hourglass-start"></i>
+                </a>
+                <a class="input-button" title="clear" data-clear>
+                    <i class="fa fa-minus"></i>
+                </a>
+            </div>
+
+
+            <div id="inputEndDateTime" class="flatpickr-wrapper">
+                <input type="text" class="datepicker form-control input" placeholder="vyberte dátum a čas" data-input>
+                <a class="input-button" title="toggle" data-toggle>
+                    <i class="fa fa-hourglass-end"></i>
+                </a>
+                
+            </div>
+
+            <label for="excuseNote">Poznámka k omluve</label>
+            <input type="text" id="excuseNote" placeholder="Zadejte poznámku pre admina k omluve">
+            <label for="excuseReason" style="margin-top:10px;">Důvod ospravedlnění (pokud jsou 2 týdny do hracího víkendu)</label>
+            <input type="text" id="excuseReason" placeholder="Zadejte důvod omluvy">
+
+            <div style="display:flex;justify-content:right">
+                <button id="submitNewExcuseToList">
+                    Přidat
+                </button>
+            </div>
+                   
+
+            <div class="excuses-container">
+                <h3>Seznam přidaných omluv</h3>
+                <ul id="excusesList"></ul>
+                <p id="noExcusesMessage">Zatím nebyly přidány žádné omluvy</p>
+                <button id="sendNewExcuse">
+                    Poslat
+                </button>
+                <button id="cancelSendingExcuse">
+                    Zrušit
+                </button>
+            </div>
+
+           
+        </form>
+    </div>
+    <div class="card" id="vehicleAvailabilityCard" style="visibility:hidden">
+        <h2>Přidejte možnosti vozidla</h2>
+        <form class="cardForm">
+            <label for="inputDateTimeVehicle">Zadejte časové rozmězí dostupnosti</label>
+            <div id="inputDateTimeVehicle" class="flatpickr-wrapper">
+                <input type="text" class="datepicker" placeholder="vyberte dátum a čas" data-input>
+                <a class="input-button" title="toggle" data-toggle>
+                    <i class="fa fa-hourglass-start"></i>
+                </a>
+                <a class="input-button" title="clear" data-clear>
+                    <i class="fa fa-minus"></i>
+                </a>
+            </div>
+
+
+            <div id="inputEndDateTimeVehicle" class="flatpickr-wrapper">
+                <input type="text" class="datepicker form-control input" placeholder="vyberte dátum a čas" data-input>
+                <a class="input-button" title="toggle" data-toggle>
+                    <i class="fa fa-hourglass-end"></i>
+                </a>
+
+            </div>
+
+            <label>
+                <input type="radio" name="carStatus" value="available"> Auto je k dispozici
+            </label>
+            <br>
+            <label>
+                <input type="radio" name="carStatus" value="notAvailable"> Auto není k dispozici
+            </label>
+            
+
+            <div style="display:flex;justify-content:right">
+                <button id="submitNewVehicleSlotToList">
+                    Přidat
+                </button>
+            </div>
+
+
+
+            <div class="excuses-container">
+                <h3>Seznam přidaných možností</h3>
+                <ul id="vehicleSlotList"></ul>
+                <p id="noVehicleSlotsMessage">Zatím nebyly přidány žádné možnosti</p>
+                <button id="sendNewVehicleSlot">
+                    Poslat
+                </button>
+                <button id="cancelSendingVehicleSlot">
+                    Zrušit
+                </button>
+            </div>
+
+
+        </form>
+    </div>
+    <!-- Table of excuses - Would be shown when "Zobraz zadané omluvy" is clicked -->
+    <div class="card shadow-lg border-0 rounded-3 p-3" id="excusesPreview" style="visibility:hidden; max-width: 900px; margin: auto;">
+        <h5 class="card-title text-center fw-bold mb-3">Seznam zadaných omluv</h5>
+
+        <div class="table-responsive table-container" id="tableOfExcuses">
+        </div>
+
+        <button id="cancelExcusesPreview" class="btn w-100 mt-3 fw-bold">
+            Zrušit
+        </button>
+    </div>
+    <!-- Table of vehicle slots - Would be shown when "Zobrazit možnosti vozidla" is clicked -->
+    <div class="card shadow-lg border-0 rounded-3 p-3" id="vehicleSlotsPreview" style="visibility:hidden; max-width: 900px; margin: auto;">
+        <h5 class="card-title text-center fw-bold mb-3">Seznam možností vozidla</h5>
+
+        <div class="table-responsive table-container" id="tableOfVehicleSlots">
+        </div>
+
+        <button id="cancelVehicleSlotsPreview" class="btn w-100 mt-3 fw-bold">
+            Zrušit
+        </button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+﻿:root {
+    --m3syslightprimary-container: rgba(234, 221, 255, 1);
+    --m3syslighton-primary-container: rgba(79, 55, 138, 1);
+    --m3syslighton-surface: rgba(29, 27, 32, 1);
+    --m3syslightoutline-variant: rgba(202, 196, 208, 1);
+    --m3state-layerslighton-surfaceopacity-008: rgba(29, 27, 32, 0.08);
+    --m3syslightsurface-container-highest: rgba(230, 224, 233, 1);
+    --m3-title-medium-font-family: "Roboto", Helvetica;
+    --m3-title-medium-font-weight: 500;
+    --m3-title-medium-font-size: 16px;
+    --m3-title-medium-letter-spacing: 0.15000000596046448px;
+    --m3-title-medium-line-height: 24px;
+    --m3-title-medium-font-style: normal;
+    --m3-body-medium-font-family: "Roboto", Helvetica;
+    --m3-body-medium-font-weight: 400;
+    --m3-body-medium-font-size: 14px;
+    --m3-body-medium-letter-spacing: 0.25px;
+    --m3-body-medium-line-height: 20px;
+    --m3-body-medium-font-style: normal;
+    --subtitle-font-family: "Inter", Helvetica;
+    --subtitle-font-weight: 400;
+    --subtitle-font-size: 32px;
+    --subtitle-letter-spacing: 0px;
+    --subtitle-line-height: 120.00000762939453%;
+    --subtitle-font-style: normal;
+    --m3-elevation-light-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+}
