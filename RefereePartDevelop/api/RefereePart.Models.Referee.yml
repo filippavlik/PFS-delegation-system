@@ -1,0 +1,1049 @@
+### YamlMime:ManagedReference
+items:
+- uid: RefereePart.Models.Referee
+  commentId: T:RefereePart.Models.Referee
+  id: Referee
+  parent: RefereePart.Models
+  children:
+  - RefereePart.Models.Referee.ActuallPragueZone
+  - RefereePart.Models.Referee.Age
+  - RefereePart.Models.Referee.CarAvailability
+  - RefereePart.Models.Referee.Email
+  - RefereePart.Models.Referee.Excuses
+  - RefereePart.Models.Referee.FacrId
+  - RefereePart.Models.Referee.League
+  - RefereePart.Models.Referee.Name
+  - RefereePart.Models.Referee.Note
+  - RefereePart.Models.Referee.Ofs
+  - RefereePart.Models.Referee.PragueZone
+  - RefereePart.Models.Referee.RefereeId
+  - RefereePart.Models.Referee.Surname
+  - RefereePart.Models.Referee.TimestampChange
+  - RefereePart.Models.Referee.UserId
+  - RefereePart.Models.Referee.VehicleSlots
+  langs:
+  - csharp
+  - vb
+  name: Referee
+  nameWithType: Referee
+  fullName: RefereePart.Models.Referee
+  type: Class
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Referee
+    path: Models/Referee.cs
+    startLine: 5
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public class Referee
+    content.vb: Public Class Referee
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: RefereePart.Models.Referee.RefereeId
+  commentId: P:RefereePart.Models.Referee.RefereeId
+  id: RefereeId
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: RefereeId
+  nameWithType: Referee.RefereeId
+  fullName: RefereePart.Models.Referee.RefereeId
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: RefereeId
+    path: Models/Referee.cs
+    startLine: 7
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public int RefereeId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property RefereeId As Integer
+  overload: RefereePart.Models.Referee.RefereeId*
+- uid: RefereePart.Models.Referee.UserId
+  commentId: P:RefereePart.Models.Referee.UserId
+  id: UserId
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: UserId
+  nameWithType: Referee.UserId
+  fullName: RefereePart.Models.Referee.UserId
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: UserId
+    path: Models/Referee.cs
+    startLine: 9
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string? UserId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property UserId As String
+  overload: RefereePart.Models.Referee.UserId*
+- uid: RefereePart.Models.Referee.FacrId
+  commentId: P:RefereePart.Models.Referee.FacrId
+  id: FacrId
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: FacrId
+  nameWithType: Referee.FacrId
+  fullName: RefereePart.Models.Referee.FacrId
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: FacrId
+    path: Models/Referee.cs
+    startLine: 11
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string? FacrId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FacrId As String
+  overload: RefereePart.Models.Referee.FacrId*
+- uid: RefereePart.Models.Referee.Name
+  commentId: P:RefereePart.Models.Referee.Name
+  id: Name
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Name
+  nameWithType: Referee.Name
+  fullName: RefereePart.Models.Referee.Name
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Name
+    path: Models/Referee.cs
+    startLine: 13
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string Name { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Name As String
+  overload: RefereePart.Models.Referee.Name*
+- uid: RefereePart.Models.Referee.Surname
+  commentId: P:RefereePart.Models.Referee.Surname
+  id: Surname
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Surname
+  nameWithType: Referee.Surname
+  fullName: RefereePart.Models.Referee.Surname
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Surname
+    path: Models/Referee.cs
+    startLine: 15
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string Surname { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Surname As String
+  overload: RefereePart.Models.Referee.Surname*
+- uid: RefereePart.Models.Referee.Email
+  commentId: P:RefereePart.Models.Referee.Email
+  id: Email
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Email
+  nameWithType: Referee.Email
+  fullName: RefereePart.Models.Referee.Email
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Email
+    path: Models/Referee.cs
+    startLine: 17
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string Email { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Email As String
+  overload: RefereePart.Models.Referee.Email*
+- uid: RefereePart.Models.Referee.League
+  commentId: P:RefereePart.Models.Referee.League
+  id: League
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: League
+  nameWithType: Referee.League
+  fullName: RefereePart.Models.Referee.League
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: League
+    path: Models/Referee.cs
+    startLine: 19
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public int League { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property League As Integer
+  overload: RefereePart.Models.Referee.League*
+- uid: RefereePart.Models.Referee.Age
+  commentId: P:RefereePart.Models.Referee.Age
+  id: Age
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Age
+  nameWithType: Referee.Age
+  fullName: RefereePart.Models.Referee.Age
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Age
+    path: Models/Referee.cs
+    startLine: 21
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public int Age { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property Age As Integer
+  overload: RefereePart.Models.Referee.Age*
+- uid: RefereePart.Models.Referee.Ofs
+  commentId: P:RefereePart.Models.Referee.Ofs
+  id: Ofs
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Ofs
+  nameWithType: Referee.Ofs
+  fullName: RefereePart.Models.Referee.Ofs
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Ofs
+    path: Models/Referee.cs
+    startLine: 23
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public bool Ofs { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property Ofs As Boolean
+  overload: RefereePart.Models.Referee.Ofs*
+- uid: RefereePart.Models.Referee.Note
+  commentId: P:RefereePart.Models.Referee.Note
+  id: Note
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Note
+  nameWithType: Referee.Note
+  fullName: RefereePart.Models.Referee.Note
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Note
+    path: Models/Referee.cs
+    startLine: 25
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string? Note { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Note As String
+  overload: RefereePart.Models.Referee.Note*
+- uid: RefereePart.Models.Referee.PragueZone
+  commentId: P:RefereePart.Models.Referee.PragueZone
+  id: PragueZone
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: PragueZone
+  nameWithType: Referee.PragueZone
+  fullName: RefereePart.Models.Referee.PragueZone
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: PragueZone
+    path: Models/Referee.cs
+    startLine: 27
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string PragueZone { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property PragueZone As String
+  overload: RefereePart.Models.Referee.PragueZone*
+- uid: RefereePart.Models.Referee.ActuallPragueZone
+  commentId: P:RefereePart.Models.Referee.ActuallPragueZone
+  id: ActuallPragueZone
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: ActuallPragueZone
+  nameWithType: Referee.ActuallPragueZone
+  fullName: RefereePart.Models.Referee.ActuallPragueZone
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: ActuallPragueZone
+    path: Models/Referee.cs
+    startLine: 29
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public string? ActuallPragueZone { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActuallPragueZone As String
+  overload: RefereePart.Models.Referee.ActuallPragueZone*
+- uid: RefereePart.Models.Referee.CarAvailability
+  commentId: P:RefereePart.Models.Referee.CarAvailability
+  id: CarAvailability
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: CarAvailability
+  nameWithType: Referee.CarAvailability
+  fullName: RefereePart.Models.Referee.CarAvailability
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: CarAvailability
+    path: Models/Referee.cs
+    startLine: 31
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public bool CarAvailability { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property CarAvailability As Boolean
+  overload: RefereePart.Models.Referee.CarAvailability*
+- uid: RefereePart.Models.Referee.TimestampChange
+  commentId: P:RefereePart.Models.Referee.TimestampChange
+  id: TimestampChange
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: TimestampChange
+  nameWithType: Referee.TimestampChange
+  fullName: RefereePart.Models.Referee.TimestampChange
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: TimestampChange
+    path: Models/Referee.cs
+    startLine: 33
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public DateTime TimestampChange { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property TimestampChange As Date
+  overload: RefereePart.Models.Referee.TimestampChange*
+- uid: RefereePart.Models.Referee.Excuses
+  commentId: P:RefereePart.Models.Referee.Excuses
+  id: Excuses
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: Excuses
+  nameWithType: Referee.Excuses
+  fullName: RefereePart.Models.Referee.Excuses
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: Excuses
+    path: Models/Referee.cs
+    startLine: 35
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public virtual ICollection<Excuse> Excuses { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.ICollection{RefereePart.Models.Excuse}
+    content.vb: Public Overridable Property Excuses As ICollection(Of Excuse)
+  overload: RefereePart.Models.Referee.Excuses*
+- uid: RefereePart.Models.Referee.VehicleSlots
+  commentId: P:RefereePart.Models.Referee.VehicleSlots
+  id: VehicleSlots
+  parent: RefereePart.Models.Referee
+  langs:
+  - csharp
+  - vb
+  name: VehicleSlots
+  nameWithType: Referee.VehicleSlots
+  fullName: RefereePart.Models.Referee.VehicleSlots
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/Referee.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: VehicleSlots
+    path: Models/Referee.cs
+    startLine: 37
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public virtual ICollection<VehicleSlot> VehicleSlots { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.ICollection{RefereePart.Models.VehicleSlot}
+    content.vb: Public Overridable Property VehicleSlots As ICollection(Of VehicleSlot)
+  overload: RefereePart.Models.Referee.VehicleSlots*
+references:
+- uid: RefereePart.Models
+  commentId: N:RefereePart.Models
+  href: RefereePart.html
+  name: RefereePart.Models
+  nameWithType: RefereePart.Models
+  fullName: RefereePart.Models
+  spec.csharp:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html
+  spec.vb:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: RefereePart.Models.Referee.RefereeId*
+  commentId: Overload:RefereePart.Models.Referee.RefereeId
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_RefereeId
+  name: RefereeId
+  nameWithType: Referee.RefereeId
+  fullName: RefereePart.Models.Referee.RefereeId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: RefereePart.Models.Referee.UserId*
+  commentId: Overload:RefereePart.Models.Referee.UserId
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_UserId
+  name: UserId
+  nameWithType: Referee.UserId
+  fullName: RefereePart.Models.Referee.UserId
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: RefereePart.Models.Referee.FacrId*
+  commentId: Overload:RefereePart.Models.Referee.FacrId
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_FacrId
+  name: FacrId
+  nameWithType: Referee.FacrId
+  fullName: RefereePart.Models.Referee.FacrId
+- uid: RefereePart.Models.Referee.Name*
+  commentId: Overload:RefereePart.Models.Referee.Name
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Name
+  name: Name
+  nameWithType: Referee.Name
+  fullName: RefereePart.Models.Referee.Name
+- uid: RefereePart.Models.Referee.Surname*
+  commentId: Overload:RefereePart.Models.Referee.Surname
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Surname
+  name: Surname
+  nameWithType: Referee.Surname
+  fullName: RefereePart.Models.Referee.Surname
+- uid: RefereePart.Models.Referee.Email*
+  commentId: Overload:RefereePart.Models.Referee.Email
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Email
+  name: Email
+  nameWithType: Referee.Email
+  fullName: RefereePart.Models.Referee.Email
+- uid: RefereePart.Models.Referee.League*
+  commentId: Overload:RefereePart.Models.Referee.League
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_League
+  name: League
+  nameWithType: Referee.League
+  fullName: RefereePart.Models.Referee.League
+- uid: RefereePart.Models.Referee.Age*
+  commentId: Overload:RefereePart.Models.Referee.Age
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Age
+  name: Age
+  nameWithType: Referee.Age
+  fullName: RefereePart.Models.Referee.Age
+- uid: RefereePart.Models.Referee.Ofs*
+  commentId: Overload:RefereePart.Models.Referee.Ofs
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Ofs
+  name: Ofs
+  nameWithType: Referee.Ofs
+  fullName: RefereePart.Models.Referee.Ofs
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: RefereePart.Models.Referee.Note*
+  commentId: Overload:RefereePart.Models.Referee.Note
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Note
+  name: Note
+  nameWithType: Referee.Note
+  fullName: RefereePart.Models.Referee.Note
+- uid: RefereePart.Models.Referee.PragueZone*
+  commentId: Overload:RefereePart.Models.Referee.PragueZone
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_PragueZone
+  name: PragueZone
+  nameWithType: Referee.PragueZone
+  fullName: RefereePart.Models.Referee.PragueZone
+- uid: RefereePart.Models.Referee.ActuallPragueZone*
+  commentId: Overload:RefereePart.Models.Referee.ActuallPragueZone
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_ActuallPragueZone
+  name: ActuallPragueZone
+  nameWithType: Referee.ActuallPragueZone
+  fullName: RefereePart.Models.Referee.ActuallPragueZone
+- uid: RefereePart.Models.Referee.CarAvailability*
+  commentId: Overload:RefereePart.Models.Referee.CarAvailability
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_CarAvailability
+  name: CarAvailability
+  nameWithType: Referee.CarAvailability
+  fullName: RefereePart.Models.Referee.CarAvailability
+- uid: RefereePart.Models.Referee.TimestampChange*
+  commentId: Overload:RefereePart.Models.Referee.TimestampChange
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_TimestampChange
+  name: TimestampChange
+  nameWithType: Referee.TimestampChange
+  fullName: RefereePart.Models.Referee.TimestampChange
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date
+- uid: RefereePart.Models.Referee.Excuses*
+  commentId: Overload:RefereePart.Models.Referee.Excuses
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_Excuses
+  name: Excuses
+  nameWithType: Referee.Excuses
+  fullName: RefereePart.Models.Referee.Excuses
+- uid: System.Collections.Generic.ICollection{RefereePart.Models.Excuse}
+  commentId: T:System.Collections.Generic.ICollection{RefereePart.Models.Excuse}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.ICollection`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  name: ICollection<Excuse>
+  nameWithType: ICollection<Excuse>
+  fullName: System.Collections.Generic.ICollection<RefereePart.Models.Excuse>
+  nameWithType.vb: ICollection(Of Excuse)
+  fullName.vb: System.Collections.Generic.ICollection(Of RefereePart.Models.Excuse)
+  name.vb: ICollection(Of Excuse)
+  spec.csharp:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: <
+  - uid: RefereePart.Models.Excuse
+    name: Excuse
+    href: RefereePart.Models.Excuse.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: RefereePart.Models.Excuse
+    name: Excuse
+    href: RefereePart.Models.Excuse.html
+  - name: )
+- uid: System.Collections.Generic.ICollection`1
+  commentId: T:System.Collections.Generic.ICollection`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  name: ICollection<T>
+  nameWithType: ICollection<T>
+  fullName: System.Collections.Generic.ICollection<T>
+  nameWithType.vb: ICollection(Of T)
+  fullName.vb: System.Collections.Generic.ICollection(Of T)
+  name.vb: ICollection(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: RefereePart.Models.Referee.VehicleSlots*
+  commentId: Overload:RefereePart.Models.Referee.VehicleSlots
+  href: RefereePart.Models.Referee.html#RefereePart_Models_Referee_VehicleSlots
+  name: VehicleSlots
+  nameWithType: Referee.VehicleSlots
+  fullName: RefereePart.Models.Referee.VehicleSlots
+- uid: System.Collections.Generic.ICollection{RefereePart.Models.VehicleSlot}
+  commentId: T:System.Collections.Generic.ICollection{RefereePart.Models.VehicleSlot}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.ICollection`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  name: ICollection<VehicleSlot>
+  nameWithType: ICollection<VehicleSlot>
+  fullName: System.Collections.Generic.ICollection<RefereePart.Models.VehicleSlot>
+  nameWithType.vb: ICollection(Of VehicleSlot)
+  fullName.vb: System.Collections.Generic.ICollection(Of RefereePart.Models.VehicleSlot)
+  name.vb: ICollection(Of VehicleSlot)
+  spec.csharp:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: <
+  - uid: RefereePart.Models.VehicleSlot
+    name: VehicleSlot
+    href: RefereePart.Models.VehicleSlot.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.ICollection`1
+    name: ICollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: RefereePart.Models.VehicleSlot
+    name: VehicleSlot
+    href: RefereePart.Models.VehicleSlot.html
+  - name: )

@@ -1,0 +1,27 @@
+{
+"$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [ "RefereePart.csproj" ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {     
+	"files": [ "index.md" ]
+      },
+      {
+        "files": [ "api/**.yml" ]
+      }
+    ],
+    "resource": [],
+    "overwrite": [],
+    "dest": "_site",
+    "template": [ "default" ]
+  }
+}

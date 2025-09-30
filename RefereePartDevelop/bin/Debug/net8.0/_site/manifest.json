@@ -1,0 +1,258 @@
+{
+  "source_base_path": "/home/RefereePart/RefereePart",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Controllers.HomeController.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Controllers.HomeController.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Controllers.HomeController",
+      "Summary": "<p sourcefile=\"api/RefereePart.Controllers.HomeController.yml\" sourcestartlinenumber=\"1\">Defines routes for user actions in referee docker container.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Controllers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Controllers.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Controllers",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.ErrorViewModel.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.ErrorViewModel.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.ErrorViewModel",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.Excuse.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.Excuse.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.Excuse",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.ExcuseRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.ExcuseRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.ExcuseRequest",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.ExcuseRequirements.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.ExcuseRequirements.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.ExcuseRequirements",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.Referee.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.Referee.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.Referee",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.RefereeDbContext.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.RefereeDbContext.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.RefereeDbContext",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.VehicleSlot.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.VehicleSlot.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.VehicleSlot",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.VehicleSlotRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.VehicleSlotRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.VehicleSlotRequest",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.VehicleSlotRequirements.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.VehicleSlotRequirements.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.VehicleSlotRequirements",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.ViewModels.UserViewModel.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.ViewModels.UserViewModel.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.ViewModels.UserViewModel",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.ViewModels.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.ViewModels.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models.ViewModels",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/RefereePart.Models.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/RefereePart.Models.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "RefereePart.Models",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/YourService.Controllers.TokenValidationController.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/YourService.Controllers.TokenValidationController.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "YourService.Controllers.TokenValidationController",
+      "Summary": "<p sourcefile=\"api/YourService.Controllers.TokenValidationController.yml\" sourcestartlinenumber=\"1\">Controller for validating authentication tokens used by internal services.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/YourService.Controllers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/YourService.Controllers.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "YourService.Controllers",
+      "Summary": null
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

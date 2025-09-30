@@ -1,0 +1,23 @@
+### YamlMime:ManagedReference
+items:
+- uid: RefereePart.Models.ViewModels
+  commentId: N:RefereePart.Models.ViewModels
+  id: RefereePart.Models.ViewModels
+  children:
+  - RefereePart.Models.ViewModels.UserViewModel
+  langs:
+  - csharp
+  - vb
+  name: RefereePart.Models.ViewModels
+  nameWithType: RefereePart.Models.ViewModels
+  fullName: RefereePart.Models.ViewModels
+  type: Namespace
+  assemblies:
+  - RefereePart
+references:
+- uid: RefereePart.Models.ViewModels.UserViewModel
+  commentId: T:RefereePart.Models.ViewModels.UserViewModel
+  href: RefereePart.Models.ViewModels.UserViewModel.html
+  name: UserViewModel
+  nameWithType: UserViewModel
+  fullName: RefereePart.Models.ViewModels.UserViewModel
