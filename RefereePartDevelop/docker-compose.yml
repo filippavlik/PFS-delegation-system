@@ -1,0 +1,37 @@
+#version: '3.8'
+
+#networks:
+ # referee-network:
+  #  external: true
+
+#services:
+ # referee-application-container:
+  #  container_name: referee-application-container
+   # image: refereepart
+    #restart: on-failure
+    #environment:
+    #  - POSTGRES_DB=mydb
+    #networks:
+    #  referee-network:
+    #    ipv4_address: 172.18.2.3  # Static IP within the subnet
+    #secrets:
+    #  - AzureClientId
+    #  - AzureClientSecret
+    #  - AzureTenantId
+    #  - AzureVaultURI
+    #  - JwtIssuer
+    #  - JwtAudience
+    #user: root
+#secrets:
+ #       AzureClientId:
+  #        file: ./secrets/AzureClientId
+   #     AzureClientSecret:
+    #      file: ./secrets/AzureClientSecret
+     #   AzureTenantId:
+     #     file: ./secrets/AzureTenantId
+     #   AzureVaultURI:
+     #     file: ./secrets/AzureVaultURI
+     #   JwtIssuer:
+     #     file: ./secrets/JwtIssuer
+     #   JwtAudience:
+     #     file: ./secrets/JwtAudience

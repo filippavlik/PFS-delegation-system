@@ -1,0 +1,105 @@
+### YamlMime:ManagedReference
+items:
+- uid: RefereePart.Models
+  commentId: N:RefereePart.Models
+  id: RefereePart.Models
+  children:
+  - RefereePart.Models.ErrorViewModel
+  - RefereePart.Models.Excuse
+  - RefereePart.Models.ExcuseRequest
+  - RefereePart.Models.ExcuseRequirements
+  - RefereePart.Models.Referee
+  - RefereePart.Models.RefereeDbContext
+  - RefereePart.Models.VehicleSlot
+  - RefereePart.Models.VehicleSlotRequest
+  - RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: RefereePart.Models
+  nameWithType: RefereePart.Models
+  fullName: RefereePart.Models
+  type: Namespace
+  assemblies:
+  - RefereePart
+references:
+- uid: RefereePart.Models.ErrorViewModel
+  commentId: T:RefereePart.Models.ErrorViewModel
+  href: RefereePart.Models.ErrorViewModel.html
+  name: ErrorViewModel
+  nameWithType: ErrorViewModel
+  fullName: RefereePart.Models.ErrorViewModel
+- uid: RefereePart.Models.Excuse
+  commentId: T:RefereePart.Models.Excuse
+  href: RefereePart.Models.Excuse.html
+  name: Excuse
+  nameWithType: Excuse
+  fullName: RefereePart.Models.Excuse
+- uid: RefereePart.Models.ExcuseRequest
+  commentId: T:RefereePart.Models.ExcuseRequest
+  parent: RefereePart.Models
+  href: RefereePart.Models.ExcuseRequest.html
+  name: ExcuseRequest
+  nameWithType: ExcuseRequest
+  fullName: RefereePart.Models.ExcuseRequest
+- uid: RefereePart.Models.ExcuseRequirements
+  commentId: T:RefereePart.Models.ExcuseRequirements
+  href: RefereePart.Models.ExcuseRequirements.html
+  name: ExcuseRequirements
+  nameWithType: ExcuseRequirements
+  fullName: RefereePart.Models.ExcuseRequirements
+- uid: RefereePart.Models.Referee
+  commentId: T:RefereePart.Models.Referee
+  parent: RefereePart.Models
+  href: RefereePart.Models.Referee.html
+  name: Referee
+  nameWithType: Referee
+  fullName: RefereePart.Models.Referee
+- uid: RefereePart.Models.RefereeDbContext
+  commentId: T:RefereePart.Models.RefereeDbContext
+  parent: RefereePart.Models
+  href: RefereePart.Models.RefereeDbContext.html
+  name: RefereeDbContext
+  nameWithType: RefereeDbContext
+  fullName: RefereePart.Models.RefereeDbContext
+- uid: RefereePart.Models.VehicleSlot
+  commentId: T:RefereePart.Models.VehicleSlot
+  href: RefereePart.Models.VehicleSlot.html
+  name: VehicleSlot
+  nameWithType: VehicleSlot
+  fullName: RefereePart.Models.VehicleSlot
+- uid: RefereePart.Models.VehicleSlotRequest
+  commentId: T:RefereePart.Models.VehicleSlotRequest
+  parent: RefereePart.Models
+  href: RefereePart.Models.VehicleSlotRequest.html
+  name: VehicleSlotRequest
+  nameWithType: VehicleSlotRequest
+  fullName: RefereePart.Models.VehicleSlotRequest
+- uid: RefereePart.Models.VehicleSlotRequirements
+  commentId: T:RefereePart.Models.VehicleSlotRequirements
+  href: RefereePart.Models.VehicleSlotRequirements.html
+  name: VehicleSlotRequirements
+  nameWithType: VehicleSlotRequirements
+  fullName: RefereePart.Models.VehicleSlotRequirements
+- uid: RefereePart.Models
+  commentId: N:RefereePart.Models
+  href: RefereePart.html
+  name: RefereePart.Models
+  nameWithType: RefereePart.Models
+  fullName: RefereePart.Models
+  spec.csharp:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html
+  spec.vb:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html

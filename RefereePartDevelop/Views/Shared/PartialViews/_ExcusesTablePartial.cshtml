@@ -1,0 +1,29 @@
+@model List<Excuse>
+<table class="table table-striped table-hover">
+                <thead class="table-light sticky-header">
+                    <tr>
+                        <th>Čas přidání</th>
+                        <th>Datum a čas od</th>
+                        <th>Datum a čas do</th>
+                        <th>Poznámka</th>
+                        <th>Důvod</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody>
+			@foreach (var excuse in Model)
+            		{
+                		<tr>
+                    			<td>@excuse.DatetimeAdded.ToString("dd-MM-yy HH:mm")</td>
+                    			<td>@excuse.DateFrom.ToString("dd-MM-yy") : @excuse.TimeFrom.ToString("HH:mm")</td>
+                    			<td>@excuse.DateTo.ToString("dd-MM-yy") : @excuse.TimeTo.ToString("HH:mm")</td>
+                    			<td>@excuse.Note</td>
+                    			<td>@excuse.Reason</td>
+                    			<td>
+                        			<button class="btn btn-sm btn-danger delete-excuse" data-id="@excuse.ExcuseId">
+	    <i class="fas fa-trash"></i>
+</button>                    			</td>
+                		</tr>
+            }
+                </tbody>
+</table>

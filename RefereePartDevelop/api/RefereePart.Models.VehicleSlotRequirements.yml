@@ -1,0 +1,545 @@
+### YamlMime:ManagedReference
+items:
+- uid: RefereePart.Models.VehicleSlotRequirements
+  commentId: T:RefereePart.Models.VehicleSlotRequirements
+  id: VehicleSlotRequirements
+  parent: RefereePart.Models
+  children:
+  - RefereePart.Models.VehicleSlotRequirements.DateFrom
+  - RefereePart.Models.VehicleSlotRequirements.DateTo
+  - RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+  - RefereePart.Models.VehicleSlotRequirements.TimeFrom
+  - RefereePart.Models.VehicleSlotRequirements.TimeTo
+  langs:
+  - csharp
+  - vb
+  name: VehicleSlotRequirements
+  nameWithType: VehicleSlotRequirements
+  fullName: RefereePart.Models.VehicleSlotRequirements
+  type: Class
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: VehicleSlotRequirements
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 6
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public class VehicleSlotRequirements
+    content.vb: Public Class VehicleSlotRequirements
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: RefereePart.Models.VehicleSlotRequirements.DateFrom
+  commentId: P:RefereePart.Models.VehicleSlotRequirements.DateFrom
+  id: DateFrom
+  parent: RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: DateFrom
+  nameWithType: VehicleSlotRequirements.DateFrom
+  fullName: RefereePart.Models.VehicleSlotRequirements.DateFrom
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: DateFrom
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 8
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public DateOnly DateFrom { get; set; }
+    parameters: []
+    return:
+      type: System.DateOnly
+    content.vb: Public Property DateFrom As DateOnly
+  overload: RefereePart.Models.VehicleSlotRequirements.DateFrom*
+- uid: RefereePart.Models.VehicleSlotRequirements.TimeFrom
+  commentId: P:RefereePart.Models.VehicleSlotRequirements.TimeFrom
+  id: TimeFrom
+  parent: RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: TimeFrom
+  nameWithType: VehicleSlotRequirements.TimeFrom
+  fullName: RefereePart.Models.VehicleSlotRequirements.TimeFrom
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: TimeFrom
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 10
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public TimeOnly TimeFrom { get; set; }
+    parameters: []
+    return:
+      type: System.TimeOnly
+    content.vb: Public Property TimeFrom As TimeOnly
+  overload: RefereePart.Models.VehicleSlotRequirements.TimeFrom*
+- uid: RefereePart.Models.VehicleSlotRequirements.DateTo
+  commentId: P:RefereePart.Models.VehicleSlotRequirements.DateTo
+  id: DateTo
+  parent: RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: DateTo
+  nameWithType: VehicleSlotRequirements.DateTo
+  fullName: RefereePart.Models.VehicleSlotRequirements.DateTo
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: DateTo
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 12
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public DateOnly DateTo { get; set; }
+    parameters: []
+    return:
+      type: System.DateOnly
+    content.vb: Public Property DateTo As DateOnly
+  overload: RefereePart.Models.VehicleSlotRequirements.DateTo*
+- uid: RefereePart.Models.VehicleSlotRequirements.TimeTo
+  commentId: P:RefereePart.Models.VehicleSlotRequirements.TimeTo
+  id: TimeTo
+  parent: RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: TimeTo
+  nameWithType: VehicleSlotRequirements.TimeTo
+  fullName: RefereePart.Models.VehicleSlotRequirements.TimeTo
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: TimeTo
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 14
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public TimeOnly TimeTo { get; set; }
+    parameters: []
+    return:
+      type: System.TimeOnly
+    content.vb: Public Property TimeTo As TimeOnly
+  overload: RefereePart.Models.VehicleSlotRequirements.TimeTo*
+- uid: RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+  commentId: P:RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+  id: HasCarInTheSlot
+  parent: RefereePart.Models.VehicleSlotRequirements
+  langs:
+  - csharp
+  - vb
+  name: HasCarInTheSlot
+  nameWithType: VehicleSlotRequirements.HasCarInTheSlot
+  fullName: RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+  type: Property
+  source:
+    remote:
+      path: RefereePart/Models/VehicleSlotRequirements.cs
+      branch: refereeB
+      repo: https://gitlab.fit.cvut.cz/pavlifi3/bachelor-thesis
+    id: HasCarInTheSlot
+    path: Models/VehicleSlotRequirements.cs
+    startLine: 16
+  assemblies:
+  - RefereePart
+  namespace: RefereePart.Models
+  syntax:
+    content: public bool? HasCarInTheSlot { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Boolean}
+    content.vb: Public Property HasCarInTheSlot As Boolean?
+  overload: RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot*
+references:
+- uid: RefereePart.Models
+  commentId: N:RefereePart.Models
+  href: RefereePart.html
+  name: RefereePart.Models
+  nameWithType: RefereePart.Models
+  fullName: RefereePart.Models
+  spec.csharp:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html
+  spec.vb:
+  - uid: RefereePart
+    name: RefereePart
+    href: RefereePart.html
+  - name: .
+  - uid: RefereePart.Models
+    name: Models
+    href: RefereePart.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: RefereePart.Models.VehicleSlotRequirements.DateFrom*
+  commentId: Overload:RefereePart.Models.VehicleSlotRequirements.DateFrom
+  href: RefereePart.Models.VehicleSlotRequirements.html#RefereePart_Models_VehicleSlotRequirements_DateFrom
+  name: DateFrom
+  nameWithType: VehicleSlotRequirements.DateFrom
+  fullName: RefereePart.Models.VehicleSlotRequirements.DateFrom
+- uid: System.DateOnly
+  commentId: T:System.DateOnly
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.dateonly
+  name: DateOnly
+  nameWithType: DateOnly
+  fullName: System.DateOnly
+- uid: RefereePart.Models.VehicleSlotRequirements.TimeFrom*
+  commentId: Overload:RefereePart.Models.VehicleSlotRequirements.TimeFrom
+  href: RefereePart.Models.VehicleSlotRequirements.html#RefereePart_Models_VehicleSlotRequirements_TimeFrom
+  name: TimeFrom
+  nameWithType: VehicleSlotRequirements.TimeFrom
+  fullName: RefereePart.Models.VehicleSlotRequirements.TimeFrom
+- uid: System.TimeOnly
+  commentId: T:System.TimeOnly
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.timeonly
+  name: TimeOnly
+  nameWithType: TimeOnly
+  fullName: System.TimeOnly
+- uid: RefereePart.Models.VehicleSlotRequirements.DateTo*
+  commentId: Overload:RefereePart.Models.VehicleSlotRequirements.DateTo
+  href: RefereePart.Models.VehicleSlotRequirements.html#RefereePart_Models_VehicleSlotRequirements_DateTo
+  name: DateTo
+  nameWithType: VehicleSlotRequirements.DateTo
+  fullName: RefereePart.Models.VehicleSlotRequirements.DateTo
+- uid: RefereePart.Models.VehicleSlotRequirements.TimeTo*
+  commentId: Overload:RefereePart.Models.VehicleSlotRequirements.TimeTo
+  href: RefereePart.Models.VehicleSlotRequirements.html#RefereePart_Models_VehicleSlotRequirements_TimeTo
+  name: TimeTo
+  nameWithType: VehicleSlotRequirements.TimeTo
+  fullName: RefereePart.Models.VehicleSlotRequirements.TimeTo
+- uid: RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot*
+  commentId: Overload:RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+  href: RefereePart.Models.VehicleSlotRequirements.html#RefereePart_Models_VehicleSlotRequirements_HasCarInTheSlot
+  name: HasCarInTheSlot
+  nameWithType: VehicleSlotRequirements.HasCarInTheSlot
+  fullName: RefereePart.Models.VehicleSlotRequirements.HasCarInTheSlot
+- uid: System.Nullable{System.Boolean}
+  commentId: T:System.Nullable{System.Boolean}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool?
+  nameWithType: bool?
+  fullName: bool?
+  nameWithType.vb: Boolean?
+  fullName.vb: Boolean?
+  name.vb: Boolean?
+  spec.csharp:
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+  spec.vb:
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )

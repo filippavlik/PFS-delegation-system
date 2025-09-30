@@ -1,0 +1,23 @@
+### YamlMime:ManagedReference
+items:
+- uid: YourService.Controllers
+  commentId: N:YourService.Controllers
+  id: YourService.Controllers
+  children:
+  - YourService.Controllers.TokenValidationController
+  langs:
+  - csharp
+  - vb
+  name: YourService.Controllers
+  nameWithType: YourService.Controllers
+  fullName: YourService.Controllers
+  type: Namespace
+  assemblies:
+  - RefereePart
+references:
+- uid: YourService.Controllers.TokenValidationController
+  commentId: T:YourService.Controllers.TokenValidationController
+  href: YourService.Controllers.TokenValidationController.html
+  name: TokenValidationController
+  nameWithType: TokenValidationController
+  fullName: YourService.Controllers.TokenValidationController
