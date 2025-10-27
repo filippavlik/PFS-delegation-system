@@ -221,7 +221,118 @@
     .context-menu-items li:hover {
     background-color: #f5f5f5;
     }
+.overlay-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+#cardForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+
+.flatpickr-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+}
+
+    .flatpickr-wrapper input {
+        flex: 1;
+        border: none;
+        padding: 8px;
+        background: transparent;
+        font-size: 16px;
+        outline: none;
+    }
+
+
+.excuses-list-container {
+    margin-top: 15px;
+}
+
+#excusesList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    #excusesList li {
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+
+.excuse-info {
+    flex: 1;
+}
+
+.excuse-time {
+    font-weight: bold;
+}
+
+.excuse-reason {
+    color: #555;
+    margin-top: 5px;
+}
+
+.delete-excuse {
+    color: #ea4335;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+}
+
+#noExcusesMessage {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    padding: 15px;
+}
+
+.slot-info {
+    flex: 1;
+}
+
+.slot-time {
+    font-weight: bold;
+}
+
+.delete-slot {
+    color: #ea4335;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+}
 </style>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <!-- flatpickr plugin-->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+           
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <script src="Admin/js/Custom/ManualExcuses.js" defer></script>
+</head>
 @functions {
     public class PositionData
     {
@@ -265,6 +376,44 @@
         return new PositionData { Left = left, Width = width };
     }
 }
+<div class="card" id="excuseCard" style="display:none">
+    <form class="cardForm">
+        <label for="inputDateTime">Zadejte časové rozmězí omluvy</label>
+        <div id="inputDateTime" class="flatpickr-wrapper">
+            <input type="text" class="datepicker" placeholder="vyberte dátum a čas" data-input>
+        </div>
+
+        <div id="inputEndDateTime" class="flatpickr-wrapper">
+            <input type="text" class="datepicker form-control input" placeholder="vyberte dátum a čas" data-input>
+        </div>
+
+        <label style="margin:25px;" for="excuseNote">Poznámka k omluve</label>
+        <input type="text" id="excuseNote" placeholder="Zadejte poznámku pre admina k omluve">
+        <label for="excuseReason" style="margin-top:10px;">Důvod ospravedlnění (pokud jsou 2 týdny do hracího víkendu)</label>
+        <input type="text" id="excuseReason" placeholder="Zadejte důvod omluvy">
+
+        <div style="display:flex;justify-content:right">
+            <button id="submitNewExcuseToList">
+                Přidat
+            </button>
+        </div>
+
+
+        <div class="excuses-container">
+            <h3>Seznam přidaných omluv</h3>
+            <ul id="excusesList"></ul>
+            <p id="noExcusesMessage">Zatím nebyly přidány žádné omluvy</p>
+            <button id="sendNewExcuse">
+               Poslat
+            </button>
+            <button id="cancelSendingExcuse">
+                Zrušit
+            </button>
+        </div>
+
+
+    </form>
+</div>
 <div class="container mt-2">
     <!-- First Row -->
     <div class="row">
@@ -286,11 +435,19 @@
                                 <label for="refereeEmail">Email:</label>
                                 <input type="email" class="form-control" id="refereeEmail" value="@referee.Email" />
                             </div>
-
-                            <div class="form-group">
-                                <label for="refereeAge">Ročník:</label>
-                                <input type="number" class="form-control" id="refereeAge" name="Age" value="@referee.Age" min="1930" max="2050" />
-                            </div>
+			     <div class="row">
+                                <div class="col-md-6">
+                            		<div class="form-group">
+                                		<label for="refereeAge">Ročník:</label>
+                                		<input type="number" class="form-control" id="refereeAge" name="Age" value="@referee.Age" min="1930" max="2050" />
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label for="refereeRating">Rating:</label>                                                                                 <input type="number" class="form-control" id="refereeRating" name="Rating" value="@referee.Rating" min="1" max="10" />
+                            		</div>
+				</div>
+			</div>
 
                             <div class="form-group">
                                 <label for="refereeLeague">Soutěž:</label>
@@ -349,6 +506,11 @@
         </div>
         <!-- Excuses List (Right) -->
         <div class="col-md-4">
+	       <div class="action-item">
+       <button data-id="@referee.RefereeId" id="addNewExcuse" class="action-icon" style="background-color:white">
+           Zadat novou omluvu
+       </button>
+   </div>
             <div class="card mb-1">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Seznam omluvenek</h5>

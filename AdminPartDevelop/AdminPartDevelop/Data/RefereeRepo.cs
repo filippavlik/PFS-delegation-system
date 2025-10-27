@@ -23,7 +23,7 @@ namespace AdminPartDevelop.Data
         {
             try
             {
-                var existingRelation = await _context.Referees
+                var existingRelation =  await _context.Referees
                                         .Where(s => s.Name == referee.Name && s.Surname == referee.Surname)
                                         .FirstOrDefaultAsync();
                 if (existingRelation != null)
@@ -35,9 +35,10 @@ namespace AdminPartDevelop.Data
                     };
                 }
                 else
-                {
+                {                   
                     _context.Referees.Add(referee);
                     await _context.SaveChangesAsync();
+
                     return new RepositoryResponse
                     {
                         Success = true,
@@ -57,7 +58,30 @@ namespace AdminPartDevelop.Data
 
             }
         }
+	public async Task<RepositoryResponse> AddManualExcuses(List<Excuse> excuses)
+{
+    try
+    {
+        _context.Excuses.AddRange(excuses);
+        await _context.SaveChangesAsync();
+        return new RepositoryResponse
+        {
+            Success = true,
+            Message = "Omluvy úspěšně přidáne!"
+        };
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "[AddVeto] Error saving excuses");
+        return new RepositoryResponse
+        {
+            Success = false,
+            Message = "Došlo k chybě při ukládání omluv."
+        };
 
+    }
+
+}
         public async Task<RepositoryResult<Referee>> GetRefereeByIdAsync(int id)
         {
             try
@@ -69,7 +93,7 @@ namespace AdminPartDevelop.Data
 
                 if (referee == null)
                 {
-                    return RepositoryResult<Referee>.Failure("Rozhodčí s id " + id + " nebyl najden!");
+                    return RepositoryResult<Referee>.Failure("Rozhodčí s id "+id+" nebyl najden!");
                 }
 
                 return RepositoryResult<Referee>.Success(referee);
@@ -102,7 +126,7 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Referee>>.Failure("Nepodařilo se získat rozhodčí z databáze");
             }
         }
-
+      
         public async Task<RepositoryResult<List<Excuse>>> GetExcusesAsync()
         {
             try
@@ -111,14 +135,14 @@ namespace AdminPartDevelop.Data
 
                 var listOfExcuses = await _context.Excuses
                     .Include(r => r.Referee)
-                    /* production
+                   
                     .Where(r => r.DateTo != null && r.TimeTo != null &&
                     // Convert DateTo and TimeTo to a DateTime for comparison
                     new DateTime(r.DateTo.Year, r.DateTo.Month, r.DateTo.Day,
                               r.TimeTo.Hour, r.TimeTo.Minute, r.TimeTo.Second)
                     < oneWeekAgo)
-                    */
-                    .OrderByDescending(r => r.DatetimeAdded)
+                    
+                    .OrderByDescending(r => r.DatetimeAdded)                   
                     .ToListAsync();
 
                 if (listOfExcuses != null)
@@ -225,7 +249,7 @@ namespace AdminPartDevelop.Data
                     .Select(r => new
                     {
                         r.RefereeId,
-                        FullName = r.Name + " " + r.Surname,
+                        FullName = r.Name+ " " + r.Surname,
                         r.FacrId
                     })
                     .ToListAsync();
@@ -245,15 +269,16 @@ namespace AdminPartDevelop.Data
         }
 
 
-        public async Task<RepositoryResponse> UpdateRefereeAsync(int id, RefereeAddRequest referee)
+        public async Task<RepositoryResponse> UpdateRefereeAsync(int id,RefereeAddRequest referee)
         {
             try
             {
-                var existing = await _context.Referees.FirstOrDefaultAsync(r => r.RefereeId == id);
+                var existing =  await _context.Referees.FirstOrDefaultAsync(r => r.RefereeId == id);
                 if (existing != null)
                 {
                     existing.Email = referee.Email;
                     existing.Age = referee.Age;
+		    existing.Rating = referee.Rating;
                     existing.PragueZone = referee.Place;
                     existing.FacrId = referee.FacrId;
                     existing.Note = referee.Note;
@@ -307,57 +332,57 @@ namespace AdminPartDevelop.Data
                             existingReferee.League = levelDto.League;
                             existingReferee.Ofs = levelDto.Ofs;
                         }
-                        else if (referee is FilledRefereeDto filledDto)
+                        else if(referee is FilledRefereeDto filledDto)
                         {
                             if (!string.IsNullOrWhiteSpace(filledDto.Email) && existingReferee.Email != filledDto.Email)
                             {
-                                // Check if another referee already uses the email
-                                bool emailInUse = await _context.Referees
-                                    .AnyAsync(r => r.Email == filledDto.Email &&
-                                           (r.Name != name || r.Surname != surname));
+        				// Check if another referee already uses the email
+        				bool emailInUse = await _context.Referees
+            				.AnyAsync(r => r.Email == filledDto.Email &&
+                           		(r.Name != name || r.Surname != surname));
 
-                                if (!emailInUse)
-                                {
-                                    existingReferee.Email = filledDto.Email;
-                                }
+        				if (!emailInUse)
+        				{
+						existingReferee.Email = filledDto.Email;
+        				}
                             }
                             if (!string.IsNullOrWhiteSpace(filledDto.FacrId))
                             {
                                 existingReferee.FacrId = filledDto.FacrId;
                             }
-                            if (existingReferee.Note != null)
-                            {
-                                existingReferee.Note = filledDto.PhoneNumber + existingReferee.Note.Substring(14);
-                            }
-                            else
+                            if (!string.IsNullOrEmpty(existingReferee.Note) && existingReferee.Note.Length >= 14)
+				{
+    					existingReferee.Note = filledDto.PhoneNumber + existingReferee.Note.Substring(14);
+				}
+			    else
                             {
                                 existingReferee.Note = filledDto.PhoneNumber;
                             }
 
                         }
-
+                           
                         existingReferee.TimestampChange = TimeZoneInfo.ConvertTimeFromUtc
                                     (DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")); //we want to have timestamp for Prague time
 
                         _context.Referees.Update(existingReferee);
                     }
                     else if (referee is RefereeLevelDto levelDto)
-                    {
-                        var newReferee = new Referee
-                        {
-                            Name = referee.Name,
-                            Surname = referee.Surname,
-                            Email = "not parsed yet>>" + referee.Name + referee.Surname,
-                            PragueZone = "0",
-                            TimestampChange = TimeZoneInfo.ConvertTimeFromUtc
-                            (DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) //we want to have timestamp for Prague time
-                        };
-                        newReferee.Age = levelDto.Age;
-                        newReferee.League = levelDto.League;
-                        newReferee.Ofs = levelDto.Ofs;
+                    {                        
+                            var newReferee = new Referee
+                            {
+                                Name = referee.Name,
+                                Surname = referee.Surname,
+                                Email = "not parsed yet>>" + referee.Name + referee.Surname,
+                                PragueZone = "0",
+                                TimestampChange = TimeZoneInfo.ConvertTimeFromUtc
+                                (DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) //we want to have timestamp for Prague time
+                            };
+                            newReferee.Age = levelDto.Age;
+                            newReferee.League = levelDto.League;
+                            newReferee.Ofs = levelDto.Ofs;
 
-                        await _context.Referees.AddAsync(newReferee);
-
+                            await _context.Referees.AddAsync(newReferee);
+                                                                   
                     }
                 }
 

@@ -1,4 +1,4 @@
-﻿using AdminPartDevelop.Common;
+using AdminPartDevelop.Common;
 using System;
 
 namespace AdminPartDevelop.Services.RouteServices

@@ -30,6 +30,7 @@ namespace AdminPartDevelop.Services.RouteServices
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("MapyClient");
         }
+
         /// <summary>
         /// Calculates a car route distance and length between two geographic coordinates using the Mapy.cz API
         /// </summary>

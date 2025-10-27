@@ -11,6 +11,7 @@ public partial class Competition
     public string CompetitionName { get; set; } = null!;
 
     public int MatchLength { get; set; }
+    public int AmountOfReferees { get; set; }
 
     public int League { get; set; }
 

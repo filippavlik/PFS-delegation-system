@@ -12,6 +12,35 @@
         </tr>
     </thead>
     <tbody>
+        @*New*@
+        <tr>
+            <td>
+                <input type="number" value="" readonly />
+            </td>
+            <td>
+                <input type="text" id="newFieldName"/>
+            </td>
+            <td>
+                <input type="text" id="newFieldAddress" />
+            </td>
+            <td>
+                <input type="number" id="newFieldLatitude" step="any" />
+            </td>
+            <td>
+                <input type="number" id="newFieldLongitude" step="any" />
+            </td>
+            <td>
+                <button type="submit" class="addField btn btn-success">
+                    <i class="fa fa-save"></i>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="6">
+                <hr style="border: 2px solid #000; margin: 10px 0;">
+            </td>
+        </tr>
+        @*New*@
         @foreach (var field in Model)
         {
             <tr>
@@ -32,7 +61,7 @@
                 </td>
                 <td>
                     <button type="submit" data-id="@field.FieldId" class="updateField btn btn-success">
-                        <i class="fa fa-save"></i>
+				<i class="fa fa-save"></i>
                     </button>
                 </td>
             </tr>

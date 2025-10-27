@@ -114,7 +114,8 @@ builder.Services.AddScoped<IRefereeService, RefereeService>(); // Business logic
 builder.Services.AddScoped<IAdminService, AdminService>();     // Business logic for admins
 builder.Services.AddScoped<IRefereeRepo, RefereeRepo>();       // Data access for referees
 builder.Services.AddScoped<IAdminRepo, AdminRepo>();           // Data access for admins
-builder.Services.AddScoped<IEmailsToLoginDbSender,EmailsToLoginDbSender>();       //Email sender to login database
+builder.Services.AddScoped<AdminPartDevelop.Services.CacheServices.IMatchesCacheService, AdminPartDevelop.Services.CacheServices.MatchesCacheService>();
+//builder.Services.AddScoped<IEmailsToLoginDbSender,EmailsToLoginDbSender>();       //Email sender to login database
 
 // Add memory caching for performance optimization
 builder.Services.AddMemoryCache();

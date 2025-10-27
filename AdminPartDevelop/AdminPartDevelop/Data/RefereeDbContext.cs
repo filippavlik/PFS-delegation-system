@@ -61,6 +61,7 @@ public partial class RefereeDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("actuall_prague_zone");
             entity.Property(e => e.Age).HasColumnName("age");
+            entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.CarAvailability).HasColumnName("car_availability");
             entity.Property(e => e.Email)
                 .HasMaxLength(320)

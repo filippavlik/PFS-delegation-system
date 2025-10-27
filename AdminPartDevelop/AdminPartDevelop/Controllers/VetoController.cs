@@ -17,16 +17,16 @@ namespace AdminPartDevelop.Controllers
     [Route("Admin/Veto")]
     public class VetoController : Controller
     {
-        private readonly ILogger<VetoController> _logger;
+        private readonly ILogger<VetoController> _logger;      
         private readonly Data.IAdminRepo _adminRepo;
 
-        public VetoController(Data.IAdminRepo adminRepo, ILogger<VetoController> logger)
+        public VetoController(Data.IAdminRepo adminRepo,ILogger<VetoController> logger)
         {
-            _logger = logger;
+            _logger = logger;          
             _adminRepo = adminRepo;
         }
-        [HttpPost("AddVeto")]
-        public async Task<IActionResult> AddVeto(int idOfReferee, string idOfTeam, string idOfCompetition, string note)
+	[HttpPost("AddVeto")]
+        public async Task<IActionResult> AddVeto(int idOfReferee,string idOfTeam, string idOfCompetition,string note)
         {
             try
             {
@@ -59,12 +59,12 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, "Nastala chyba při přidávaní veta na server.");
             }
         }
-        [HttpPost("UpdateVeto")]
-        public IActionResult UpdateVeto(int id, string note)
+	[HttpPost("UpdateVeto")]
+        public IActionResult UpdateVeto(int id,string note)
         {
             try
             {
-                var responseOfTransaction = _adminRepo.UpdateExistingVeto(id, note);
+                var responseOfTransaction = _adminRepo.UpdateExistingVeto(id,note);
 
                 if (responseOfTransaction.Success)
                 {
@@ -86,7 +86,7 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, "Nastala chyba při nahrávání informací o vetu na server.");
             }
         }
-        [HttpPost("DeleteVeto")]
+	[HttpPost("DeleteVeto")]
         public IActionResult DeleteVeto(int id)
         {
             try
@@ -112,6 +112,6 @@ namespace AdminPartDevelop.Controllers
                 _logger.LogError(ex, "[DeleteVeto] Error home controller");
                 return StatusCode(500, "Nastala chyba při vymazáváni veta z servera.");
             }
-        }
+        }       
     }
 }

@@ -1,4 +1,4 @@
-﻿using AdminPartDevelop.Hubs;
+using AdminPartDevelop.Hubs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Services.FileParsers;
@@ -14,8 +14,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Maui.ApplicationModel.Communication;
 using Microsoft.AspNet.SignalR;
 using AdminPartDevelop.Services.RouteServices;
-using AdminPartDevelop.Services.AdminServices;
-using System.ComponentModel.DataAnnotations;
 
 namespace AdminPartDevelop.Controllers
 {
@@ -24,10 +22,10 @@ namespace AdminPartDevelop.Controllers
     {
         private readonly ILogger<RefereeController> _logger;
         private readonly Services.FileParsers.IExcelParser _excelParser;
-        private readonly Services.EmailsSender.IEmailsToLoginDbSender _emailSender;
+       // private readonly Services.EmailsSender.EmailsToLoginDbSender _emailSender;
         private readonly Services.RefereeServices.IRefereeService _refereeService;
-        private readonly IAdminService _adminService;
-        
+        private readonly Services.AdminServices.IAdminService _adminService;
+        private readonly Services.CacheServices.IMatchesCacheService _matchesCacheService;
 
 
         private readonly Microsoft.AspNetCore.SignalR.IHubContext<HubForReendering> _hubContext;
@@ -38,13 +36,14 @@ namespace AdminPartDevelop.Controllers
         private readonly Data.IRefereeRepo _refereeRepo;
         private readonly Data.IAdminRepo _adminRepo;
         public RefereeController(Data.IRefereeRepo refereeRepo, Data.IAdminRepo adminRepo,
-             Services.FileParsers.IExcelParser excelParser, Services.EmailsSender.IEmailsToLoginDbSender emailSender,
-            Services.RefereeServices.IRefereeService refereeService, IAdminService adminService,
+            Services.FileParsers.IExcelParser excelParser, Services.CacheServices.IMatchesCacheService matchesCacheService,
+            Services.RefereeServices.IRefereeService refereeService, Services.AdminServices.IAdminService adminService,
             Microsoft.AspNetCore.SignalR.IHubContext<HubForReendering> hubContext, IMemoryCache memoryCache, ILogger<RefereeController> logger)
         {
             _logger = logger;
             _excelParser = excelParser;
-            _emailSender = emailSender;
+            // _emailSender = emailSender;
+            _matchesCacheService = matchesCacheService;
             _refereeService = refereeService;
             _adminService = adminService;
             _refereeRepo = refereeRepo;
@@ -56,33 +55,40 @@ namespace AdminPartDevelop.Controllers
         [HttpPost("AddNewRefereeAsync")]
         public async Task<IActionResult> AddNewRefereeAsync([FromBody] DTOs.RefereeAddRequest request)
         {
-            // Check if model is valid based on annotations
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var validationResults = new List<ValidationResult>();
-            var context = new ValidationContext(request, serviceProvider: null, items: null);
-
-            if (!Validator.TryValidateObject(request, context, validationResults, validateAllProperties: true))
-            {
-                return BadRequest(validationResults);
-            }
-
             try
             {
-                var referee = ToReferee(request);
-                if (!string.IsNullOrWhiteSpace(request.Email))
-                {
-                    var emails = new List<string> { request.Email };
-                    var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emails)).GetDataOrThrow();
-                    if (!sendResult)
-                    {
-                        _logger.LogWarning("Some or all emails could not be added to the login DB.");
-                        return StatusCode(500, "E-mail nebylo možné přidat do přihlašovací databáze.");
-                    }
-                }
+		        List<Referee> existingReferees = (await _refereeRepo.GetRefereesAsync()).GetDataOrThrow();
+
+		        var refereeWithSameInfo = existingReferees
+    			        .FirstOrDefault(e =>
+        				        (e.Name == request.Name && e.Surname == request.Surname) ||
+        				        e.Email == request.Email || 
+					        (
+    						        (!string.IsNullOrEmpty(request.FacrId) && e.FacrId == request.FacrId)
+					        )
+				               );
+
+		        if (refereeWithSameInfo != null)
+		        {
+    			        return StatusCode(400, "Rozhodčí se stejným jménem nebo e-mailem,nebo FačrId již existuje");
+		        }
+
+                        var referee = ToReferee(request);
+		        if (!string.IsNullOrWhiteSpace(request.Email))
+                        {
+                                var emails = new List<string> { request.Email };
+                                /*var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emails)).GetDataOrThrow();
+                                if (!sendResult)
+                                {
+                                        _logger.LogWarning("Some or all emails could not be added to the login DB.");
+                                        return StatusCode(500, "E-mail nebylo možné přidat do přihlašovací databáze.");
+                                }*/
+                        }
 
                 var resultOfTransaction = await _refereeRepo.AddRefereeAsync(referee);
                 if (resultOfTransaction.Success)
@@ -101,12 +107,48 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, new { message = "Došlo k chybě při ukládání rozhodčího." });
             }
         }
+	    [HttpPost("SaveExcuse")]
+         public async Task<IActionResult> SaveExcuse([FromBody] ExcuseRequest request)
+         {
+             try
+             {
+                 if (request == null || request.Excuses == null || request.Excuses.Count == 0)
+                 {
+                     return BadRequest(new { message = "Žádné omluvy neboli nahrány!" });
+                 }
+
+                 List<Excuse> excusesToSave = request.Excuses.Select(excuseReq => new Excuse
+                 {
+                     RefereeId = request.RefereeId,
+                     DateFrom = excuseReq.DateFrom,
+                     TimeFrom = excuseReq.TimeFrom,
+                     DateTo = excuseReq.DateTo,
+                     TimeTo = excuseReq.TimeTo,
+                     Reason = excuseReq.Reason,
+                     Note = "Manuálně přidáno v systému "+excuseReq.Note,
+                     DatetimeAdded = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) //we want to have timestamp for Prague time
+                 }).ToList();
+
+                 var result = _refereeRepo.AddManualExcuses(excusesToSave).Result;
+                 if(result.Success)
+                     return Ok(new { message = "Omluvy nahrány úspěšne!" });
+                 else
+                     return StatusCode(500, "Nastala chyba při ukládaní omluv.");
+             }
+             catch (Exception ex)
+             {
+                 _logger.LogError(ex, "[SaveExcuse] An unexpected error occurred");
+                 return StatusCode(500, new { message = "Chyba systému v procese nahrávaní ,prosím kontaktujte administrátora!" });
+             }
+         }
         [HttpPost("AddRefereeToTheMatch")]
-        public async Task<IActionResult> AddRefereeToTheMatch(int refereeId, string matchId, int role, bool force, string user)
+        public async Task<IActionResult> AddRefereeToTheMatch(int refereeId, string matchId, int role, bool force,string user)
         {
             try
             {
-                var listOfMatches = GetMatchesFromCache().Result;
+                var matchesResult = await _matchesCacheService.GetMatchesFromCacheAsync();
+
+                var listOfMatches = matchesResult.GetDataOrThrow();
                 DateOnly firstGameDay = _adminRepo.GetStartGameDate().GetDataOrThrow();
                 Referee refereeFromId = (await _refereeRepo.GetRefereeByIdAsync(refereeId)).GetDataOrThrow();
                 var listOfTransfers = (await _adminRepo.GetRefereesTransfersAsync(refereeId)).GetDataOrThrow();
@@ -115,7 +157,6 @@ namespace AdminPartDevelop.Controllers
                 RefereeWithTimeOptions referee = (await _refereeService.AddRefereeTimeOptionsAsync(refereeFromId, listOfMatches, listOfTransfers, firstGameDay)).GetDataOrThrow();
 
                 Match matchToCheck = (await _adminRepo.GetMatchByIdAsync(matchId)).GetDataOrThrow();
-
                 //check time availability and vetoes of the referee
                 if (!force)
                 {
@@ -123,49 +164,51 @@ namespace AdminPartDevelop.Controllers
 
                     if (hasVeto)
                     {
-                        return StatusCode(400, "Daný rozhodčí má veto na jeden z tímu (zkontrolujte v okně rozhodčího)!");
+				        return StatusCode(400, "Rozhodčí "+ refereeFromId.Name + refereeFromId.Surname +" má veto na jeden z tímu (zkontrolujte v okně rozhodčího)!");
                     }
                     bool isFree = _refereeService.CheckTimeAvailabilityOfReferee(referee, matchToCheck).GetDataOrThrow();
 
                     if (!isFree)
                     {
-                        return StatusCode(400, "Daný rozhodčí je v daný čas zápasu nedostupný (zkontrolujte v okně rozhodčího)!");
+                        return StatusCode(400, "Rozhodčí "+ refereeFromId.Name + refereeFromId.Surname +" je v daný čas zápasu nedostupný (zkontrolujte v okně rozhodčího)!");
                     }
                 }
-                var calculatedTransfers = (await _refereeService.CalculateTransfersWhenAssigningAsync(matchToCheck, referee, force)).GetDataOrThrow();
-                if(!calculatedTransfers.IsManageable)
-                    return StatusCode(400, calculatedTransfers.Message);
 
-                var resultOfTransaction = await _adminRepo.AddRefereeToTheMatch(refereeId, matchId, role, user);
-                //if these two add fails it is not that important to have transfers stored 
-                if (calculatedTransfers.PreMatch != null)
-                {
-                    await _adminRepo.AddTransfer(calculatedTransfers.PreMatch);
-                }
-                if (calculatedTransfers.PostMatch != null)
-                {
-                     await _adminRepo.AddTransfer(calculatedTransfers.PostMatch);
-                }
+		var calculatedTransfers = (await _refereeService.CalculateTransfersWhenAssigningAsync(matchToCheck, referee, force)).GetDataOrThrow();
+		if(!calculatedTransfers.IsManageable)
+    		{
+			return StatusCode(400, calculatedTransfers.Message);
+		}
 
+		var resultOfTransaction = await _adminRepo.AddRefereeToTheMatch(refereeId, matchId, role, user);
+		//if these two add fails it is not that important to have transfers stored 
+		if (calculatedTransfers.PreMatch != null)
+		{
+    			await _adminRepo.AddTransfer(calculatedTransfers.PreMatch);
+		}
+		if (calculatedTransfers.PostMatch != null)
+		{
+     			await _adminRepo.AddTransfer(calculatedTransfers.PostMatch);
+		}
                 if (resultOfTransaction.Success)
                 {
-                    var updatedListOfMatches = UploadRefreshedMatchToCache(matchId).Result;
+                    var updatedListOfMatches =(await _matchesCacheService.UploadRefreshedMatchToCacheAsync(matchId)).GetDataOrThrow();
                     if (updatedListOfMatches.Count == 0)
                     {
-                        return StatusCode(500, "Nastala chyba při přidávání rozhodčího na zápas. (získavání zápasů z cache)");
+                        return StatusCode(500, "Nastala chyba při přidávání rozhodčího "+ refereeFromId.Name + refereeFromId.Surname +" na zápas. (získavání zápasů z cache)");
                     }
 
                     Referee updatedRefereeFromId = (await _refereeRepo.GetRefereeByIdAsync(refereeId)).GetDataOrThrow();
                     var updatedListOfTransfers = (await _adminRepo.GetRefereesTransfersAsync(refereeId)).GetDataOrThrow();
 
                     RefereeWithTimeOptions updatedReferee = (await _refereeService.AddRefereeTimeOptionsAsync(updatedRefereeFromId, updatedListOfMatches, updatedListOfTransfers, firstGameDay)).GetDataOrThrow();
-                    DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
-                    await _hubContext.Clients.All.SendAsync("AcceptChangeMatchAdd", matchId, refereeId, updatedRefereeFromId.Name.Substring(0, 1) + ". " + updatedRefereeFromId.Surname, role, user, timestampChangeHub);
-                    await _hubContext.Clients.All.SendAsync("AcceptChangeReferee", new
-                    {
-                        refereeId = refereeId,
-                        refereeData = updatedReferee
-                    });
+		    DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+                    await _hubContext.Clients.All.SendAsync("AcceptChangeMatchAdd", matchId, refereeId, updatedRefereeFromId.Name.Substring(0, 1) + ". " + updatedRefereeFromId.Surname, role,user,timestampChangeHub);
+                    
+                    await _hubContext.Clients.All.SendAsync("AcceptChangeReferee", new {
+                                refereeId = refereeId,
+                                refereeData = updatedReferee
+                        });
 
 
                     return Ok(resultOfTransaction.Message);
@@ -182,34 +225,34 @@ namespace AdminPartDevelop.Controllers
             }
         }
         [HttpPost("RemoveRefereeFromTheMatch")]
-        public async Task<IActionResult> RemoveRefereeFromTheMatch(string matchId, int refereeId, string user)
+        public async Task<IActionResult> RemoveRefereeFromTheMatch(string matchId, int refereeId,string user)
         {
             try
             {
-                var resultOfTransaction = await _adminRepo.RemoveRefereeFromTheMatch(refereeId, matchId, user);
+                var resultOfTransaction = await _adminRepo.RemoveRefereeFromTheMatch(refereeId, matchId,user);
                 var resultOfTransferTransaction = await _adminRepo.RemoveTransfersConnectedTo(refereeId, matchId);
                 if (resultOfTransaction.Success)
                 {
                     DateOnly firstGameDay = _adminRepo.GetStartGameDate().GetDataOrThrow();
-                    var updatedListOfMatches = UploadRefreshedMatchToCache(matchId).Result;
-                    if (updatedListOfMatches.Count == 0)
+                    // Use cache service to update
+                    var updatedMatchesResult = (await _matchesCacheService.UploadRefreshedMatchToCacheAsync(matchId)).GetDataOrThrow();
+                    if (updatedMatchesResult.Count == 0)
                     {
-                        return StatusCode(500, "Nastala chyba při přidávání rozhodčího na zápas. (získavání zápasů z cache)");
+                        return StatusCode(500, "Nastala chyba při odoberání rozhodčího na zápas. (získavání zápasů z cache)");
                     }
 
                     Referee updatedRefereeFromId = (await _refereeRepo.GetRefereeByIdAsync(refereeId)).GetDataOrThrow();
                     var updatedListOfTransfers = (await _adminRepo.GetRefereesTransfersAsync(refereeId)).GetDataOrThrow();
 
 
-                    RefereeWithTimeOptions updatedReferee = (await _refereeService.AddRefereeTimeOptionsAsync(updatedRefereeFromId, updatedListOfMatches, updatedListOfTransfers, firstGameDay)).GetDataOrThrow();
-                    DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+                    RefereeWithTimeOptions updatedReferee = (await _refereeService.AddRefereeTimeOptionsAsync(updatedRefereeFromId, updatedMatchesResult, updatedListOfTransfers, firstGameDay)).GetDataOrThrow();
+			DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
-                    await _hubContext.Clients.All.SendAsync("AcceptChangeMatchRemove", matchId, updatedReferee.Referee.RefereeId, user, timestampChangeHub);
-                    await _hubContext.Clients.All.SendAsync("AcceptChangeReferee", new
-                    {
-                        refereeId = refereeId,
-                        refereeData = updatedReferee
-                    });
+                    await _hubContext.Clients.All.SendAsync("AcceptChangeMatchRemove", matchId, updatedReferee.Referee.RefereeId,user,timestampChangeHub);
+                    await _hubContext.Clients.All.SendAsync("AcceptChangeReferee", new {
+                                refereeId = refereeId,
+                                refereeData = updatedReferee
+                        });
 
                     return Ok(resultOfTransaction.Message);
                 }
@@ -232,7 +275,7 @@ namespace AdminPartDevelop.Controllers
                 Referee referee = (await _refereeRepo.GetRefereeByIdAsync(id)).GetDataOrThrow();
                 DateOnly firstGameDay = _adminRepo.GetStartGameDate().GetDataOrThrow();
 
-                var listOfMatches = GetMatchesFromCache().Result;
+                var listOfMatches = (await _matchesCacheService.GetMatchesFromCacheAsync()).GetDataOrThrow();
                 var listOfTransfers = (await _adminRepo.GetRefereesTransfersAsync(id)).GetDataOrThrow();
                 var refereeWithTimeOptions = (await _refereeService.AddRefereeTimeOptionsAsync(referee, listOfMatches, listOfTransfers, firstGameDay)).GetDataOrThrow();
                 ViewBag.FirstGameDay = firstGameDay;
@@ -276,7 +319,7 @@ namespace AdminPartDevelop.Controllers
             }
         }
         [HttpPost("UpdateRefereeAsync")]
-        public async Task<IActionResult> UpdateRefereeAsync(int id, string name, string surname, string idFacr, string email, int age, int league, bool car, bool pfs, string place, string note)
+        public async Task<IActionResult> UpdateRefereeAsync(int id,string name,string surname,string idFacr,string email,int rating,int age,int league,bool car, bool pfs,string place,string note)
         {
             try
             {
@@ -288,23 +331,25 @@ namespace AdminPartDevelop.Controllers
                     Email = email,
                     League = league,
                     Age = age,
+		    Rating = rating,
                     Ofs = pfs,
                     Note = note,
                     CarAvailability = car,
                     Place = place == null ? "0" : place,
                 };
-                if (!string.IsNullOrWhiteSpace(email))
+                //TODO only if changed
+                /*if (!string.IsNullOrWhiteSpace(email))
                 {
-                    var emails = new List<string> { email };
-                    var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emails)).GetDataOrThrow();
-                    if (!sendResult)
-                    {
-                        _logger.LogWarning("Some or all emails could not be added to the login DB.");
-                        return StatusCode(500, "E-maily nebylo možné přidat do přihlašovací databáze.");
-                    }
-                }
+                        var emails = new List<string> { email };
+                        var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emails)).GetDataOrThrow();
+                        if (!sendResult)
+                        {
+                                _logger.LogWarning("Some or all emails could not be added to the login DB.");
+                                return StatusCode(500, "E-maily nebylo možné přidat do přihlašovací databáze.");
+                        }
+                }*/
 
-                var responseOfTransaction = await _refereeRepo.UpdateRefereeAsync(id, refereeToUpdate);
+                var responseOfTransaction = await _refereeRepo.UpdateRefereeAsync(id,refereeToUpdate);
 
                 if (responseOfTransaction.Success)
                 {
@@ -370,12 +415,12 @@ namespace AdminPartDevelop.Controllers
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .ToList();
                 // Send emails to login container
-                var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emailList)).GetDataOrThrow();
+                /*var sendResult = (await _emailSender.AddEmailsToAllowedListAsync(emailList)).GetDataOrThrow();
                 if (!sendResult)
                 {
-                    _logger.LogWarning("Some or all emails could not be added to the login DB.");
-                    return StatusCode(500, "Některé nebo všechny e-maily nebylo možné přidat do přihlašovací databáze..");
-                }
+                        _logger.LogWarning("Some or all emails could not be added to the login DB.");
+                        return StatusCode(500, "Některé nebo všechny e-maily nebylo možné přidat do přihlašovací databáze..");
+                }*/
                 var resultOfTransaction = (await _refereeRepo.UpdateRefereesAsync(dictOfReferees));
 
                 if (resultOfTransaction.Success)
@@ -388,13 +433,13 @@ namespace AdminPartDevelop.Controllers
             {
                 return StatusCode(500, inEx.Message);
             }
-            catch (Exception ex)
+                catch (Exception ex)
             {
                 _logger.LogError(ex, "[UploadRefereesFromEmailFileAsync] Error referee controller");
                 return StatusCode(500, "Nastala chyba při nahrávání informacích o rozhodčích na server.");
             }
         }
-        [HttpPost("UploadRefreshedMatch")]
+        /*[HttpPost("UploadRefreshedMatch")]
         public async Task<IActionResult> UploadRefreshedMatch(string matchId)
         {
             try
@@ -412,12 +457,12 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, "Nastala chyba při update zápasu do cache.(neznáma chyba)");
             }
         }
-
-        private async Task<List<Match>> GetMatchesFromCache()
+        */
+        /*private async Task<List<Match>> GetMatchesFromCache()
         {
             try
             {
-                if (!_memoryCache.TryGetValue(MatchesCacheKey, out List<Match> updatedlistOfMatches))
+                    if (!_memoryCache.TryGetValue(MatchesCacheKey, out List<Match> updatedlistOfMatches))
                 {
                     updatedlistOfMatches = (await _adminRepo.GetPureMatchesAsync()).GetDataOrThrow();
                     _memoryCache.Set(MatchesCacheKey, updatedlistOfMatches, TimeSpan.FromHours(1));
@@ -459,12 +504,12 @@ namespace AdminPartDevelop.Controllers
 
                 }
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 _logger.LogError(ex, "[UploadRefreshedMatchToCache] Error referee controller");
                 return new List<Match>();
             }
-        }
+        }*/
         private static Referee ToReferee( DTOs.RefereeAddRequest request)
         {
             return new Referee
@@ -475,6 +520,7 @@ namespace AdminPartDevelop.Controllers
                 Email = request.Email,
                 League = request.League,
                 Age = request.Age,
+		Rating = 7,
                 Ofs = request.Ofs,
                 Note = request.Note,
                 CarAvailability = request.CarAvailability,
@@ -484,5 +530,6 @@ namespace AdminPartDevelop.Controllers
                     TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"))
             };
         }
+
     }
 }

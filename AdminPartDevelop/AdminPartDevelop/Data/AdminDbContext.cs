@@ -44,6 +44,7 @@ public partial class AdminDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("competition_name");
             entity.Property(e => e.League).HasColumnName("league");
+            entity.Property(e => e.AmountOfReferees).HasColumnName("amount_of_referees");
             entity.Property(e => e.MatchLength).HasColumnName("match_length");
         });
 

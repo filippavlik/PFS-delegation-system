@@ -1,8 +1,188 @@
-﻿﻿var selectedRefereeId = null; // Variable for keeping the selected referee
+﻿var selectedRefereeId = null; // Variable for keeping the selected referee
 var selectedNameSurname = null;
+var searchedRefereeId = null;
+var searchedNameSurname = null;
+var searchedCompetitionName = null;
 let searchTimeout;
 
+// REFEREE AND COMPETITION SEARCH
+var competitionSearchMethods = {
+    init: function () {
+        var $searchInput = $("#competitionSearch");
+        var $results = $("#searchResultsCompetition");
+        
+        // Event bindings using jQuery
+        $searchInput.on("input", function () {
+            competitionSearchMethods.filter($(this).val());
+        });
+        
+        $results.on("click", "li", function () {
+            competitionSearchMethods.select($(this).data("id"));
+        });
+        
+        $searchInput.on("blur", function () {
+            setTimeout(function() {
+                $results.hide();
+            }, 200);
+        });
+        
+        $searchInput.on("focus", function () {
+            if ($(this).val().trim()) {
+                competitionSearchMethods.filter($(this).val());
+            }
+        });
+    },
+    
+    filter: function (query) {
+    	var $results = $("#searchResultsCompetition");
+    	var lowerQuery = query.toLowerCase();
+
+    	$results.find("li").hide();
+
+    	if (!lowerQuery) {
+        	$results.hide();
+        	return;
+    	}
+
+    	var matches = $results.find("li").filter(function () {
+        	var text = $(this).text().toLowerCase();
+        	var id = ($(this).data("id") + "").toLowerCase();
+        	return text.includes(lowerQuery) || id.includes(lowerQuery);
+    	});
+
+    	matches.slice(0, 5).show();
+
+    	if (matches.length > 0) {
+        	$results.show();
+    	} 	else {
+        	$results.hide();
+    	}
+    },
+    
+    select: function (selectedId) {
+        $("#searchResultsCompetition").hide();
+        
+        $.ajax({
+            url: 'Admin/Match/GetMatchesByCompetition', 
+            type: 'GET',
+            data: { competitionId: selectedId },
+            success: function(response) {
+            	$('#undelegated-content').html(response);
+	    	 showAlert("Úspěch: Načteny zápasy s id soutěže "+ selectedId, "success");
+	    },
+            error: function(xhr, status, error) {
+                console.error('Error loading matches:', error);
+                alert('Chyba při načítání zápasů!');
+            }
+        });
+    }
+};
+
+var refereeSearchMethods = {
+    init: function () {
+        const $searchInput = $("#refereeSearch");
+        const $results = $("#searchResults");
+
+        // Event bindings
+        $searchInput.on("input", function () {
+            refereeSearchMethods.filter($(this).val());
+        });
+
+        $results.on("click", "li", function () {
+            refereeSearchMethods.select($(this).data("id"), $(this).data("name"));
+        });
+
+        $searchInput.on("blur", function () {
+            setTimeout(() => {
+                $results.hide();
+                if ($searchInput.val().trim()) {
+                    refereeSearchMethods.triggerSearch();
+                }
+            }, 200);
+        });
+    },
+
+    filter: function (query) {
+        const $results = $("#searchResults");
+        const lowerQuery = query.toLowerCase();
+
+        $results.find("li").hide();
+
+        if (!lowerQuery) {
+            $results.hide();
+            return;
+        }
+
+        const matches = $results.find("li").filter(function () {
+            return $(this).data("name").toLowerCase().includes(lowerQuery);
+        });
+
+        matches.slice(0, 3).show();
+
+        if (matches.length > 0) {
+            $results.show();
+        } else {
+            $results.hide();
+        }
+    },
+
+    select: function (id, name) {
+        searchedRefereeId = id;
+        searchedNameSurname = name;
+        $("#refereeSearch").val(name);
+        $("#searchResults").hide();
+        refereeSearchMethods.triggerSearch();
+    },
+
+    triggerSearch: function () {
+        if (searchedRefereeId && searchedNameSurname) {
+            const $button = $(".tab-content .tab-pane #" + searchedRefereeId + "_referee-offer-pure-button");
+
+            if ($button.length) {
+                const $tabPane = $button.closest(".tab-pane");
+                const targetTabId = $tabPane.attr("id");
+                const $tabButton = $('.nav-link[data-bs-target="#' + targetTabId + '"]');
+
+                if ($tabButton.length) {
+                    if (!$tabPane.hasClass("show")) {
+                        // If in a different tab → switch and then scroll
+                        $tabButton.one("shown.bs.tab", function () {
+                            refereeSearchMethods.scrollToButton($button);
+                        });
+                        $tabButton.tab("show");
+                    } else {
+                        // If already in the current tab → scroll immediately
+                        refereeSearchMethods.scrollToButton($button);
+                    }
+                }
+            } else {
+                alert("Rozhodčí nenalezen!");
+            }
+        } else {
+            alert("Rozhodčí není vybrán!");
+        }
+    },
+
+    scrollToButton: function ($button) {
+        $("html, body").animate({
+            scrollTop: $button.offset().top - 100
+        }, 500);
+
+        $('.referee-button').removeClass('selected');
+        $button.addClass('selected');
+
+        selectedRefereeId = $button.data('id');
+        selectedNameSurname = $button.text();
+
+        // Clear the search input
+        $("#refereeSearch").val("");
+        $("#searchResults").hide();
+    }
+};
+
 $(function () {
+    refereeSearchMethods.init();
+    competitionSearchMethods.init();
     $("#customAlert .btn-close").on("click", function (e) {
         e.preventDefault();
         $("#customAlert").addClass("d-none").removeClass("show");
@@ -19,11 +199,10 @@ $(function () {
             minuteIncrement: 1,      // Increment minutes by 1
             plugins: [new rangePlugin({ input: "#filterEndDateTime" })], // Adding the rangePlugin
     });
-
-
 });
-
-
+$(document).on("click", "#logOutTheUser", function () {
+	 logout();
+});
 $(document).on("click", ".referee-button", function () {
     $('.referee-button').removeClass('selected');
 
@@ -66,6 +245,18 @@ $(document).on("click", "#showFootballFieldsBtn", function (e) {
         $("#footbalfieldsModalBody").html(data);
     }).fail(function () {
         $("#footbalfieldsModalBody").html("<div class='alert alert-danger'>Nepodařilo se načíst přehled hřišť.</div>");
+    });
+});
+$(document).on("click", "#showCompetitionsBtn", function (e) {
+    e.preventDefault();
+
+    $("#competitionsModal").modal("show");
+    $("#competitionsModalBody").html('<div class="text-center"><span class="spinner-border"></span></div>');
+
+    $.get("Admin/Competition/GetPreviewOfCompetitions", function (data) {
+        $("#competitionsModalBody").html(data);
+    }).fail(function () {
+        $("#competitionsModalBody").html("<div class='alert alert-danger'>Nepodařilo se načíst přehled soutěží.</div>");
     });
 });
 $(document).on("mousedown", ".referee-button", function (e) {
@@ -111,6 +302,126 @@ $(document).on("contextmenu", ".referee-button", function (e) {
     e.preventDefault();
     e.stopPropagation();
     return false;
+});
+$(document).on("click", ".newCompetition", function (e) {
+    e.preventDefault();
+
+    const competitionCode = $("#newCompetitionCode").val(); 
+    const competitionName = $("#newCompetitionName").val();
+    const competitionLength = $("#newCompetitionHalftimeLength").val();
+    const competitionAmountOfReferees = $("#newCompetitionAmountOfReferees").val();
+    const competitionLeague = $("#newCompetitionLeague").val();
+
+    var form = new FormData;
+    form.append("newId", competitionCode)
+    form.append("newName", competitionName);
+    form.append("newLength", parseInt(competitionLength));
+    form.append("newAmountOfReferees", parseInt(competitionAmountOfReferees))
+    form.append("newLeague", parseInt(competitionLeague));
+
+    $.ajax({
+        url: "Admin/Competition/CreateSingleCompetition",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: form,
+        success: function (response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Úspěch',
+                text: response
+            });
+            $("#competitionsModal").modal("hide");
+        },
+        error: function (xhr, status, error) {
+            $("#competitionsModal").modal("hide");
+            if (xhr.status === 500) {
+                showAlert("Error: " + xhr.responseText, "danger");
+            } else {
+                showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
+            }
+        }
+    });
+
+});
+$(document).on("click", ".updateCompetition", function (e) {
+    e.preventDefault();
+
+    const id = $(this).data("id");
+    const competitionName = $("#competitionName_" + id).val();
+    const competitionLength = $("#competitionHalftimeLength_" + id).val();
+    const competitionAmountOfReferees = $("#competitionAmountOfReferees_"+id).val();
+    const competitionLeague = $("#competition_" + id).val();
+
+    var form = new FormData;
+    form.append("id", id);
+    form.append("name", competitionName);
+    form.append("length", parseInt(competitionLength));
+    form.append("amountOfReferees", parseInt(competitionAmountOfReferees))
+    form.append("league", parseInt(competitionLeague));
+
+    $.ajax({
+        url: "Admin/Competition/UpdateSingleCompetition",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: form,
+        success: function (response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Úspěch',
+                text: response
+            });
+        },
+        error: function (xhr, status, error) {
+            $("#competitionsModal").modal("hide");
+            if (xhr.status === 500) {
+                showAlert("Error: " + xhr.responseText, "danger");
+            } else {
+                showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
+            }
+        }
+    });
+
+});
+$(document).on("click", ".newField", function (e) {
+    e.preventDefault();
+
+    const fieldName = $("#newFieldName").val();
+    const fieldAddress = $("#newFieldAddress").val();
+    const latitude = $("#newFieldLatitude").val();
+    const longitude = $("#newFieldLongitude").val();
+
+    var form = new FormData;
+    form.append("newFieldName", fieldName);
+    form.append("newFieldAddress", fieldAddress);
+    form.append("newLatitude", parseFloat(latitude));
+    form.append("newLongitude", parseFloat(longitude));
+
+    $.ajax({
+        url: "Admin/Field/CreateSingleField",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: form,
+        success: function (response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Úspěch',
+                text: response
+            });
+            $("#footbalfieldsModal").modal("hide");
+        },
+        error: function (xhr, status, error) {
+            $("#footbalfieldsModal").modal("hide");
+            if (xhr.status === 500) {
+                showAlert("Error: " + xhr.responseText, "danger");
+            } else {
+                showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
+            }
+        }
+    });
+
 });
 $(document).on("click", ".updateField", function (e) {
     e.preventDefault();
@@ -190,6 +501,71 @@ $(document).on("click", "#updateVeto", function (e) {
                     text: xhr.statusText
                 });
             }
+        }
+    });
+
+});
+$(document).on("click", ".change-match-date", function (e) {
+    e.preventDefault();
+
+    const matchId = $(this).data("id");
+    const $container = $(this).closest('.datetime-input-group');
+    const $displayMode = $container.find('.display-mode');
+    const $editMode = $container.find('.edit-mode');
+    const $timeInput = $editMode.find('input[name="MatchTime"]');
+    const $dateInput = $editMode.find('input[name="MatchDate"]');
+    const userVal = $("#usernameLogged").text();
+
+    const matchData = {
+        matchId: matchId,
+        newDate: $dateInput.val(), 
+        newTime: $timeInput.val(),
+	user: userVal
+    };
+
+    $(this).prop('disabled', true).text('...');
+
+    $.ajax({
+        url: 'Admin/Match/UpdateMatchDate',
+        type: 'POST',
+        data: matchData,
+        success: function (response) {
+            const $timeDisplay = $displayMode.find('.time-display');
+            const $dateDisplay = $displayMode.find('.date-display');
+		
+	 
+            $timeDisplay.text($timeInput.val() || '00:00');
+
+            if ($dateInput.val()) {
+                const date = new Date($dateInput.val());
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = String(date.getFullYear()).slice(-2);
+                $dateDisplay.text(`${day}.${month}.${year}`);
+            }
+
+            $editMode.hide();
+            $displayMode.show();
+
+            showAlert("Úspěch: " + response, "success");
+        },
+        error: function (xhr, status, error) {
+            $(this).prop('disabled', false).text('✓');
+
+            if (xhr.status === 500) {
+                showAlert("Error: " + xhr.responseText, "danger");
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            } else {
+                showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
+            }
+        },
+        complete: function() {
+            $(this).prop('disabled', false).text('✓');
         }
     });
 
@@ -370,6 +746,7 @@ $(document).on("click", "#updateReferee", function (e) {
     const idVal = $("#refereeId").val();
     const emailVal = $("#refereeEmail").val();
     const ageVal = $("#refereeAge").val();
+    const ratingVal = $("#refereeRating").val();
     const leagueVal = $("#refereeLeague").val();
     const carVal = $("#refereeCar").val();
     const pfsVal = $("#refereePfs").val();
@@ -383,6 +760,7 @@ $(document).on("click", "#updateReferee", function (e) {
 
     form.append("idFacr", idVal);
     form.append("email", emailVal);
+    form.append("rating",parseInt(ratingVal));
     form.append("age", parseInt(ageVal));
     form.append("league", parseInt(leagueVal));
     form.append("car", carVal);
@@ -487,7 +865,8 @@ $(document).on("submit", "#newRefereeForm", function (e) {
             form.removeClass('was-validated');
         },
         error: function (xhr, status, error) {
-            if (xhr.status === 500) {
+	                $("#addNewRefereeModal").modal("hide");
+            if (xhr.status === 500 || xhr.status === 400) {
                 showAlert("Error: " + xhr.responseText, "danger");
             } else {
                 showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
@@ -523,7 +902,12 @@ $(document).on("click", "#filterMatchesBasedOnDate", function () {
         data: { startDate: dateFrom, startTime: timeFrom, endDate: dateTo, endTime: timeTo },
         success: function (response) {
             $('#undelegated-content').html(response);
-        },
+		showAlert(
+            "Úspěch – načteny zápasy od " + dateFrom + " " + timeFrom +
+            " do " + dateTo + " " + timeTo,
+            "success"
+        );
+	},
         error: function (xhr) {
             if (xhr.status === 500) {
                 showAlert("Error: " + xhr.responseText, "danger");
@@ -586,27 +970,46 @@ $(document).on("click", ".match-referee-counter", function () {
         isReferee: asAReferee
     };
 
-
     $.ajax({
         url: 'Admin/Match/GetRefereeMatchCounts',
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(refereeMatchCountRequest),
         success: function (response) {
+            // Reset button backgrounds
             idsButtons.each(function () {
                 $(this).css('background', `linear-gradient(to right, #6c757d 50%, #6c757d 50%)`);
             });
+
             response.forEach(function (item) {
                 const refereeId = item.refereeId;
                 const homeCount = item.homeCount;
                 const awayCount = item.awayCount;
+                const matchesDates = item.matchesDates || [];
 
                 const leftColor = colorMapping[homeCount] || '#6c757d';
                 const rightColor = colorMapping[awayCount] || '#6c757d';
 
                 const buttonId = refereeId + "_referee-offer-pure-button";
 
+                // Update background gradient
                 $("#" + buttonId).css('background', `linear-gradient(to right, ${leftColor} 50%, ${rightColor} 50%)`);
+
+                // Tooltip with dates + home/away indicator
+                const datesHtml = matchesDates
+                    .map(d => {
+                        // d.date is in ISO format: "2025-03-10"
+                        const [year, month, day] = d.date.split("-");
+                        const locationLabel = d.isHome ? "Doma" : "Venku"; // home = house, away = flag
+                        return `<div>${day}.${month}.${year} ${locationLabel}</div>`;
+                    })
+                    .join('');
+
+                $("#" + buttonId)
+                    .attr('data-bs-original-title', datesHtml)
+                    .attr('data-bs-html', 'true')
+                    .tooltip('dispose')
+                    .tooltip({ html: true });
             });
         },
         error: function (error) {
@@ -614,11 +1017,9 @@ $(document).on("click", ".match-referee-counter", function () {
                 icon: 'error',
                 title: 'Neznáma chyba',
                 text: error
-            });        }
+            });
+        }
     });
-
-
-
 });
 $(document).on("click", "#color_ref_count", function () {
     const colorMapping = {
@@ -968,6 +1369,9 @@ $(document).on("click", ".lock-button", function () {
             url: 'Admin/Match/LockOrUnlockMatch',
             type: 'POST',
             data: matchDetails,
+	    success:function (response) {
+		                    showAlert("Úspěch: Zápas s id "+matchDetails.matchId+" uzamčen/odomčen" , "success");
+                },
             error: function (xhr, status, error) {
                 if (xhr.status === 500) {
                     showAlert("Error: " + xhr.responseText, "danger");
@@ -1129,25 +1533,13 @@ $(document).on("change", "#fileInputMatches", function (event) {
             contentType: false,
             processData: false,
             success: function (response) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Úspěch',
-                    text: "Úspěch: " + response
-                });
-            },
+            	showAlert("Úspěch: Zápasy nahrány z souboru" , "success");
+	    },
             error: function (xhr) {
                 if (xhr.status === 500) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Chyba',
-                        text: "Error: " + xhr.responseText
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Neznáma chyba',
-                        text: "An unexpected error occurred: " + xhr.statusText
-                    });
+                	 showAlert("Error: " + xhr.responseText, "danger");
+		} else {
+                         showAlert("An unexpected error occurred: " + xhr.statusText, "danger");
                 }
             }
 
@@ -1201,7 +1593,8 @@ $(document).on("change", "#sort_first_row", function (event) {
             data: { selector: changedTo },
             success: function (response) {
                 $('#undelegated-content').html(response);
-            },
+                showAlert("Úspěch: zápasy úspěšne seřazeny dle " + changedTo, "success");
+	    },
             error: function (xhr) {
                 if (xhr.status === 500) {
                     showAlert("Error: " + xhr.responseText, "danger");
@@ -1219,7 +1612,8 @@ $(document).on("click", "#connectMatches", function (event) {
         type: "POST",
         success: function (response) {
             $('#undelegated-content').html(response);
-        },
+                        showAlert("Úspěch: zápasy úspěšne spojeny!", "success");
+	},
         error: function (xhr) {
             if (xhr.status === 500) {
                 showAlert("Error: " + xhr.responseText, "danger");
@@ -1294,9 +1688,54 @@ $(document).on("change", "#fileInputPlayedMatches", function (event) {
 });
 
 //HELPER METHODS
+function showAlert(message, type = "info", confirmCallback = null) {
+    // Create unique toast container if not exists
+    let container = $("#customToastContainer");
+    if (container.length === 0) {
+        container = $('<div id="customToastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>');
+        $("body").append(container);
+    }
+
+    // Create unique toast element
+    const toastId = `toast-${Date.now()}`;
+    const toastEl = $(`
+        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `);
+
+    // Add confirm button if needed
+    if (confirmCallback) {
+        const confirmButton = $('<button class="btn btn-sm btn-light ms-2">Přidělit rozhodčího i přes to</button>');
+        toastEl.find(".toast-body").append(confirmButton);
+        confirmButton.on("click", function () {
+            confirmCallback();
+            bootstrap.Toast.getInstance(toastEl[0]).hide();
+        });
+    }
+
+    // Append and show toast
+    container.append(toastEl);
+    const toast = new bootstrap.Toast(toastEl[0], {
+        autohide: type === "success",
+        delay: 3000
+    });
+    toast.show();
+
+    // Remove the toast from DOM after it hides
+    toastEl.on("hidden.bs.toast", function () {
+        toastEl.remove();
+    });
+}
+
+/*
 function showAlert(message, type = "warning", confirmCallback = null) {
     $("#customAlertText").text(message);
-
     $("#customAlert")
         .removeClass("d-none alert-warning alert-success alert-danger alert-info")
         .addClass(`alert-${type} show`);
@@ -1312,7 +1751,7 @@ function showAlert(message, type = "warning", confirmCallback = null) {
             $("#customAlert").addClass("d-none");
         });
     }
-}
+}*/
 function extractDateTime(timeRange) {
     if (!timeRange) return [null, null, null, null];
 
@@ -1330,15 +1769,15 @@ function loadAllCompetitions() {
     $('#vetoCompetitionName').append(
         $('<option>', {
             value: "all",
-            text: "všechny soutěže",
-            'data-id': "všechny soutěže"
+            text: "all",
+            'data-id': "all"
         })
     );
     $('#vetoCompetitionId').append(
         $('<option>', {
             value: "all",
-            text: "všechny soutěže",
-            'data-name': "všechny soutěže"
+            text: "all",
+            'data-name': "all"
         })
     );
 
@@ -1370,6 +1809,7 @@ function loadAllCompetitions() {
                 $('#vetoCompetitionName').on('change', function () {
                     let dataId = $('#vetoCompetitionName option:selected').data('id');
                     $('#vetoCompetitionId').val(dataId);
+			
                 });
 
                 $('#vetoCompetitionId').on('change', function () {
@@ -1451,3 +1891,23 @@ function getColorForValue(value) {
 
     return rgbToHex(r, g, b);
 }
+function deleteAllCookies() {
+        $.each(document.cookie.split(";"), function (i, cookie) {
+            var cookieName = $.trim(cookie.split("=")[0]);
+
+            // Delete cookie for current path
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+            // Optional: delete for parent domain too
+            var domainParts = window.location.hostname.split(".");
+            if (domainParts.length > 1) {
+                var rootDomain = "." + domainParts.slice(-2).join(".");
+                document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + rootDomain + ";";
+            }
+        });
+    }
+
+function logout() {
+        deleteAllCookies();
+        window.location.href = "https://rozhodcipraha.cz"; 
+	}

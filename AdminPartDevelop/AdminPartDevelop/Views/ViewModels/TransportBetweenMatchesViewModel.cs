@@ -1,4 +1,4 @@
-﻿using AdminPartDevelop.Models;
+using AdminPartDevelop.Models;
 
 namespace AdminPartDevelop.Views.ViewModels
 {

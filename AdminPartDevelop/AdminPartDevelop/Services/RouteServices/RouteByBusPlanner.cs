@@ -4,9 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AdminPartDevelop.Common;
-using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Nest;
 
 namespace AdminPartDevelop.Services.RouteServices
 {
@@ -37,7 +35,6 @@ namespace AdminPartDevelop.Services.RouteServices
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("GoogleMapsClient");  // Get a managed HttpClient instance
         }
-      
 
         /// <summary>
         /// Calculates a route between two geographic coordinates using the Google Maps Directions API

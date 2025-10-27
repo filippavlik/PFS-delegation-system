@@ -1,31 +1,29 @@
-﻿﻿@using AdminPartDevelop
-@using AdminPartDevelop.Models
-@using AdminPartDevelop.Views.ViewModels
+﻿@using AdminPartDevelop.Views.ViewModels
 @model MainViewModel
 @{
     ViewData["Title"] = "Administrátorská část";
 }
 <head>
-    <!-- jQuery -->
+<!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    
     <!-- Only include one version of SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
     <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-
+    
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.15/dist/sweetalert2.min.js"></script>
-
+    
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.15/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css" />
-
+    
     <script src="~/js/Custom/MainAdminActions.js" defer></script>
 </head>
 <style>
@@ -131,13 +129,14 @@
     }
     .filter-container {
         display: flex;
+	flex-direction:row; 
         align-items: center;
         gap: 10px;
         text-align: right;
-        margin-right: 30px;
+        margin-left: 60px;
         padding: 10px;
         border-radius: 5px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;       
     }
     .section-with-referees {
     position: absolute;
@@ -149,10 +148,9 @@
     }
 
     .container-fluid {
-    margin-left:10px;
-    display: flex;
-    flex-direction: row; /* Aligns items in a row */
-    gap: 10px; /* Adds spacing between columns */
+    	display: flex;
+    	flex-direction: row; /* Aligns items in a row */
+    	gap: 10px; /* Adds spacing between columns */
     }
 
     .referee-button-wrapper {
@@ -204,23 +202,32 @@
 </style>
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showAlert("@TempData["SuccessMessage"]", "success");
+        });
+    </script>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            showAlert("@TempData["ErrorMessage"]", "danger");
+        });
+    </script>
 }
 
-<div id="customAlert" class="alert alert-warning alert-dismissible fade show d-none" role="alert">
-    <span id="customAlertText">Default alert text</span>
-    <button type="button" class="btn-close" aria-label="Close"></button>
+<!-- Toast container (top-right corner) -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="customAlert" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div id="customAlertText" class="toast-body">
+                Default toast text
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="excusesModal" tabindex="-1" aria-labelledby="excusesModalLabel" aria-hidden="true">
@@ -271,6 +278,23 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="competitionsModal" tabindex="-1" aria-labelledby="competitionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="competitionsModalLabel">Nahrané soutěže</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
+            </div>
+            <div class="modal-body" id="competitionsModalBody">
+                <!-- AJAX-loaded content goes here -->
+                <div class="text-center">
+                    <span class="spinner-border"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="addNewRefereeModal" tabindex="-1" aria-labelledby="addNewRefereeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -344,7 +368,7 @@
                                     <input type="text" class="form-control" id="place" name="place">
                                 </div>
                             </div>
-                        </div>
+                        </div>                     
 
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -393,7 +417,7 @@
                 <h5 class="modal-title" id="showCardOfRefereeModalLabel">Karta rozhodčího</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
             </div>
-            <div class="modal-body" id="showCardOfRefereeModalBody">
+		    <div class="modal-body" id="showCardOfRefereeModalBody">
                 <div class="container">
                     <!-- AJAX-loaded content goes here -->
                 </div>
@@ -405,199 +429,594 @@
 
 
 
-<div class="container-fluid" style="margin-left:0px">
-    <div class="position-relative d-inline-block">
-        <form method="post" asp-controller="Match" asp-action="UploadTheGameWeekendDate" style="margin-bottom:10px">
-            <label style="font-size:13px;" for="weekendDate">Vyber datum herního víkendu (první sobota)</label>
-            <input type="date" id="gameWeekendDate" name="weekendDate" required
-                   value="@(ViewBag.FirstGameDay != null ? ((DateOnly)ViewBag.FirstGameDay).ToString("yyyy-MM-dd") : "")" />
+@if (ViewData["UserRole"]?.ToString() == "MainAdmin")
+{
+    <div class="container-fluid" style="margin-left:0px">
+        <div id="excusesPreview" class="modal-dialog modal-xl show d-none">...</div>
+        <div id="matchesUploadedPreview" class="modal-dialog modal-xl show d-none">...</div>
+        <div class="col-md-12">
+            
 
-            <button type="submit" class="btn btn-outline-secondary btn-sm me-1">Odoslat datum</button>
-        </form>
-        <button id="importAllMatches" class="btn btn-outline-secondary btn-sm me-1">
-            Nahraj zápasy
-        </button>
-        <!-- Hidden file input -->
-        <input type="file" id="fileInputMatches" style="display: none;" />
-        <button id="importAllReferees" class="btn btn-outline-secondary btn-sm me-1">
-            Nahraj rozhodcov
-        </button>
-        <!-- Hidden file input -->
-        <input type="file" id="fileInputReferees" style="display: none;" />
-        <button id="importAllEmailsPhoneNumbers" class="btn btn-outline-secondary btn-sm me-1">
-            Nahraj emaily ,čísla
-        </button>
-        <!-- Hidden file input -->
-        <input type="file" id="fileInputEmails" style="display: none;" />
-        <button id="importDataAboutFields" class="btn btn-outline-secondary btn-sm me-1">
-            Nahraj hřiště
-        </button>
-        <!-- Hidden file input -->
-        <input type="file" id="fileInputFields" style="display: none;" />
-        <button id="connectMatches" class="btn btn-outline-secondary btn-sm me-1">
-            Spoj zápasy
-        </button>
-        <div class="position-relative d-inline-block">
-            <!-- Buttons -->
-            <div class="d-flex">
-                <button id="show_legenda" class="btn btn-outline-secondary btn-sm me-1"
-                        onmouseover="document.getElementById('legenda').style.display = 'block';"
-                        onmouseout="document.getElementById('legenda').style.display = 'none';">
-                    Legenda
-                </button>
-                <button id="color_ref_count" class="btn btn-outline-secondary btn-sm">
-                    <span class="small">Kolik zápasů?</span>
-                </button>
+            <!-- Sorting and filtering controls -->
+            <div class="d-flex align-items-center">
+                <div style="margin-right:25px;" class="dropdown d-inline-block">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="importMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        ☰ Importy
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="importMenuButton" style="min-width: 250px;">
+                        <li class="position-relative d-inline-block" style="display:flex; flex-direction:column; flex-wrap:nowrap; align-items:center; gap:10px;">
+                            <form method="post" style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px;" action="/Admin/Match/UploadTheGameWeekendDate">
+                                <label style="font-size:13px; white-space:nowrap;" for="weekendDate">
+                                    Vyber datum herního víkendu (první sobota)
+                                </label>
+ <input type="date" id="gameWeekendDate" name="weekendDate" required
+            value="@(ViewBag.FirstGameDay != null ? ((DateOnly)ViewBag.FirstGameDay).ToString("yyyy-MM-dd") : "")" />
+                                
+<button type="submit" class="btn btn-outline-secondary btn-sm me-1">Odoslat datum</button>
+                            </form>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="importAllMatches">Nahraj zápasy</button>
+                            <input type="file" id="fileInputMatches" style="display: none;" />
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="importAllReferees">Nahraj rozhodcov</button>
+                            <input type="file" id="fileInputReferees" style="display: none;" />
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="importAllEmailsPhoneNumbers">Nahraj emaily, čísla</button>
+                            <input type="file" id="fileInputEmails" style="display: none;" />
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="importDataAboutFields">Nahraj hřiště</button>
+                            <input type="file" id="fileInputFields" style="display: none;" />
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="connectMatches">Spoj zápasy</button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" id="loadPreviousMatches" style="margin-top:10px;">Nahraj odehrané zápasy</button>
+                            <input type="file" id="fileInputPlayedMatches" style="display: none;" />
+                        </li>
+                    </ul>
+                </div>
+                <label class="text-nowrap" for="sort_first_row">Seřadit dle</label>
+                <select id="sort_first_row" class="form-select me-2" style="width: auto;">
+                    <option value="sortByGameTimeAsc">Herního času(Vzestupně)</option>
+                    <option value="sortByGameTimeDesc">Herního času(Sestupně)</option>
+                    <option value="sortByFieldAsc">Hřiště(Vzestupně)</option>
+                    <option value="sortByFieldDesc">Hřiště(Sestupně)</option>
+                    <option value="sortByNameCategoryAsc">Soutěže(Vzestupně)</option>
+                    <option value="sortByNameCategoryDesc">Soutěže(Sestupně)</option>
+                    <option value="sortByNameHomeTeamAsc">Domácího týmu(Vzestupně)</option>
+                    <option value="sortByNameHomeTeamDesc">Domácího týmu(Sestupně)</option>
+                    <option value="sortByNameAwayTeamAsc">Hostujícího týmu(Vzestupně)</option>
+                    <option value="sortByNameAwayTeamDesc">Hostujícího týmu(Sestupně)</option>
+                    <option value="sortByUndelegatedMatches">Počtu delegovaných osob</option>
+                </select>
+                <div style="margin-left:40px;" class="position-relative d-inline-block">                   
+                    <!-- Buttons -->
+                    <div class="d-flex">
+                        <button id="show_legenda" class="btn btn-outline-secondary btn-sm me-1"
+                                onmouseover="document.getElementById('legenda').style.display = 'block';"
+                                onmouseout="document.getElementById('legenda').style.display = 'none';">
+                            Legenda
+                        </button>
+                        <button id="color_ref_count" class="btn btn-outline-secondary btn-sm">
+                            <span class="small">Kolik zápasů?</span>
+                        </button>
+                    </div>
+
+                    <!-- Legend panel (hidden by default) -->
+                    <!-- Legend panel (hidden by default) -->
+                    <div id="legenda" class="position-absolute bg-light border p-2 mt-1"
+                         style="display: none; width: 200px; z-index: 1000;">
+                        <div class="container">
+                            <div class="gradient-bar"></div>
+
+                            <div class="scale">
+                                <div class="tick" style="left: 0%"><div class="tick-label">0</div></div>
+                                <div class="tick" style="left: 25%"><div class="tick-label">25</div></div>
+                                <div class="tick" style="left: 50%"><div class="tick-label">50</div></div>
+                                <div class="tick" style="left: 75%"><div class="tick-label">75</div></div>
+                                <div class="tick" style="left: 100%"><div class="tick-label">100</div></div>
+                                <div class="marker" id="marker" style="left: 50%;"></div>
+                            </div>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div id="saturday_label" class="text-center">@ViewBag.FirstGameDay.ToString("dd.MM.yy")</div>
+                            </div>
+                            <div class="col-6">
+                                <div id="sunday_label" class="text-center">@ViewBag.SecondGameDay.ToString("dd.MM.yy")</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-6 text-center">Dopoledne</div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:yellow;"></div>
+                            </div>
+                            <div class="col-3"></div>
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkred;"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-6 text-center">Odpoledne</div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkblue;"></div>
+                            </div>
+                            <div class="col-3"></div>
+                            <div class="col-3">
+                                <div class="rounded-circle " style="width: 26px; height: 26px;background-color:forestgreen;"></div>
+                            </div>
+                        </div>
+
+
+                        <!-- Match count colors -->
+                        <div class="row mt-3">
+                            <div class="col-12">Kolik zápasů:</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-1">
+                                <div class="border bg-secondary" style="width: 15px; height: 15px;"></div>
+                                <div style="text-align: center;">0</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border " style="width: 15px; height: 15px;background-color:forestgreen;"></div>
+                                <div style="text-align: center;">1</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border " style="width: 15px; height: 15px;background-color:pink;"></div>
+                                <div style="text-align: center;">2</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:orange;"></div>
+                                <div style="text-align: center;">3</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:orangered;"></div>
+                                <div style="text-align: center;">4</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:darkred;"></div>
+                                <div style="text-align: center;">5</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:black;"></div>
+                                <div style="text-align: center;">6+ (veto)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span id="range_matches" class="ms-auto fw-bold"></span>
+
+                <div class="filter-container">
+                    <label class="text-nowrap" for="filterStartDateTime">Zadejte rozmezí</label>
+                    <div id="filterStartDateTime" class="flatpickr-wrapper">
+                        <input type="text" class="datepicker" placeholder="datum a čas od" data-input>
+                    </div>
+
+
+                    <div id="filterEndDateTime" class="flatpickr-wrapper">
+                        <input type="text" class="datepicker form-control input" placeholder="datum a čas do" data-input>
+                    </div>
+
+                    <button id="filterMatchesBasedOnDate" class="btn btn-outline-secondary btn-sm me-1">Filtrovat</button>
+                </div>
             </div>
 
-            <!-- Legend panel (hidden by default) -->
-            <div id="legenda" class="position-absolute bg-light border p-2 mt-1"
-                 style="display: none; width: 200px; z-index: 1000;">
-                <div class="container">
-                    <div class="gradient-bar"></div>
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button style="font-size:12px;" 
+                class="nav-link active" 
+                id="undelegated-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#undelegated-content" 
+                type="button" 
+                role="tab">
+            All matches <span id="matchesShowedCount" class="badge bg-secondary"></span>
+        </button>
+    </li>
+    <li class="ms-auto nav-item position-relative">
+        <div class="input-group">
+            <input type="text" 
+                   id="competitionSearch" 
+                   class="form-control" 
+                   placeholder="Zadej název soutěže...">
+        </div>
+    @{
+    var distinctCompetitions = Model.Matches
+        .Where(m => m.CompetitionId != null && m.CompetitionName != null)
+        .ToList()
+        .Select(m => new { m.CompetitionId, m.CompetitionName })
+        .Distinct()
+        .OrderBy(c => c.CompetitionName)
+        .ToList();
+}
 
-                    <div class="scale">
-                        <div class="tick" style="left: 0%"><div class="tick-label">0</div></div>
-                        <div class="tick" style="left: 25%"><div class="tick-label">25</div></div>
-                        <div class="tick" style="left: 50%"><div class="tick-label">50</div></div>
-                        <div class="tick" style="left: 75%"><div class="tick-label">75</div></div>
-                        <div class="tick" style="left: 100%"><div class="tick-label">100</div></div>
-                        <div class="marker" id="marker" style="left: 50%;"></div>
+<ul id="searchResultsCompetition" class="list-group position-absolute w-100" style="z-index: 999; display: none;">
+@foreach (var competition in distinctCompetitions)
+{
+    <li class="list-group-item" data-id="@competition.CompetitionId" style="display:none;">
+        @competition.CompetitionName
+    </li>
+}
+</ul>
+	</li>
+</ul>
+
+<div class="tab-content border border-top-0 p-2 mb-3">
+    <div class="progress">
+	<div class="progress-bar progress-bar-striped progress-bar-animated"
+	     role="progressbar"
+	     style="width: @ViewBag.percentageDelegated%; background-color: #32cd32;"
+	     aria-valuenow="@ViewBag.percentageDelegated"
+	     aria-valuemin="0"
+	     aria-valuemax="100">
+	    % obsazených zápasů alespoň jedním rozhodčím: @ViewBag.percentageDelegated
+	</div>
+    </div>
+    <div style="width:110%" class="tab-pane fade show active" id="undelegated-content" role="tabpanel">
+            @Html.Partial("~/Views/PartialViews/_MatchesTable.cshtml", Model.Matches)
+	</div>
+</div>
+
+    </div>
+
+
+
+    <!-- Referee section with tabs -->
+    <div class="row section-with-referees">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="refereesTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="prebor-tab" data-bs-toggle="tab" data-bs-target="#content-0" type="button" role="tab">
+                        PŘEBOR
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="a-tab" data-bs-toggle="tab" data-bs-target="#content-1" type="button" role="tab">
+                        1.A TŘÍDA
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="b-tab" data-bs-toggle="tab" data-bs-target="#content-2" type="button" role="tab">
+                        1.B TŘÍDA
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="two-tab" data-bs-toggle="tab" data-bs-target="#content-3" type="button" role="tab">
+                        2. - 3.TŘÍDA
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="m-tab" data-bs-toggle="tab" data-bs-target="#content-4" type="button" role="tab">
+                        M
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="n-tab" data-bs-toggle="tab" data-bs-target="#content-5" type="button" role="tab">
+                        N
+                    </button>
+                </li>
+		<li class="ms-auto nav-item position-relative">
+        		<div class="input-group">
+            			<input type="text" id="refereeSearch" class="form-control" placeholder="Zadej jméno rozhodčího...">
+        		</div>
+        		<ul id="searchResults" class="list-group position-absolute w-100" style="z-index: 999; display: none;">
+@foreach (var group in Model.Referees)
+                {
+                                @foreach (var referee in group.Referees)
+                                {
+					    <li class="list-group-item" data-id="@referee.Referee.RefereeId" data-name="@referee.Referee.Name @referee.Referee.Surname" style="display:none;">@referee.Referee.Name @referee.Referee.Surname</li>
+				}
+		}
+
+</ul>
+    		</li>
+            </ul>
+            <div class="tab-content border border-top-0 p-2">
+                @foreach (var group in Model.Referees)
+                {
+                    var paneId ="pane-"+group.LeagueId;
+                    var contentId = "content-"+group.LeagueId ;
+
+                    <div id=@contentId class="tab-pane fade @((group.LeagueId == 0) ? "show active" : "")" data-id="@group.LeagueId" role="tabpanel">
+
+                        <text>
+                            <div id=@paneId class="d-flex flex-wrap">
+                                @foreach (var referee in group.Referees)
+                                {
+                                    var buttonDivId = @referee.Referee.RefereeId + "_referee-offer-button";
+                                    var buttonId = @referee.Referee.RefereeId + "_referee-offer-pure-button";
+
+
+                                    <div id="@buttonDivId" class="referee-button-wrapper">
+                                        @* Left Side Rectangles *@
+                                        @if (referee.isFreeSaturdayMorning)
+                                        {
+                                            <div class="rectangle rect-left-top" style="background-color: yellow;"></div>
+                                        }
+                                        @if (referee.isFreeSaturdayAfternoon)
+                                        {
+                                            <div class="rectangle rect-left-bottom" style="background-color: darkblue;"></div>
+                                        }
+
+                                        @* Right Side Rectangles *@
+                                        @if (referee.isFreeSundayMorning)
+                                        {
+                                            <div class="rectangle rect-right-top" style="background-color: darkred;"></div>
+                                        }
+                                        @if (referee.isFreeSundayAfternoon)
+                                        {
+                                            <div class="rectangle rect-right-bottom" style="background-color: forestgreen;"></div>
+                                        }
+
+                                        <button id="@buttonId" class="btn btn-secondary referee-button @(referee.hasSpecialNote ? "sticky" : "")" data-id="@referee.Referee.RefereeId">
+                                            @if (referee.hasSpecialNote)
+                                            {
+                                                <i class="fas fa-sticky-note fa-sm text-warning"></i>
+                                            }
+                                            <strong>@referee.Referee.Name.Substring(0, 1). @referee.Referee.Surname</strong>
+                                        </button>
+                                    </div>                               
+                            }
+                        </div>
+                    </text>
                     </div>
+                }
+            </div>            
+        </div>
+    </div>
+
+    <!-- Excuses modal -->
+    <div class="modal fade" id="excusesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Excuses</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="row mt-4">
-                    <div class="col-6">
-                        <div id="saturday_label" class="text-center">@ViewBag.FirstGameDay.ToString("dd.MM.yy")</div>
-                    </div>
-                    <div class="col-6">
-                        <div id="sunday_label" class="text-center">@ViewBag.SecondGameDay.ToString("dd.MM.yy")</div>
-                    </div>
-                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="list-group" id="excusesList"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <form id="excuseForm">
+                                <div class="mb-3">
+                                    <label for="name_ref_field" class="form-label">Name</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="name_ref_field" placeholder="Enter name">
+                                        <button class="btn btn-outline-secondary" type="button" id="find_name_ref_butt">Find</button>
+                                    </div>
+                                    <div class="form-text" id="name_found_control">Not found yet</div>
+                                </div>
 
-                <div class="row mt-1">
-                    <div class="col-6 text-center">Dopoledne</div>
-                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">From</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="excuse_time_from" placeholder="00:00">
+                                        <input type="date" class="form-control" id="excuse_date_from">
+                                    </div>
+                                </div>
 
-                <div class="row mt-1">
-                    <div class="col-3">
-                        <div class="rounded-circle" style="width: 26px; height: 26px;background-color:yellow;"></div>
-                    </div>
-                    <div class="col-3"></div>
-                    <div class="col-3">
-                        <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkred;"></div>
-                    </div>
-                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">To</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="excuse_time_to" placeholder="23:59">
+                                        <input type="date" class="form-control" id="excuse_date_to">
+                                    </div>
+                                </div>
 
-                <div class="row mt-2">
-                    <div class="col-6 text-center">Odpoledne</div>
-                </div>
-
-                <div class="row mt-1">
-                    <div class="col-3">
-                        <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkblue;"></div>
-                    </div>
-                    <div class="col-3"></div>
-                    <div class="col-3">
-                        <div class="rounded-circle " style="width: 26px; height: 26px;background-color:forestgreen;"></div>
-                    </div>
-                </div>
-
-
-                <!-- Match count colors -->
-                <div class="row mt-3">
-                    <div class="col-12">Kolik zápasů:</div>
-                </div>
-
-                <div class="row">
-                    <div class="col-1">
-                        <div class="border bg-secondary" style="width: 15px; height: 15px;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border " style="width: 15px; height: 15px;background-color:forestgreen;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border " style="width: 15px; height: 15px;background-color:pink;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border" style="width: 15px; height: 15px;background-color:orange;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border" style="width: 15px; height: 15px;background-color:orangered;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border" style="width: 15px; height: 15px;background-color:darkred;"></div>
-                    </div>
-                    <div class="col-1">
-                        <div class="border" style="width: 15px; height: 15px;background-color:black;"></div>
-                    </div>
-                    <div class="col-8">
-                        <div class="d-flex justify-content-between medium">
-                            <span>0</span>
-                            <span>1</span>
-                            <span>2</span>
-                            <span>3</span>
-                            <span>4</span>
-                            <span>5</span>
-                            <span>6+ (veto)</span>
+                                <button type="button" class="btn btn-primary" id="load_single_excuse_butt">Load excuse</button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
-        <button id="loadPreviousMatches" class="btn btn-outline-secondary btn-sm me-1" style="margin-top:30px">
-            Nahraj odehrané zápasy
-        </button>
-        <!-- Hidden file input -->
-        <input type="file" id="fileInputPlayedMatches" style="display: none;" />
-
-
-
     </div>
-    <div id="excusesPreview" class="modal-dialog modal-xl show d-none">...</div>
-    <div id="matchesUploadedPreview" class="modal-dialog modal-xl show d-none">...</div>
 
-    <div class="col-md-12">
-        <!-- Sorting and filtering controls -->
-        <div class="d-flex align-items-center">
-            <label for="sort_first_row">Seřadit dle</label>
-            <select id="sort_first_row" class="form-select me-2" style="width: auto;">
-                <option value="sortByGameTimeAsc">Herního času(Vzestupně)</option>
-                <option value="sortByGameTimeDesc">Herního času(Sestupně)</option>
-                <option value="sortByFieldAsc">Hřiště(Vzestupně)</option>
-                <option value="sortByFieldDesc">Hřiště(Sestupně)</option>
-                <option value="sortByNameCategoryAsc">Soutěže(Vzestupně)</option>
-                <option value="sortByNameCategoryDesc">Soutěže(Sestupně)</option>
-                <option value="sortByNameHomeTeamAsc">Domácího týmu(Vzestupně)</option>
-                <option value="sortByNameHomeTeamDesc">Domácího týmu(Sestupně)</option>
-                <option value="sortByNameAwayTeamAsc">Hostujícího týmu(Vzestupně)</option>
-                <option value="sortByNameAwayTeamDesc">Hostujícího týmu(Sestupně)</option>
-                <option value="sortByUndelegatedMatches">Počtu delegovaných osob</option>
-            </select>
-            <span id="range_matches" class="ms-auto fw-bold"></span>
-
-            <div class="filter-container">
-                <label for="filterStartDateTime">Zadejte rozmezí filtrace</label>
-                <div id="filterStartDateTime" class="flatpickr-wrapper">
-                    <input type="text" class="datepicker" placeholder="datum a čas od" data-input>
+    <!-- Referee card modal -->
+    <div class="modal fade" id="refereeCardModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Referee Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-
-                <div id="filterEndDateTime" class="flatpickr-wrapper">
-                    <input type="text" class="datepicker form-control input" placeholder="datum a čas do" data-input>
-                </div>
-
-                <button id="filterMatchesBasedOnDate" class="btn btn-outline-secondary btn-sm me-1">Filtrovat</button>
+                <div class="modal-body" id="referee_card_content"></div>
             </div>
         </div>
+    </div>
 
-        <!-- Main match list -->
+    <!-- Saved weekends list -->
+    <div class="position-absolute bg-white border shadow" id="saved_weekends" style="display: none; z-index: 1000; width: 400px;"></div>
+</div>
+
+}else
+{
+    <div class="container-fluid" style="margin-left:0px">       
+        <div id="excusesPreview" class="modal-dialog modal-xl show d-none">...</div>
+        <div id="matchesUploadedPreview" class="modal-dialog modal-xl show d-none">...</div>
+
+        <div class="col-md-12">
+            <!-- Sorting and filtering controls -->
+            <div class="d-flex align-items-center">
+                <label for="sort_first_row">Seřadit dle</label>
+                <select id="sort_first_row" class="form-select me-2" style="width: auto;">
+                    <option value="sortByGameTimeAsc">Herního času(Vzestupně)</option>
+                    <option value="sortByGameTimeDesc">Herního času(Sestupně)</option>
+                    <option value="sortByFieldAsc">Hřiště(Vzestupně)</option>
+                    <option value="sortByFieldDesc">Hřiště(Sestupně)</option>
+                    <option value="sortByNameCategoryAsc">Soutěže(Vzestupně)</option>
+                    <option value="sortByNameCategoryDesc">Soutěže(Sestupně)</option>
+                    <option value="sortByNameHomeTeamAsc">Domácího týmu(Vzestupně)</option>
+                    <option value="sortByNameHomeTeamDesc">Domácího týmu(Sestupně)</option>
+                    <option value="sortByNameAwayTeamAsc">Hostujícího týmu(Vzestupně)</option>
+                    <option value="sortByNameAwayTeamDesc">Hostujícího týmu(Sestupně)</option>
+                    <option value="sortByUndelegatedMatches">Počtu delegovaných osob</option>
+                </select>         
+                <div class="position-relative d-inline-block">
+                    <form method="post" asp-controller="Match" asp-action="UploadTheGameWeekendDate" style="margin-bottom:10px" readonly>
+                        <label style="font-size:13px;" for="weekendDate">Aktuální herní víkend </label>
+                        <input type="date" id="gameWeekendDate" name="weekendDate" required
+                               value="@(ViewBag.FirstGameDay != null ? ((DateOnly)ViewBag.FirstGameDay).ToString("yyyy-MM-dd") : "")" readonly />
+
+                    </form>
+                    <!-- Buttons -->
+                    <div class="d-flex">
+                        <button id="show_legenda" class="btn btn-outline-secondary btn-sm me-1"
+                                onmouseover="document.getElementById('legenda').style.display = 'block';"
+                                onmouseout="document.getElementById('legenda').style.display = 'none';">
+                            Legenda
+                        </button>
+                        <button id="color_ref_count" class="btn btn-outline-secondary btn-sm">
+                            <span class="small">Kolik zápasů?</span>
+                        </button>
+                    </div>
+
+                    <!-- Legend panel (hidden by default) -->
+                    <div id="legenda" class="position-absolute bg-light border p-2 mt-1"
+                         style="display: none; width: 200px; z-index: 1000;">
+                        <div class="container">
+                            <div class="gradient-bar"></div>
+
+                            <div class="scale">
+                                <div class="tick" style="left: 0%"><div class="tick-label">0</div></div>
+                                <div class="tick" style="left: 25%"><div class="tick-label">25</div></div>
+                                <div class="tick" style="left: 50%"><div class="tick-label">50</div></div>
+                                <div class="tick" style="left: 75%"><div class="tick-label">75</div></div>
+                                <div class="tick" style="left: 100%"><div class="tick-label">100</div></div>
+                                <div class="marker" id="marker" style="left: 50%;"></div>
+                            </div>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div id="saturday_label" class="text-center">@ViewBag.FirstGameDay.ToString("dd.MM.yy")</div>
+                            </div>
+                            <div class="col-6">
+                                <div id="sunday_label" class="text-center">@ViewBag.SecondGameDay.ToString("dd.MM.yy")</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-6 text-center">Dopoledne</div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:yellow;"></div>
+                            </div>
+                            <div class="col-3"></div>
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkred;"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-6 text-center">Odpoledne</div>
+                        </div>
+
+                        <div class="row mt-1">
+                            <div class="col-3">
+                                <div class="rounded-circle" style="width: 26px; height: 26px;background-color:darkblue;"></div>
+                            </div>
+                            <div class="col-3"></div>
+                            <div class="col-3">
+                                <div class="rounded-circle " style="width: 26px; height: 26px;background-color:forestgreen;"></div>
+                            </div>
+                        </div>
+
+
+                        <!-- Match count colors -->
+                        <div class="row mt-3">
+                            <div class="col-12">Kolik zápasů:</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-1">
+                                <div class="border bg-secondary" style="width: 15px; height: 15px;"></div>
+                                <div style="text-align: center;">0</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border " style="width: 15px; height: 15px;background-color:forestgreen;"></div>
+                                <div style="text-align: center;">1</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border " style="width: 15px; height: 15px;background-color:pink;"></div>
+                                <div style="text-align: center;">2</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:orange;"></div>
+                                <div style="text-align: center;">3</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:orangered;"></div>
+                                <div style="text-align: center;">4</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:darkred;"></div>
+                                <div style="text-align: center;">5</div>
+                            </div>
+                            <div class="col-1">
+                                <div class="border" style="width: 15px; height: 15px;background-color:black;"></div>
+                                <div style="text-align: center;">6+ (veto)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <span id="range_matches" class="ms-auto fw-bold"></span>
+
+                <div class="filter-container">
+                    <label for="filterStartDateTime">Zadejte rozmezí filtrace</label>
+                    <div id="filterStartDateTime" class="flatpickr-wrapper">
+                        <input type="text" class="datepicker" placeholder="datum a čas od" data-input>
+                    </div>
+
+
+                    <div id="filterEndDateTime" class="flatpickr-wrapper">
+                        <input type="text" class="datepicker form-control input" placeholder="datum a čas do" data-input>
+                    </div>
+
+                    <button id="filterMatchesBasedOnDate" class="btn btn-outline-secondary btn-sm me-1">Filtrovat</button>
+                </div>
+            </div>
+ <!-- Main match list -->
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button style="font-size:12px;" class="nav-link active" id="undelegated-tab" data-bs-toggle="tab" data-bs-target="#undelegated-content" type="button" role="tab">
                     All matches <span id="matchesShowedCount" class="badge bg-secondary"></span>
                 </button>
             </li>
+ <li class="ms-auto nav-item position-relative">
+                        <div class="input-group">
+                                <input type="text" id="competitionSearch" class="form-control" placeholder="Zadej název soutěže...">
+                        </div>
+                        <ul id="searchResultsCompetition" class="list-group position-absolute w-100" style="z-index: 999; display: none;">
+@{
+    var distinctCompetitionNames = Model.Matches
+        .Select(m => m.CompetitionName)
+        .Distinct()
+        .OrderBy(name => name)
+        .ToList();
+}
+   @foreach (var competitionName in distinctCompetitionNames)
+{
+     <li class="list-group-item" data-id="@competitionName" style="display:none;">@competitionName</li>                 }                                                                                                                     </ul>
+                </li>
         </ul>
         <div class="tab-content border border-top-0 p-2 mb-3">
             <div class="progress">
@@ -610,7 +1029,7 @@
                     % obsazených zápasů alespoň jedním rozhodčím: @ViewBag.percentageDelegated
                 </div>
             </div>
-            <div class="tab-pane fade show active" id="undelegated-content" role="tabpanel">
+            <div style="width:110%" class="tab-pane fade show active" id="undelegated-content" role="tabpanel">
                 @Html.Partial("~/Views/PartialViews/_MatchesTable.cshtml", Model.Matches)
             </div>
         </div>
@@ -653,12 +1072,27 @@
                         N
                     </button>
                 </li>
+ <li class="ms-auto nav-item position-relative">
+                        <div class="input-group">
+                                <input type="text" id="refereeSearch" class="form-control" placeholder="Zadej jméno rozhodčího...">
+                        </div>
+                        <ul id="searchResults" class="list-group position-absolute w-100" style="z-index: 999; display: none;">
+@foreach (var group in Model.Referees)
+                {
+                                @foreach (var referee in group.Referees)
+                                {
+                                            <li class="list-group-item" data-id="@referee.Referee.RefereeId" data-name="@referee.Referee.Name @referee.Referee.Surname" style="display:none;">@referee.Referee.Name @referee.Referee.Surname</li>
+                                }
+                }
+
+</ul>
+                </li>
             </ul>
             <div class="tab-content border border-top-0 p-2">
                 @foreach (var group in Model.Referees)
                 {
-                    var paneId = "pane-" + group.LeagueId;
-                    var contentId = "content-" + group.LeagueId;
+                    var paneId ="pane-"+group.LeagueId;
+                    var contentId = "content-"+group.LeagueId ;
 
                     <div id=@contentId class="tab-pane fade @((group.LeagueId == 0) ? "show active" : "")" data-id="@group.LeagueId" role="tabpanel">
 
@@ -691,7 +1125,7 @@
                                             <div class="rectangle rect-right-bottom" style="background-color: forestgreen;"></div>
                                         }
 
-                                        <button id="@buttonId" class="btn btn-secondary referee-button" data-id="@referee.Referee.RefereeId">
+                                        <button id="@buttonId" class="btn btn-secondary referee-button @(referee.hasSpecialNote ? "sticky" : "")" data-id="@referee.Referee.RefereeId">
                                             @if (referee.hasSpecialNote)
                                             {
                                                 <i class="fas fa-sticky-note fa-sm text-warning"></i>
@@ -699,9 +1133,9 @@
                                             <strong>@referee.Referee.Name.Substring(0, 1). @referee.Referee.Surname</strong>
                                         </button>
                                     </div>
-                                }
-                            </div>
-                        </text>
+                            }
+                        </div>
+                    </text>
                     </div>
                 }
             </div>
@@ -772,48 +1206,52 @@
 
     <!-- Saved weekends list -->
     <div class="position-absolute bg-white border shadow" id="saved_weekends" style="display: none; z-index: 1000; width: 400px;"></div>
-</div>
+</div>}
 
 @section Scripts {
     <script>
-            $(document).ready(function() {
-        // Log environment information for debugging
-                console.log("Page loaded. Environment info:");
-                console.log("URL:", window.location.href);
-                console.log("Protocol:", window.location.protocol);
-                console.log("Host:", window.location.host);
-                console.log("Path:", window.location.pathname);
+        $(document).ready(function() {
+	// Log environment information for debugging
+        	console.log("Page loaded. Environment info:");
+        	console.log("URL:", window.location.href);
+        	console.log("Protocol:", window.location.protocol);
+        	console.log("Host:", window.location.host);
+        	console.log("Path:", window.location.pathname);
+        
+        	// Check if WebSockets are supported
+        	if ("WebSocket" in window) {
+            		console.log("WebSockets are supported by this browser");
+        	} else {
+            		console.error("WebSockets are NOT supported by this browser");
+        	}
+	     	// Dynamically set max year for birth year input
+            	const currentYear = new Date().getFullYear();
+            	$('#age').attr('max', currentYear);
 
-                // Check if WebSockets are supported
-                if ("WebSocket" in window) {
-                        console.log("WebSockets are supported by this browser");
-                } else {
-                        console.error("WebSockets are NOT supported by this browser");
-                }
-                $('#refereesTabs .nav-link').on('click', function() {
-                    $('#refereesTabs .nav-link').removeClass('active');
-                    $('.tab-pane').removeClass('show active');
+            $('#refereesTabs .nav-link').on('click', function() {
+                $('#refereesTabs .nav-link').removeClass('active');
+                $('.tab-pane').removeClass('show active');
 
-                    $(this).addClass('active');
-                    var targetPane = $(this).data('bs-target');
-                    $(targetPane).addClass('show active');
-                    $('#undelegated-content').addClass('show active');
-                });
-                $('#showCardOfRefereeModal').on('click', 'a', function() {
-                    $('#showCardOfRefereeModal').modal('hide');
-                });
-                $('#showCardOfRefereeModal').on('click', 'a.excuseHref', function() {
-                    $('#showCardOfRefereeModal').modal('hide');
-
-                    const targetHref = $(this).attr('href');
-
-                    $('#showExcusesBtn').click();
-
-                    setTimeout(function () {
-                        window.location.hash = targetHref;
-                    }, 1000);
-                });
+                $(this).addClass('active');
+                var targetPane = $(this).data('bs-target');
+                $(targetPane).addClass('show active');
+                $('#undelegated-content').addClass('show active');             
             });
+            $('#showCardOfRefereeModal').on('click', 'a', function() {
+                $('#showCardOfRefereeModal').modal('hide');
+            });
+            $('#showCardOfRefereeModal').on('click', 'a.excuseHref', function() {
+                $('#showCardOfRefereeModal').modal('hide');
+
+                const targetHref = $(this).attr('href');
+
+                $('#showExcusesBtn').click();
+
+                setTimeout(function () {
+                    window.location.hash = targetHref;
+                }, 1000);
+            });
+        });
     </script>
     <script src="~/js/Custom/SignalR/RerenderChangesSignal.js" defer></script>
 }

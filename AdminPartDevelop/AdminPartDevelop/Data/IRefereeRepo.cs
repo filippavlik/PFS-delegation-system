@@ -62,6 +62,13 @@ namespace AdminPartDevelop.Data
         /// Returns failure if a referee with the same name and surname already exists.
         /// </returns>
         Task<RepositoryResponse> AddRefereeAsync(Referee referee);
+	        /// <summary>
+        /// Saves a list of excuses for a specific referee.
+        /// </summary>
+        /// <param name="excuses">The list of excuses to be saved</param>
+        /// <returns>A status message indicating whether the excuses were successfully saved or if there was an error</returns>
+        /// <returns>A repository response indicating success or failure with an appropriate message.</returns>
+        Task<RepositoryResponse> AddManualExcuses(List<Excuse> excuses);
         /// <summary>
         /// Updates an existing referee's information in the database.
         /// </summary>
@@ -70,7 +77,7 @@ namespace AdminPartDevelop.Data
         /// <returns>
         /// A repository response indicating success or failure with an appropriate message.
         /// </returns>
-        Task<RepositoryResponse> UpdateRefereeAsync(int id, RefereeAddRequest referee);
+        Task<RepositoryResponse> UpdateRefereeAsync(int id,RefereeAddRequest referee);
         /// <summary>
         /// Updates multiple referees based on a dictionary of name/surname pairs and referee DTOs.
         /// Creates new referees if they don't exist in the database.

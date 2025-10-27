@@ -10,6 +10,13 @@ public partial class Field
     {
         FieldName = fieldName;
     }
+    public Field(string fieldName,string fieldAddress,float latitude,float longtitude)
+    {
+        FieldName = fieldName;
+        FieldAddress = fieldAddress;
+        Longitude = longtitude;
+        Latitude = latitude;
+    }
 
     public int FieldId { get; set; }
 

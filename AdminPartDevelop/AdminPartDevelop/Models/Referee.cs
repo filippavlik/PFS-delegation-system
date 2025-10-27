@@ -30,6 +30,7 @@ public partial class Referee
     public string? ActuallPragueZone { get; set; }
 
     public bool CarAvailability { get; set; }
+    public int Rating { get; set; }
 
     public DateTime TimestampChange { get; set; }
 

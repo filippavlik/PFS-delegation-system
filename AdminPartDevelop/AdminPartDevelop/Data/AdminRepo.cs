@@ -29,6 +29,15 @@ namespace AdminPartDevelop.Data
             _logger = logger;
             _context = context;
         }
+	Dictionary<int, string> leagueMapping = new Dictionary<int, string>
+	{
+    		{ 0, "PŘEBOR" },
+    		{ 1, "1.A TŘÍDA" },
+    		{ 2, "1.B TŘÍDA" },
+    		{ 3, "2.-3.TŘÍDA" },
+    		{ 4, "M" },
+    		{ 5, "N" }
+	};
 
 
         public RepositoryResult<Field> GetOrSaveTheField(string fieldName)
@@ -52,7 +61,7 @@ namespace AdminPartDevelop.Data
                 }
 
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 _logger.LogError(ex, "[GetOrSaveTheFieldAsync] Error saving field");
                 return RepositoryResult<Field>.Failure("Nepodařilo se uložiť hřište do databázy");
@@ -87,7 +96,7 @@ namespace AdminPartDevelop.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[GetOrSaveTheTeam] Error saving team");
-                return RepositoryResult<Team>.Failure("Nepodařilo se uložiť tím" + name + "do databázy");
+                return RepositoryResult<Team>.Failure("Nepodařilo se uložiť tím"+ name +"do databázy");
 
             }
         }
@@ -114,7 +123,7 @@ namespace AdminPartDevelop.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[DoesCompetitionExist] Error checking competition");
-                return RepositoryResult<Competition>.Failure("Nepodařilo se zjistiť či existuje soutež s id:" + idOfCompetition);
+                return RepositoryResult<Competition>.Failure("Nepodařilo se zjistiť či existuje soutež s id:"+idOfCompetition);
 
             }
         }
@@ -188,7 +197,7 @@ namespace AdminPartDevelop.Data
             }
         }
 
-        public RepositoryResult<bool> DoesVetoExistForTeam(string teamId, string competitionId, int refereeId)
+        public RepositoryResult<bool> DoesVetoExistForTeam(string teamId,string competitionId, int refereeId)
         {
             try
             {
@@ -257,8 +266,8 @@ namespace AdminPartDevelop.Data
                     }
                     else
                     {*/
-                    return RepositoryResult<DateOnly>.Success(existingRelation.GameDate);
-                    // }
+                        return RepositoryResult<DateOnly>.Success(existingRelation.GameDate);
+                   // }
                 }
                 else
                 {
@@ -302,11 +311,13 @@ namespace AdminPartDevelop.Data
         {
             try
             {
+		        DateOnly startDateOfGamePeriod  = GetStartGameDate().GetDataOrThrow();
                 var matches = await _context.Matches
                     .Include(m => m.Competition)
                     .Include(m => m.Field)
-                //production .Where(m => m.StartDate.ToDateTime(m.StartTime) > DateTime.Now())
-                .ToListAsync();
+	                .Where(m => m.MatchDate >= startDateOfGamePeriod.AddDays(-1) && m.MatchDate <= startDateOfGamePeriod.AddDays(3) && 
+                	            m.MatchDate.ToDateTime(m.MatchTime) > DateTime.Now)
+                    .ToListAsync();
 
                 return RepositoryResult<List<Models.Match>>.Success(matches);
             }
@@ -334,7 +345,7 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Models.Match>>.Failure("Nepodařilo se získat čisté zápasy z serveru.");
             }
         }
-        public async Task<RepositoryResult<List<Models.Match>>> GetTeamsPureMatchesAsync(string teamId, string competitionId)
+        public async Task<RepositoryResult<List<Models.Match>>> GetTeamsPureMatchesAsync(string teamId,string competitionId)
         {
             try
             {
@@ -434,7 +445,7 @@ namespace AdminPartDevelop.Data
 
 
 
-        public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesAsync(Dictionary<int, string> dictNameOfReferees)
+        public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesAsync(Dictionary<int,string> dictNameOfReferees)
         {
             try
             {
@@ -450,7 +461,7 @@ namespace AdminPartDevelop.Data
                 var matches = await _context.Matches
                     .Include(m => m.Competition)
                     .Include(m => m.Field)
-                //production .Where(m => m.StartDate.ToDateTime(m.StartTime) > DateTime.Now())
+                    .Where(m => m.MatchDate.ToDateTime(m.MatchTime) > DateTime.Now)
                 .ToListAsync();
 
 
@@ -459,6 +470,8 @@ namespace AdminPartDevelop.Data
                 {
                     Match = match,
                     CompetitionName = match.Competition.CompetitionName,
+		            CompetitionId = match.Competition.CompetitionId ,
+		            CompetitionLeague = leagueMapping[match.Competition.League],
                     FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
                     HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
                     AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
@@ -483,7 +496,131 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<MatchViewModel>>.Failure("Nepodařilo se získat zápasy z serveru.");
             }
         }
-        public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesByDateAsync(Dictionary<int, string> dictNameOfReferees, DateTime startDate, DateTime endDate)
+        public async Task<RepositoryResult<List<MatchViewModel>>> ConvertMatchesToViewModels(
+             List<Models.Match> listOfMatches,
+             Dictionary<int, string> dictNameOfReferees)
+        {
+            try
+            {
+                DateOnly firstGameDay = GetStartGameDate().Data;
+
+                var saturdayStart = firstGameDay.ToDateTime(new TimeOnly(0, 1));
+                var saturdayNoon = firstGameDay.ToDateTime(new TimeOnly(12, 0));
+
+                var sunday = firstGameDay.AddDays(1);
+                var sundayStart = sunday.ToDateTime(new TimeOnly(0, 1));
+                var sundayNoon = sunday.ToDateTime(new TimeOnly(12, 0));
+                var sundayEnd = sunday.ToDateTime(new TimeOnly(23, 59));
+
+                // Preload all related data to minimize DB calls inside Select
+                var fieldIds = listOfMatches.Select(m => m.FieldId).Distinct().ToList();
+                var teamIds = listOfMatches
+                    .SelectMany(m => new[] { m.HomeTeamId, m.AwayTeamId })
+                    .Distinct()
+                    .ToList();
+
+                var fields = await _context.Fields
+                    .Where(f => fieldIds.Contains(f.FieldId))
+                    .ToDictionaryAsync(f => f.FieldId, f => f.FieldName);
+
+                var teams = await _context.Teams
+                    .Where(t => teamIds.Contains(t.TeamId))
+                    .ToDictionaryAsync(t => t.TeamId, t => t.Name);
+
+                // Project the result into MatchViewModel
+                var matchViewModels = listOfMatches.Select(match =>
+                {
+                    var matchDateTime = match.MatchDate.ToDateTime(match.MatchTime);
+
+                    return new MatchViewModel
+                    {
+                        Match = match,
+                        CompetitionName = match.Competition?.CompetitionName ?? "Neznámá soutěž",
+                        CompetitionId = match.Competition?.CompetitionId ?? null,
+                        CompetitionLeague = leagueMapping.TryGetValue(match.Competition?.League ?? 0, out var league)
+                            ? league
+                            : "Neznámá liga",
+                        FieldName = fields.TryGetValue(match.FieldId, out var fieldName)
+                            ? fieldName
+                            : "Neznámé hřiště",
+                        HomeTeamName = teams.TryGetValue(match.HomeTeamId, out var homeName)
+                            ? homeName
+                            : "Neznámý tým",
+                        AwayTeamName = teams.TryGetValue(match.AwayTeamId, out var awayName)
+                            ? awayName
+                            : "Neznámý tým",
+                        RefereeName = match.RefereeId.HasValue && dictNameOfReferees.TryGetValue(match.RefereeId.Value, out var refereeName)
+                            ? refereeName
+                            : null,
+                        Ar1Name = match.Ar1Id.HasValue && dictNameOfReferees.TryGetValue(match.Ar1Id.Value, out var ar1Name)
+                            ? ar1Name
+                            : null,
+                        Ar2Name = match.Ar2Id.HasValue && dictNameOfReferees.TryGetValue(match.Ar2Id.Value, out var ar2Name)
+                            ? ar2Name
+                            : null,
+                        WeekendPartColor = GetMatchTimeColor(matchDateTime, saturdayStart, saturdayNoon, sundayStart, sundayNoon, sundayEnd)
+                    };
+                }).ToList();
+
+                return RepositoryResult<List<MatchViewModel>>.Success(matchViewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[ConvertMatchesToViewModels] Error converting matches to view models.");
+                return RepositoryResult<List<MatchViewModel>>.Failure("Nepodařilo se převést zápasy na serveru.");
+            }
+        }
+
+        public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesByCompetitionAsync(Dictionary<int, string> dictNameOfReferees,string competitionId)
+        {
+            try
+            {
+		 DateOnly firstGameDay = GetStartGameDate().Data;
+                var saturdayStart = firstGameDay.ToDateTime(new TimeOnly(0, 1));
+                var saturdayNoon = firstGameDay.ToDateTime(new TimeOnly(12, 0));
+
+                var sunday = firstGameDay.AddDays(1);
+                var sundayStart = sunday.ToDateTime(new TimeOnly(0, 1));
+                var sundayNoon = sunday.ToDateTime(new TimeOnly(12, 0));
+                var sundayEnd = sunday.ToDateTime(new TimeOnly(23, 59));
+
+		var matches = await _context.Matches
+    			.Include(m => m.Competition)
+    			.Include(m => m.Field)
+    			.Where(m => m.Competition.CompetitionId == competitionId)
+    			.ToListAsync();
+
+                // Project the result into the MatchViewModel
+                var matchViewModels = matches.Select(match => new MatchViewModel
+                {
+                    Match = match,
+                    CompetitionName = match.Competition.CompetitionName,
+		    CompetitionLeague = leagueMapping[match.Competition.League], 
+                    FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
+                    HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
+                    AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
+                    RefereeName = match.RefereeId.HasValue && dictNameOfReferees.TryGetValue(match.RefereeId.Value, out string refereeName)
+                                        ? refereeName
+                                        : null,
+                    Ar1Name = match.Ar1Id.HasValue && dictNameOfReferees.TryGetValue(match.Ar1Id.Value, out string ar1Name)
+                                        ? ar1Name
+                                        : null,
+                    Ar2Name = match.Ar2Id.HasValue && dictNameOfReferees.TryGetValue(match.Ar2Id.Value, out string ar2Name)
+                                        ? ar2Name
+                                        : null,
+                    WeekendPartColor = GetMatchTimeColor(match.MatchDate.ToDateTime(match.MatchTime), saturdayStart, saturdayNoon, sundayStart, sundayNoon, sundayEnd)
+                }).ToList();
+
+                return RepositoryResult<List<MatchViewModel>>.Success(matchViewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GetMatchesByCompetitionAsync] Error downloading the matches.");
+                return RepositoryResult<List<MatchViewModel>>.Failure("Nepodařilo se získat zápasy dle soutěže z serveru.");
+            }
+        }
+
+        public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesByDateAsync(Dictionary<int, string> dictNameOfReferees,DateTime startDate,DateTime endDate)
         {
             try
             {
@@ -509,6 +646,7 @@ namespace AdminPartDevelop.Data
                 {
                     Match = match,
                     CompetitionName = match.Competition.CompetitionName,
+		    CompetitionLeague = leagueMapping[match.Competition.League],
                     FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
                     HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
                     AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
@@ -577,7 +715,7 @@ namespace AdminPartDevelop.Data
             {
                 foreach (var match in listOfMatches)
                 {
-                    _context.Matches.Update(match);
+                     _context.Matches.Update(match);
                 }
 
                 await _context.SaveChangesAsync();
@@ -600,7 +738,7 @@ namespace AdminPartDevelop.Data
             }
 
         }
-        public async Task<RepositoryResult<bool>> UpdateMatchLockAsync(string id, string user)
+        public async Task<RepositoryResult<bool>> UpdateMatchLockAsync(string id,string user)
         {
             try
             {
@@ -614,11 +752,11 @@ namespace AdminPartDevelop.Data
 
                 bool currentValue = match.Locked;
                 match.Locked = !currentValue;
-                match.LastChangedBy = user;
-                DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+		match.LastChangedBy = user;
+		DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
-
-                match.LastChanged = timestampChange;
+		
+		match.LastChanged = timestampChange;
                 await _context.SaveChangesAsync();
                 return RepositoryResult<bool>.Success(!currentValue);
             }
@@ -630,7 +768,47 @@ namespace AdminPartDevelop.Data
             }
 
         }
-        public async Task<RepositoryResponse> UpdateMatchPlayedAsync(string id, string user)
+	    public async Task<RepositoryResponse> UpdateMatchDateAsync(DateOnly newDate, TimeOnly newTime, string matchId,string user){
+		try
+            {
+                var match = await _context.Matches
+                   .FirstOrDefaultAsync(m => m.MatchId == matchId);
+
+                if (match == null)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = false,
+                        Message = "Zápas s id " + matchId + " nebyl najden!"
+                    };
+                }
+
+                match.MatchDate = newDate;
+		match.MatchTime = newTime;
+                match.LastChangedBy = user;
+                DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+
+                match.LastChanged = timestampChange;
+
+                await _context.SaveChangesAsync();
+                return new RepositoryResponse
+                {
+                    Success = true,
+                    Message = "Úspešne se podařilo změnit datum zápasu!"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[UpdateMatchDateAsync] Error updating matchs time! ");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Nepodařilo se změnit datum zápasu!"
+                };
+            }
+
+	}
+        public async Task<RepositoryResponse> UpdateMatchPlayedAsync(string id,string user)
         {
             try
             {
@@ -647,10 +825,10 @@ namespace AdminPartDevelop.Data
                 }
 
                 match.AlreadyPlayed = true;
-                match.LastChangedBy = user;
-                DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+		match.LastChangedBy = user;
+		DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
-                match.LastChanged = timestampChange;
+		match.LastChanged = timestampChange;
 
                 await _context.SaveChangesAsync();
                 return new RepositoryResponse
@@ -661,7 +839,7 @@ namespace AdminPartDevelop.Data
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[UpdateMatchPlayedAsync] Error uploading match!");
+                _logger.LogError(ex, "[UpdateMatchPlayedAsync] Error updating match!");
                 return new RepositoryResponse
                 {
                     Success = false,
@@ -671,7 +849,7 @@ namespace AdminPartDevelop.Data
 
         }
 
-        public async Task<RepositoryResponse> TieAndUpdateTheMatchesAsync(List<FilledMatchDto> listOfMatches, Dictionary<string, int> refereeDict, string filePath, string user)
+        public async Task<RepositoryResponse> TieAndUpdateTheMatchesAsync(List<FilledMatchDto> listOfMatches, Dictionary<string, int> refereeDict, string filePath,string user)
         {
             try
             {
@@ -712,7 +890,10 @@ namespace AdminPartDevelop.Data
                         {
                             match.RefereeId = refereeId;
                         }
-                    }
+                    }else
+		    {
+		    	match.RefereeId = null;
+		    }
 
                     if (!string.IsNullOrEmpty(filledMatch.IdOfAr1))
                     {
@@ -720,6 +901,9 @@ namespace AdminPartDevelop.Data
                         {
                             match.Ar1Id = ar1Id;
                         }
+                    }else
+                    {
+                        match.Ar1Id = null;
                     }
 
                     if (!string.IsNullOrEmpty(filledMatch.IdOfAr2))
@@ -728,6 +912,9 @@ namespace AdminPartDevelop.Data
                         {
                             match.Ar2Id = ar2Id;
                         }
+                    }else
+                    {
+                        match.Ar2Id = null;
                     }
 
                     match.AlreadyPlayed = true;
@@ -789,7 +976,7 @@ namespace AdminPartDevelop.Data
                         field.FieldAddress = filledField.FieldAddress;
                     }
 
-                    if (filledField.FieldLatitude != null)
+                    if (filledField.FieldLatitude!= null)
                     {
                         field.Latitude = filledField.FieldLatitude.Value;
                     }
@@ -832,6 +1019,45 @@ namespace AdminPartDevelop.Data
 
             }
         }
+        public async Task<RepositoryResponse> AddField(Field fieldToAdd)
+        {
+            try
+            {
+                var existingRelation = await _context.Fields
+                                        .Where(f => f.FieldName == fieldToAdd.FieldName)
+                                        .FirstOrDefaultAsync();
+                if (existingRelation != null)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = false,
+                        Message = "Hřište s tímto názvem již existuje!"
+                    };
+                }
+                else
+                {
+                    _context.Fields.Add(fieldToAdd);
+                    await _context.SaveChangesAsync();
+
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = "Hřiště uspěšně pridáno"
+                    };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AddField] Error saving field");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Došlo k chybě při ukládání hřiště."
+                };
+
+            }
+        }
         public RepositoryResponse UpdateExistingField(FieldToUpdateDto field)
         {
             try
@@ -856,8 +1082,8 @@ namespace AdminPartDevelop.Data
                 };
             }
             catch (Exception ex)
-            {
-                _logger.LogError(ex, "[UpdateExistingFieldsAsync] Error updating fields.");
+            {      
+                _logger.LogError(ex, "[UpdateExistingFieldAsync] Error updating field.");
                 return new RepositoryResponse
                 {
                     Success = false,
@@ -865,12 +1091,93 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-        public async Task<RepositoryResponse> AddVeto(Veto vetoToAdd)
+        public async Task<RepositoryResponse> AddCompetition(Competition competitionToAdd)
+        {
+            try
+            {
+                if(competitionToAdd.MatchLength<1 || competitionToAdd.MatchLength>60 || competitionToAdd.AmountOfReferees<1 || competitionToAdd.AmountOfReferees>3)
+                    return new RepositoryResponse
+                    {
+                        Success = false,
+                        Message = "Parametry soutěže neplatné (počet rozhodčích nebo délka poločasu)!"
+                    };
+
+                var existingRelation = await _context.Competitions
+                                        .Where(c => c.CompetitionId == competitionToAdd.CompetitionId)
+                                        .FirstOrDefaultAsync();
+                if (existingRelation != null)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = false,
+                        Message = "Soutěž s tímto id již existuje!"
+                    };
+                }
+                else
+                {
+                    _context.Competitions.Add(competitionToAdd);
+                    await _context.SaveChangesAsync();
+
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = "Soutěž uspěšně pridána"
+                    };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AddCompetition] Error saving competition");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Došlo k chybě při ukládání soutěže."
+                };
+
+            }
+        }
+        public RepositoryResponse UpdateExistingCompetition(CompetitionToUpdateDto competition)
+        {
+            try
+            {
+                var existing = _context.Competitions.FirstOrDefault(c => c.CompetitionId == competition.CompetitionId);
+                if (existing != null)
+                {
+                    existing.CompetitionName = competition.CompetitionName;
+                    existing.MatchLength = competition.CompetitionLength;
+                    existing.AmountOfReferees = competition.CompetitionAmountOfReferees;
+                    existing.League = competition.CompetitionLeague;
+                    _context.SaveChanges();
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = "Soutěž uspěšně aktualizována"
+                    };
+                }
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Soutěž neuspěšně aktualizována"
+                };
+            }
+            catch (Exception ex)
+            {        
+                _logger.LogError(ex, "[UpdateExistingCompetitionAsync] Error updating competition.");
+                return new RepositoryResponse
+                {
+			 Success = false,
+                    Message = "Chyba při procesu aktualizace soutěže!"
+                };
+            }
+        }
+
+   	public async Task<RepositoryResponse> AddVeto(Veto vetoToAdd)
         {
             try
             {
                 var existingRelation = await _context.Vetoes
-                                        .Where(v => v.TeamId == vetoToAdd.TeamId && v.CompetitionId == vetoToAdd.CompetitionId && v.RefereeId == vetoToAdd.RefereeId)
+                                        .Where(v => v.TeamId == vetoToAdd.TeamId && v.CompetitionId == vetoToAdd.CompetitionId && v.RefereeId ==vetoToAdd.RefereeId )
                                         .FirstOrDefaultAsync();
                 if (existingRelation != null)
                 {
@@ -980,8 +1287,7 @@ namespace AdminPartDevelop.Data
             }
         }
 
-        public RepositoryResponse UpdateExistingVeto(int id, string note)
-        {
+        public RepositoryResponse UpdateExistingVeto(int id, string note) {
             try
             {
                 var existing = _context.Vetoes.FirstOrDefault(v => v.VetoId == id);
@@ -1076,7 +1382,7 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-        public async Task<RepositoryResponse> AddRefereeToTheMatch(int refereeId, string matchId, int role, string user)
+        public async Task<RepositoryResponse> AddRefereeToTheMatch(int refereeId, string matchId, int role,string user)
         {
             try
             {
@@ -1136,10 +1442,10 @@ namespace AdminPartDevelop.Data
                         break;
                 }
 
-                DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+ 		DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
-                match.LastChanged = timestampChange;
-                match.LastChangedBy = user;
+		match.LastChanged = timestampChange;
+		match.LastChangedBy = user;
                 await _context.SaveChangesAsync();
 
                 return new RepositoryResponse
@@ -1160,7 +1466,7 @@ namespace AdminPartDevelop.Data
             }
 
         }
-        public async Task<RepositoryResponse> RemoveRefereeFromTheMatch(int refereeId, string matchId, string user)
+        public async Task<RepositoryResponse> RemoveRefereeFromTheMatch(int refereeId, string matchId,string user)
         {
             try
             {
@@ -1188,10 +1494,10 @@ namespace AdminPartDevelop.Data
                     match.Ar2Id = null;
                 }
 
-                DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+		DateTime timestampChange = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, 				TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
-                match.LastChanged = timestampChange;
-                match.LastChangedBy = user;
+		match.LastChanged = timestampChange;
+		match.LastChangedBy = user;
 
                 await _context.SaveChangesAsync();
 
@@ -1446,7 +1752,7 @@ namespace AdminPartDevelop.Data
                             Message = "Chyba při ukládání nového post-zápasu."
                         };
                     }
-                }
+                        }
                 else
                 {
                     existingMatch.PostMatch = null;
@@ -1482,18 +1788,18 @@ namespace AdminPartDevelop.Data
 
         private static string? GetMatchTimeColor(DateTime matchStart, DateTime saturdayStart, DateTime saturdayNoon, DateTime sundayStart, DateTime sundayNoon, DateTime sundayEnd)
         {
-            return matchStart switch
-            {
-                var time when time >= saturdayStart && time < saturdayNoon => "yellow",
+               return matchStart switch
+               {
+                   var time when time >= saturdayStart && time < saturdayNoon => "yellow",
 
-                var time when time >= saturdayNoon && time < sundayStart => "darkblue",
+                   var time when time >= saturdayNoon && time < sundayStart => "darkblue",
 
-                var time when time >= sundayStart && time < sundayNoon => "darkred",
+                   var time when time >= sundayStart && time < sundayNoon => "darkred",
 
-                var time when time >= sundayNoon && time <= sundayEnd => "forestgreen",
+                   var time when time >= sundayNoon && time <= sundayEnd => "forestgreen",
 
-                _ => null
-            };
+                   _ => null
+               };
         }
 
     }

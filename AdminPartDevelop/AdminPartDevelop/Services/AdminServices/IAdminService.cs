@@ -5,37 +5,36 @@ using AdminPartDevelop.Views.ViewModels;
 
 namespace AdminPartDevelop.Services.AdminServices
 {
-    public interface IAdminService
+    public interface IAdminService 
     {
         /// <summary>
         /// Calculates the percentage of matches that have been delegated with at least one referee.
         /// </summary>
-        /// <remarks>
-        /// Every time it is showing only the matches who will be played in the future.
-        /// </remarks>
+	/// <remarks>
+	/// Every time it is showing only the matches who will be played in the future.
+	/// </remarks>
         /// <param name="matches">The list of matches to evaluate.</param>
         /// <returns>The percentage of delegated matches as an integer (0-100).</returns>
         public int GetPercentageOfDelegatedMatches(List<MatchViewModel> matches);
-        /// <summary>
-        /// Calculates the average distance in kilometers between a match location and one or two connecting coordinates.
-        /// </summary>
-        /// <remarks>
-        /// The method takes two optional locations representing the referee's previous and next locations 
-        /// and calculates the average distance to the match field. The distance is measured using geographic coordinates (latitude and longitude),
-        /// and returned as an integer in kilometers. If neither location is provided, the result is 0.
-        /// </remarks>
-        /// <param name="locationBefore">Optional starting location (latitude, longitude) before the match.</param>
-        /// <param name="locationAfter">Optional ending location (latitude, longitude) after the match.</param>
-        /// <param name="match">The match containing the destination field location.</param>
-        /// <returns>A <see cref="ServiceResult{T}"/> containing the average distance in kilometers.</returns>
-        public ServiceResult<int> CalculateAverageDistance(Tuple<float, float>? locationBefore, Tuple<float, float>? locationAfter, Models.Match match);
-       
-        /// <summary>
+	/// <summary>
+	/// Calculates the average distance in kilometers between a match location and one or two connecting coordinates.
+	/// </summary>
+	/// <remarks>
+	/// The method takes two optional locations representing the referee's previous and next locations 
+	/// and calculates the average distance to the match field. The distance is measured using geographic coordinates (latitude and longitude),
+	/// and returned as an integer in kilometers. If neither location is provided, the result is 0.
+	/// </remarks>
+	/// <param name="locationBefore">Optional starting location (latitude, longitude) before the match.</param>
+	/// <param name="locationAfter">Optional ending location (latitude, longitude) after the match.</param>
+	/// <param name="match">The match containing the destination field location.</param>
+	/// <returns>A <see cref="ServiceResult{T}"/> containing the average distance in kilometers.</returns>
+	public ServiceResult<int> CalculateAverageDistance(Tuple<float, float>? locationBefore, Tuple<float, float>? locationAfter, Models.Match match);
+	/// <summary>
         /// Retrieves and compiles statistics about referees' involvement with a specific team's matches.
         /// </summary>
         /// <remarks>
         /// This asynchronous method analyzes the history of referee delegation for a specific team by:
-        /// 1. Calculating statistics based on whether the official was delegated as referee or assistant refereei
+	/// 1. Calculating statistics based on whether the official was delegated as referee or assistant refereei
         /// 2. Counting home and away matches for each referee
         /// 3. Checking for any existing veto records between the team and referee
         ///
@@ -74,7 +73,7 @@ namespace AdminPartDevelop.Services.AdminServices
         /// - A success result with a list of fully-populated Match objects, or
         /// - A failure result with an error message if processing failed
         /// </returns>
-        public ServiceResult<List<Models.Match>> ProccessDtosToMatches(List<UnfilledMatchDto> listOfMatches, string user);
+        public ServiceResult<List<Models.Match>> ProccessDtosToMatches(List<UnfilledMatchDto> listOfMatches,string user);
 
         /// <summary>
         /// Establishes sequential connections between matches scheduled on the same field.

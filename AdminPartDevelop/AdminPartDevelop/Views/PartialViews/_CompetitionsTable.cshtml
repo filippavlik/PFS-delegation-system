@@ -1,0 +1,110 @@
+@model List<AdminPartDevelop.Models.Competition>
+<table class="table table-striped" >
+    <colgroup>
+        <col style="width: 10%">
+        <col style="width: 54%">
+        <col style="width: 8%">
+        <col style="width: 8%">
+        <col style="width: 15%">
+        <col style="width: 5%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th >Kód soutěže</th>
+            <th >Název soutěže</th>
+            <th >Délka poločasu</th>
+            <th >Počet rozhodčích</th>
+            <th >Od úrovně rozhodčích</th>
+            <th >Akce</th>
+        </tr>
+    </thead>
+    <tbody>
+        @*New*@
+        <tr>
+            <td>
+                <input class="form-control w-100 " type="text"
+                       id="newCompetitionCode"
+                       placeholder="Kód soutěže (příklad 2025510A3A)" />
+            </td>
+            <td>
+                <input class="form-control w-100" type="text"
+                       id="newCompetitionName"
+                       placeholder="Druh & název soutěže(např. 12 M-1.A/A & Muži 1. A třída skupina A)" />
+            </td>
+            <td>
+                <input class="form-control w-100" type="number"
+                       id="newCompetitionHalftimeLength" min="1"
+                       max="60"
+                        placeholder="Délka poločasu" />
+            </td>
+            <td>
+                <input class="form-control w-100" type="number"
+                       id="newCompetitionAmountOfReferees" min="1"
+                       max="3" 
+                       placeholder="Počet rozhodčích" />
+            </td>
+            <td>
+                <select class="form-select w-100" id="newCompetitionLeague" name="Competition">
+                    <option value="0">PŘEBOR</option>
+                    <option value="1">1.A TŘÍDA</option>
+                    <option value="2">1.B TŘÍDA</option>
+                    <option value="3">2.-3.TŘÍDA</option>
+                    <option value="4">M</option>
+                    <option value="5">N</option>
+                </select>
+            </td>
+            <td>
+                <button type="submit" class="newCompetition btn btn-success">
+                    <i class="fa fa-save"></i>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="6">
+                <hr style="border: 2px solid #000; margin: 10px 0;">
+            </td>
+        </tr>
+        @*New*@
+        @foreach (var competition in Model)
+        {
+            <tr>
+		<td>
+                    <input class="form-control w-100 readonly" type="text"
+                           id="competitionCode_@competition.CompetitionId"
+                           value="@competition.CompetitionId" readonly/>
+                </td>
+                <td>
+                    <input class="form-control w-100" type="text" 
+                           id="competitionName_@competition.CompetitionId" 
+                           value="@competition.CompetitionName"/>
+                </td>
+                <td>
+                    <input class="form-control w-100" type="number" 
+                           id="competitionHalftimeLength_@competition.CompetitionId" 
+                           value="@competition.MatchLength" />
+                </td>
+                <td>
+                    <input class="form-control w-100" type="number"
+                           id="competitionAmountOfReferees_@competition.CompetitionId" min="1"
+                           max="3" value="@competition.AmountOfReferees" />
+                </td>
+                <td>
+                    <select class="form-select w-100" id="competition_@competition.CompetitionId" name="Competition">
+                        <option value="0" selected="@(competition.League == 0)">PŘEBOR</option>
+                        <option value="1" selected="@(competition.League == 1)">1.A TŘÍDA</option>
+                        <option value="2" selected="@(competition.League == 2)">1.B TŘÍDA</option>
+                        <option value="3" selected="@(competition.League == 3)">2.-3.TŘÍDA</option>
+                        <option value="4" selected="@(competition.League == 4)">M</option>
+                        <option value="5" selected="@(competition.League == 5)">N</option>
+                    </select>
+                </td>
+                <td>
+                    <button type="submit" data-id="@competition.CompetitionId" class="updateCompetition btn btn-success">
+                        <i class="fa fa-save"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

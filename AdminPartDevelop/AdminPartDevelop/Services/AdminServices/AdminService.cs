@@ -4,8 +4,6 @@ using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Services.RefereeServices;
 using AdminPartDevelop.Views.ViewModels;
-using System.Device.Location;
-using AdminPartDevelop.Services.AdminServices;
 using Aspose.Cells.Charts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Nest;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography.Xml;
@@ -51,22 +50,17 @@ namespace AdminPartDevelop.Services.AdminServices
                 { "sortByNameHomeTeamDesc", matches => SortByHomeTeam(false, matches) },
                 { "sortByNameAwayTeamAsc", matches => SortByAwayTeam(true, matches) },
                 { "sortByNameAwayTeamDesc",matches => SortByAwayTeam(false, matches)  },
-                { "sortByUndelegatedMatches",matches => SortByUndelegatedMatches(matches)  }
+                { "sortByUndelegatedMatches",matches => SortByUndelegatedMatches(matches)  }              
             };
         }
 
-
-        public ServiceResult<List<Models.Match>> ProccessDtosToMatches(List<UnfilledMatchDto> listOfMatches, string user)
+        public ServiceResult<List<Models.Match>> ProccessDtosToMatches(List<UnfilledMatchDto> listOfMatches,string user)
         {
             try
             {
                 List<Models.Match> resultList = new List<Models.Match>();
                 foreach (var matchDto in listOfMatches)
                 {
-                    if (String.IsNullOrEmpty(matchDto.NumberMatch))
-                    {
-                        continue;
-                    }
                     // The competition code is extracted from the first 10 characters of NumberMatch
                     string competitionCode = !string.IsNullOrEmpty(matchDto.NumberMatch) && matchDto.NumberMatch.Length >= 10
                                 ? matchDto.NumberMatch.Substring(0, 10)
@@ -74,11 +68,8 @@ namespace AdminPartDevelop.Services.AdminServices
                     var competition = _adminRepo.DoesCompetitionExist(competitionCode).GetDataOrThrow(); //it will return competition or default competition 1
                     var resultWithField = _adminRepo.GetOrSaveTheField(matchDto.GameField).GetDataOrThrow();
 
-                    var doesHomeTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdHomeRaw, matchDto.NameHome);
-                    var doesAwayTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdAwayRaw, matchDto.NameAway);
-                    doesHomeTeamExists.GetDataOrThrow();
-                    doesAwayTeamExists.GetDataOrThrow();
-
+                    var doesHomeTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdHomeRaw, matchDto.NameHome).GetDataOrThrow;
+                    var doesAwayTeamExists = _adminRepo.GetOrSaveTheTeam(matchDto.IdAwayRaw, matchDto.NameAway).GetDataOrThrow;
 
                     var matchDate = DateOnly.FromDateTime(matchDto.DateOfGame);
                     var matchTime = TimeOnly.FromDateTime(matchDto.DateOfGame);
@@ -97,14 +88,9 @@ namespace AdminPartDevelop.Services.AdminServices
                         MatchTime = matchTime,
                         AlreadyPlayed = false,
                         Locked = false,
-                        LastChangedBy = user,
+                        LastChangedBy = user, 
                         LastChanged = timestampAdded,
-                        Competition = competition,
-                        Teams = new List<Team>
-                        {
-                            doesHomeTeamExists.Data,
-                            doesAwayTeamExists.Data
-                        }
+                        Competition = competition
                     };
 
                     resultList.Add(match);
@@ -117,86 +103,7 @@ namespace AdminPartDevelop.Services.AdminServices
                 return ServiceResult<List<Models.Match>>.Failure("Nepodařilo se spracovat zápasy!");
             }
         }
-        public async Task<ServiceResult<List<RefereesTeamsMatchesResponseDto>>> GetRefereeMatchStatsAsync(RefereesTeamsMatchesRequestDto request)
-        {
-            try
-            {
-                var queryResult = (await _adminRepo.GetTeamsPureMatchesAsync(request.TeamId, request.CompetitionId))
-                    .GetDataOrThrow();
-
-                // 1. When IsReferee is true: Process main referee assignments
-                // 2. When IsReferee is false: Process assistant referee assignments
-                var matchRefereeStats = request.IsReferee
-                    ? queryResult
-                        .Where(m => request.RefereeIds.Contains(m.RefereeId ?? -1))
-                        .GroupBy(m => m.RefereeId ?? -1)
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new
-                            {
-                                HomeCount = g.Count(m => m.HomeTeamId == request.TeamId),
-                                AwayCount = g.Count(m => m.AwayTeamId == request.TeamId)
-                            })
-                    : queryResult
-                        .Where(m =>
-                            (m.Ar1Id.HasValue && request.RefereeIds.Contains(m.Ar1Id.Value)) ||
-                            (m.Ar2Id.HasValue && request.RefereeIds.Contains(m.Ar2Id.Value)))
-                        .SelectMany(m => new[]
-                        {
-                        new { RefereeId = m.Ar1Id, IsHome = m.HomeTeamId == request.TeamId, IsAway = m.AwayTeamId == request.TeamId },
-                        new { RefereeId = m.Ar2Id, IsHome = m.HomeTeamId == request.TeamId, IsAway = m.AwayTeamId == request.TeamId }
-                        })
-                        .Where(x => x.RefereeId.HasValue && request.RefereeIds.Contains(x.RefereeId.Value))
-                        .GroupBy(x => x.RefereeId.Value)
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new
-                            {
-                                HomeCount = g.Count(x => x.IsHome),
-                                AwayCount = g.Count(x => x.IsAway)
-                            });
-
-                var result = new List<RefereesTeamsMatchesResponseDto>();
-
-                foreach (var refId in request.RefereeIds)
-                {
-                    // Important domain logic: If a team has vetoed a referee, special count values (6)
-                    // are returned regardless of actual match history. This appears to be a business rule.
-                    bool vetoExists = _adminRepo.DoesVetoExistForTeam(request.TeamId, request.CompetitionId, refId)
-                        .GetDataOrThrow();
-
-                    if (vetoExists)
-                    {
-                        result.Add(new RefereesTeamsMatchesResponseDto
-                        {
-                            RefereeId = refId,
-                            HomeCount = 6, // Special value for vetoed referees
-                            AwayCount = 6 // Special value for vetoed referees
-                        });
-                    }
-                    else
-                    {
-                        matchRefereeStats.TryGetValue(refId, out var stats);
-                        result.Add(new RefereesTeamsMatchesResponseDto
-                        {
-                            RefereeId = refId,
-                            HomeCount = stats?.HomeCount ?? 0,
-                            AwayCount = stats?.AwayCount ?? 0
-                        });
-                    }
-                }
-
-                return ServiceResult<List<RefereesTeamsMatchesResponseDto>>.Success(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[RefereeStatsService] Error in GetRefereeMatchStatsAsync");
-                return ServiceResult<List<RefereesTeamsMatchesResponseDto>>.Failure("Nepodařilo se získat data rozhodčích o delegovaných zápasů týmů!");
-            }
-
-
-        }
-        public ServiceResult<int> CalculateAverageDistance(Tuple<float,float> ? locationBefore, Tuple<float, float>? locationAfter,Models.Match match) {
+	    public ServiceResult<int> CalculateAverageDistance(Tuple<float,float> ? locationBefore, Tuple<float, float>? locationAfter,Models.Match match) {
             try
             {
                 int kmCalculationBefore = 0;
@@ -211,7 +118,7 @@ namespace AdminPartDevelop.Services.AdminServices
                     var sCoord = new System.Device.Location.GeoCoordinate(locationBefore.Item1, locationBefore.Item2);
                     var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
 
-                    kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);                
+                    kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
                     kmTogether += kmCalculationBefore;
                 }
 
@@ -239,8 +146,115 @@ namespace AdminPartDevelop.Services.AdminServices
             catch(Exception ex)
             {
                 _logger.LogError(ex, "[CalculateAverageDistance] Error in calculating aproximated distance");
-                return ServiceResult<int>.Failure("Chyba při získávání přibližné vzdálenosti u rozhodčích"); 
-            }       
+                return ServiceResult<int>.Failure("Chyba při získávání přibližné vzdálenosti u rozhodčích");
+            }
+        }
+        public async Task<ServiceResult<List<RefereesTeamsMatchesResponseDto>>> GetRefereeMatchStatsAsync(RefereesTeamsMatchesRequestDto request)
+        {
+            try
+            {
+                var queryResult = (await _adminRepo.GetTeamsPureMatchesAsync(request.TeamId, request.CompetitionId))
+                    .GetDataOrThrow();
+
+                // 1. When IsReferee is true: Process main referee assignments
+                // 2. When IsReferee is false: Process assistant referee assignments
+                var matchRefereeStats = request.IsReferee
+                    ? queryResult
+                        .Where(m => request.RefereeIds.Contains(m.RefereeId ?? -1))
+                        .GroupBy(m => m.RefereeId ?? -1)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => new
+                            {
+                                HomeCount = g.Count(m => m.HomeTeamId == request.TeamId),
+                                AwayCount = g.Count(m => m.AwayTeamId == request.TeamId),
+                                MatchesDates = g
+                                    .Where(m => m.MatchDate != null)
+                                    .Select(x => new MatchDateInfo
+                                    {
+                                        Date = x.MatchDate,
+                                        IsHome = x.HomeTeamId == request.TeamId
+                                    })
+                                    .OrderBy(d => d.Date.Value).ToList()
+                            })
+                    : queryResult
+                        .Where(m =>
+                            (m.Ar1Id.HasValue && request.RefereeIds.Contains(m.Ar1Id.Value)) ||
+                            (m.Ar2Id.HasValue && request.RefereeIds.Contains(m.Ar2Id.Value)))
+                        .SelectMany(m => new[]
+                        {
+                            new { RefereeId = m.Ar1Id, IsHome = m.HomeTeamId == request.TeamId, IsAway = m.AwayTeamId == request.TeamId,MatchDate = m.MatchDate },
+                            new { RefereeId = m.Ar2Id, IsHome = m.HomeTeamId == request.TeamId, IsAway = m.AwayTeamId == request.TeamId, MatchDate = m.MatchDate }
+                        })
+                        .Where(x => x.RefereeId.HasValue && request.RefereeIds.Contains(x.RefereeId.Value))
+                        .GroupBy(x => x.RefereeId.Value)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => new
+                            {
+                                HomeCount = g.Count(x => x.IsHome),
+                                AwayCount = g.Count(x => x.IsAway),
+                                MatchesDates = g
+                                      .Where(m => m.MatchDate != null)
+                                    .Select(x => new MatchDateInfo
+                                    {
+                                        Date = x.MatchDate,
+                                        IsHome = x.IsHome
+                                    })
+                                    .OrderBy(d => d.Date.Value).ToList()
+                            });
+
+                var result = new List<RefereesTeamsMatchesResponseDto>();
+
+                foreach (var refId in request.RefereeIds)
+                {
+                    // Important domain logic: If a team has vetoed a referee, special count values (6)
+                    // are returned regardless of actual match history. This appears to be a business rule.
+                    bool vetoExists = _adminRepo.DoesVetoExistForTeam(request.TeamId, request.CompetitionId, refId)
+                        .GetDataOrThrow();
+
+                    if (vetoExists)
+                    {
+                        result.Add(new RefereesTeamsMatchesResponseDto
+                        {
+                            RefereeId = refId,
+                            HomeCount = 6, // Special value for vetoed referees
+                            AwayCount = 6, // Special value for vetoed referees
+			                MatchesDates = new List<MatchDateInfo>()
+                        });
+                    }
+                    else
+                    {
+			if (matchRefereeStats != null && matchRefereeStats.TryGetValue(refId, out var stats))
+			{
+				 result.Add(new RefereesTeamsMatchesResponseDto
+                        		{
+                            		RefereeId = refId,
+                            		HomeCount = stats?.HomeCount ?? 0,
+                            		AwayCount = stats?.AwayCount ?? 0,
+                            		MatchesDates = stats?.MatchesDates ?? new List<MatchDateInfo>()
+                        		});
+			}else{
+				 result.Add(new RefereesTeamsMatchesResponseDto
+                                        {
+                                        RefereeId = refId,
+                                        HomeCount =  0,
+                                        AwayCount =  0,
+                                        MatchesDates = new List<MatchDateInfo>()
+                                        });
+		   	}
+			}
+                }
+
+                return ServiceResult<List<RefereesTeamsMatchesResponseDto>>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[RefereeStatsService] Error in GetRefereeMatchStatsAsync");
+                return ServiceResult<List<RefereesTeamsMatchesResponseDto>>.Failure("Nepodařilo se získat data rozhodčích o delegovaných zápasů týmů!");
+            }
+
+
         }
         public ServiceResult<List<MatchViewModel>> MakeConnectionsOfMatches(List<MatchViewModel> matches)
         {
@@ -303,7 +317,7 @@ namespace AdminPartDevelop.Services.AdminServices
                 match.Match.Ar2Id.HasValue
             );
 
-            if (totalMatches == 0) return 0;
+            if (totalMatches == 0) return 0; 
 
             int percentage = (int)((delegatedMatches / (double)totalMatches) * 100);
             return percentage;
@@ -323,8 +337,7 @@ namespace AdminPartDevelop.Services.AdminServices
 
                 return ServiceResult<List<MatchViewModel>>.Success(SortByGameTime(true, matches));
 
-            }
-            catch (Exception ex)
+            } catch(Exception ex)
             {
                 _logger.LogError(ex, "[SortMatches] Error in proccess of sorting matches");
                 return ServiceResult<List<MatchViewModel>>.Failure("Chyba při třídění zápasů");
@@ -351,10 +364,10 @@ namespace AdminPartDevelop.Services.AdminServices
                 m => (m.Match.MatchDate, m.Match.MatchTime),
                 asc);
         }
-
+        
         public List<MatchViewModel> SortByHomeTeam(bool asc, IEnumerable<MatchViewModel> matches)
         {
-            return SortBy(matches, m => (m.HomeTeamName, m.Match.MatchDate, m.Match.MatchTime), asc);
+            return SortBy(matches, m => (m.HomeTeamName,m.Match.MatchDate, m.Match.MatchTime), asc);
         }
 
         public List<MatchViewModel> SortByAwayTeam(bool asc, IEnumerable<MatchViewModel> matches)
@@ -366,7 +379,7 @@ namespace AdminPartDevelop.Services.AdminServices
         {
             var sorted = asc
                    ? matches.OrderBy(m => ((m.CompetitionName.IndexOf("&") > 0 ? m.CompetitionName.Substring(m.CompetitionName.IndexOf("&") + 1) : m.CompetitionName),
-                                            m.Match.MatchDate, m.Match.MatchTime))
+                                            m.Match.MatchDate,m.Match.MatchTime))
                                                     .ThenBy(m => m.Match.MatchDate)
                                                     .ThenBy(m => m.Match.MatchTime)
                    : matches.OrderByDescending(m => (m.CompetitionName.IndexOf("&") > 0 ? m.CompetitionName.Substring(m.CompetitionName.IndexOf("&") + 1) : m.CompetitionName))

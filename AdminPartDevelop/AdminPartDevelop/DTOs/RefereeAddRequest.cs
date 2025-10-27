@@ -20,6 +20,7 @@ namespace AdminPartDevelop.DTOs
         [Range(0, 10, ErrorMessage = "League must be between 0 and 10")]
         public int League { get; set; }
 
+	public int Rating {get;set;}
         [Required(ErrorMessage = "Age is required")]
         public int Age { get; set; }
 

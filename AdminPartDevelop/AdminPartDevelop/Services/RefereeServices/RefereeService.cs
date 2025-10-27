@@ -1,5 +1,4 @@
 ﻿using AdminPartDevelop.Common;
-using AdminPartDevelop.Data;
 using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Services.FileParsers;
@@ -8,6 +7,7 @@ using AdminPartDevelop.Views.ViewModels;
 using Aspose.Cells.Drawing.Equations;
 using Microsoft.Maui.ApplicationModel;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using static AdminPartDevelop.Services.RefereeServices.RefereeService;
 using static AdminPartDevelop.Views.ViewModels.RefereeWithTimeOptions;
 
@@ -16,134 +16,21 @@ namespace AdminPartDevelop.Services.RefereeServices
     public class RefereeService : IRefereeService
     {
         private readonly ILogger<RefereeService> _logger;
-        private readonly Data.IAdminRepo _adminRepo;
+	private readonly Data.IAdminRepo _adminRepo;
         private readonly Services.RouteServices.IRouteBusPlanner _routeBusPlanner;
         private readonly Services.RouteServices.IRouteCarPlanner _routeCarPlanner;
-
 
         private readonly int waitingTimeBeforeMatch = 45;
         private readonly int reserveAfterMatches = 30;
         private readonly int travellingMaximumPeriod = 90;
-        private readonly int locationToBeRelevantTimeGap = 4;
+	private readonly int locationToBeRelevantTimeGap = 4;
 
-        public RefereeService(Data.IAdminRepo adminRepo, Services.RouteServices.IRouteCarPlanner routeCarPlanner, Services.RouteServices.IRouteBusPlanner routeBusPlanner, ILogger<RefereeService> logger)
+        public RefereeService(Data.IAdminRepo adminRepo, Services.RouteServices.IRouteCarPlanner routeCarPlanner, Services.RouteServices.IRouteBusPlanner routeBusPlanner,ILogger<RefereeService> logger, Data.IRefereeRepo refereeRepo)
         {
-            _adminRepo = adminRepo;
-            _routeCarPlanner = routeCarPlanner;
+	    _adminRepo = adminRepo;
+	    _routeCarPlanner = routeCarPlanner;
             _routeBusPlanner = routeBusPlanner;
             _logger = logger;
-        }
-        public async Task<ServiceResult<TransportBetweenMatchesViewModel>> CalculateTransfersWhenAssigningAsync(Match matchToCheck, RefereeWithTimeOptions refereeToAssign,bool force)
-        {
-            try
-            {
-                //find out if there is longtitute and latitude of play field
-                Tuple<bool, double, Transfer> isManageableWTransferPreMatch = null!;
-                Tuple<bool, double, Transfer> isManageableWTransferPostMatch = null!;
-                Tuple<DateTime, string?> startOfNextMatch = null!;
-                Tuple<DateTime, string?> endOfPreviousMatch = null!;
-                Transfer transferPre = null!;
-                Transfer transferPost = null!;
-                bool succesfullyCalculatedRoutePre = true;
-                bool succesfullyCalculatedRoutePost = true;
-
-
-
-                //find if the location is not set
-                float longtitude = matchToCheck.Field.Longitude;
-                float latitude = matchToCheck.Field.Latitude;
-                const float epsilon = 0.001f;
-
-                bool isLatLonZero = Math.Abs(longtitude) < epsilon || Math.Abs(latitude) < epsilon;
-
-                if (!isLatLonZero)
-                {
-                    startOfNextMatch = GetFirstNextMatchDateTime(refereeToAssign, matchToCheck).GetDataOrThrow();
-                    endOfPreviousMatch = GetFirstPreviousMatchDateTime(refereeToAssign, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime)).GetDataOrThrow();
-
-                    bool hasCarOverall = refereeToAssign.Referee.CarAvailability;
-                    //referee is using car or public transport at the moment?
-                    bool? hasCarDuring = CheckCarAvailabilityOfReferee(refereeToAssign, matchToCheck).GetDataOrThrow();
-
-                    bool actuallCarAvailability = hasCarDuring.HasValue ? hasCarDuring.Value : hasCarOverall;
-                    //calculate the possible route with km and time if the match is less than 1 hour and half from the beggining of actuall
-                    if (startOfNextMatch != null)
-                    {
-                        var nextMatch = (await _adminRepo.GetMatchByIdAsync(startOfNextMatch.Item2)).GetDataOrThrow();
-
-                        bool isEndingLatLonZero = Math.Abs(nextMatch.Field.Longitude) < epsilon || Math.Abs(nextMatch.Field.Latitude) < epsilon;
-                        try
-                        {
-                            if (!isEndingLatLonZero && actuallCarAvailability)
-                            {
-                                var result = (await _routeCarPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude)).GetDataOrThrow();
-                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
-                                transferPost = isManageableWTransferPostMatch.Item3;
-                            }
-                            else if (!isEndingLatLonZero && !actuallCarAvailability)
-                            {
-                                var result = (await _routeBusPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(135))).GetDataOrThrow();
-                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
-                                transferPost = isManageableWTransferPostMatch.Item3;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            succesfullyCalculatedRoutePost = false;
-                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
-                        }
-                    }
-                    if (endOfPreviousMatch != null)
-                    {
-                        try
-                        {
-                            var previousMatch = (await _adminRepo.GetMatchByIdAsync(endOfPreviousMatch.Item2)).GetDataOrThrow();
-
-                            bool isEndingLatLonZero = Math.Abs(previousMatch.Field.Longitude) < epsilon || Math.Abs(previousMatch.Field.Latitude) < epsilon;
-                            if (!isEndingLatLonZero && actuallCarAvailability)
-                            {
-                                var result = (await _routeCarPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude)).GetDataOrThrow();
-                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
-                                transferPre = isManageableWTransferPreMatch.Item3;
-                            }
-                            else if (!isEndingLatLonZero && !actuallCarAvailability)
-                            {
-                                var result = (await _routeBusPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude, endOfPreviousMatch.Item1)).GetDataOrThrow();
-                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
-                                transferPre = isManageableWTransferPreMatch.Item3;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            succesfullyCalculatedRoutePre = false;
-                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
-                        }
-                    }
-                }
-                if (isManageableWTransferPostMatch != null && succesfullyCalculatedRoutePost)
-                {
-                    if (!force && !isManageableWTransferPostMatch.Item1)
-                    {
-
-                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na zápas z předzápasu o " + isManageableWTransferPostMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
-                    }
-                }
-                if (isManageableWTransferPreMatch != null && succesfullyCalculatedRoutePre)
-                {
-                    if (!force && !isManageableWTransferPreMatch.Item1)
-                    {
-                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na následující zápas z tohoto zápasu o" + isManageableWTransferPreMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
-                    }
-                }
-                return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(true, "",transferPre,transferPost));
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[AddRefereeToTheMatch] Error calculating transfer when delegating referee");
-                return ServiceResult<TransportBetweenMatchesViewModel>.Failure("Neočekávaná chyba při vypočítávání trasy mezi zápasy rozhodčímu!");
-
-            }
         }
 
         public ServiceResult<Dictionary<int, List<RefereeWithTimeOptions>>> SortRefereesByLeague(List<RefereeWithTimeOptions> listOfReferees)
@@ -311,6 +198,118 @@ namespace AdminPartDevelop.Services.RefereeServices
                 return ServiceResult<RefereeWithTimeOptions>.Failure("Nepodařilo se získat časové možnosti rozhodčího!");
             }
         }
+	public async Task<ServiceResult<TransportBetweenMatchesViewModel>> CalculateTransfersWhenAssigningAsync(Models.Match matchToCheck, RefereeWithTimeOptions refereeToAssign,bool force)
+        {
+            try
+            {
+                //find out if there is longtitute and latitude of play field
+                Tuple<bool, double, Transfer> isManageableWTransferPreMatch = null!;
+                Tuple<bool, double, Transfer> isManageableWTransferPostMatch = null!;
+                Tuple<DateTime, string?> startOfNextMatch = null!;
+                Tuple<DateTime, string?> endOfPreviousMatch = null!;
+                Transfer transferPre = null!;
+                Transfer transferPost = null!;
+                bool succesfullyCalculatedRoutePre = true;
+                bool succesfullyCalculatedRoutePost = true;
+
+
+
+                //find if the location is not set
+                float longtitude = matchToCheck.Field.Longitude;
+                float latitude = matchToCheck.Field.Latitude;
+                const float epsilon = 0.001f;
+
+                bool isLatLonZero = Math.Abs(longtitude) < epsilon || Math.Abs(latitude) < epsilon;
+
+                if (!isLatLonZero)
+                {
+                    startOfNextMatch = GetFirstNextMatchDateTime(refereeToAssign, matchToCheck).GetDataOrThrow();
+                    endOfPreviousMatch = GetFirstPreviousMatchDateTime(refereeToAssign, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime)).GetDataOrThrow();
+
+                    bool hasCarOverall = refereeToAssign.Referee.CarAvailability;
+                    //referee is using car or public transport at the moment?
+                    bool? hasCarDuring = CheckCarAvailabilityOfReferee(refereeToAssign, matchToCheck).GetDataOrThrow();
+
+                    bool actuallCarAvailability = hasCarDuring.HasValue ? hasCarDuring.Value : hasCarOverall;
+                    //calculate the possible route with km and time if the match is less than 1 hour and half from the beggining of actuall
+                    if (startOfNextMatch != null)
+                    {
+                        var nextMatch = (await _adminRepo.GetMatchByIdAsync(startOfNextMatch.Item2)).GetDataOrThrow();
+
+                        bool isEndingLatLonZero = Math.Abs(nextMatch.Field.Longitude) < epsilon || Math.Abs(nextMatch.Field.Latitude) < epsilon;
+                        try
+                        {
+                            if (!isEndingLatLonZero && actuallCarAvailability)
+                            {
+                                var result = (await _routeCarPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude)).GetDataOrThrow();
+                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
+                                transferPost = isManageableWTransferPostMatch.Item3;
+                            }
+                            else if (!isEndingLatLonZero && !actuallCarAvailability)
+                            {
+                                var result = (await _routeBusPlanner.CalculateRoute(latitude, longtitude, nextMatch.Field.Latitude, nextMatch.Field.Longitude, matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(135))).GetDataOrThrow();
+                                isManageableWTransferPostMatch = CheckTimeAvailabilityWithTransferOfReferee(startOfNextMatch.Item1, nextMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, false, true).GetDataOrThrow();
+                                transferPost = isManageableWTransferPostMatch.Item3;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            succesfullyCalculatedRoutePost = false;
+                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
+                        }
+                    }
+                    if (endOfPreviousMatch != null)
+                    {
+                        try
+                        {
+                            var previousMatch = (await _adminRepo.GetMatchByIdAsync(endOfPreviousMatch.Item2)).GetDataOrThrow();
+
+                            bool isEndingLatLonZero = Math.Abs(previousMatch.Field.Longitude) < epsilon || Math.Abs(previousMatch.Field.Latitude) < epsilon;
+                            if (!isEndingLatLonZero && actuallCarAvailability)
+                            {
+                                var result = (await _routeCarPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude)).GetDataOrThrow();
+                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
+                                transferPre = isManageableWTransferPreMatch.Item3;
+                            }
+                            else if (!isEndingLatLonZero && !actuallCarAvailability)
+                            {
+                                var result = (await _routeBusPlanner.CalculateRoute(previousMatch.Field.Latitude, previousMatch.Field.Longitude, latitude, longtitude, endOfPreviousMatch.Item1)).GetDataOrThrow();
+                                isManageableWTransferPreMatch = CheckTimeAvailabilityWithTransferOfReferee(endOfPreviousMatch.Item1, previousMatch.MatchId, matchToCheck, result.Item2, refereeToAssign.Referee.RefereeId, true, true).GetDataOrThrow();
+                                transferPre = isManageableWTransferPreMatch.Item3;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            succesfullyCalculatedRoutePre = false;
+                            _logger.LogError(ex, "[Calculating Route] Route or transfer check failed, continuing.");
+                        }
+                    }
+                }
+                if (isManageableWTransferPostMatch != null && succesfullyCalculatedRoutePost)
+                {
+                    if (!force && !isManageableWTransferPostMatch.Item1)
+                    {
+
+                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na zápas z předzápasu o " + isManageableWTransferPostMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
+                    }
+                }
+                if (isManageableWTransferPreMatch != null && succesfullyCalculatedRoutePre)
+                {
+                    if (!force && !isManageableWTransferPreMatch.Item1)
+                    {
+                        return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(false, "Daný rozhodčí nestíhá přijít na následující zápas z tohoto zápasu o" + isManageableWTransferPreMatch.Item2 + " minut (zkontrolujte v okně rozhodčího)!",null,null));
+                    }
+                }
+                return ServiceResult<TransportBetweenMatchesViewModel>.Success(new TransportBetweenMatchesViewModel(true, "",transferPre,transferPost));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AddRefereeToTheMatch] Error calculating transfer when delegating referee");
+                return ServiceResult<TransportBetweenMatchesViewModel>.Failure("Neočekávaná chyba při vypočítávání trasy mezi zápasy rozhodčímu!");
+
+            }
+        }
         public async Task<ServiceResult<List<RefereeWithTimeOptions>>> AddRefereesTimeOptionsAsync(List<Referee> listWithReferees, List<MatchViewModel> listOfMatches, List<Transfer> listOfTransfers, DateOnly firstGameDay)
         {
             try
@@ -359,28 +358,26 @@ namespace AdminPartDevelop.Services.RefereeServices
                     DateTime matchEnd = officialMatchStart.AddMinutes((match.Match.Competition.MatchLength * 2) + 15 + reserveAfterMatches);
                     var timeFlags = GetMatchTimeFlags(matchStart, firstGameDay, saturdayStart, saturdayNoon, sundayStart, sundayNoon, sundayEnd);
 
+                    RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(matchStart, matchEnd, "zapas", matchId: match.Match.MatchId);
                     // Differentiate between main referee ("zapasref") and assistants ("zapasar")
                     // to allow finer filtering later.
                     if (match.Match.RefereeId.HasValue && refereeDict.TryGetValue(match.Match.RefereeId.Value, out RefereeWithTimeOptions mainRefTimeOptions))
                     {
-                        Console.WriteLine("Adding zapasref " + match.Match.MatchId + " to referee " + mainRefTimeOptions.Referee.RefereeId);
-                        RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(matchStart, matchEnd, "zapasref", matchId: match.Match.MatchId);
+                        timeRange.RangeType = "zapasref";
                         mainRefTimeOptions.SortedRanges.Add(timeRange);
                         SetTimeFlags(timeFlags, mainRefTimeOptions);
                     }
 
                     if (match.Match.Ar1Id.HasValue && refereeDict.TryGetValue(match.Match.Ar1Id.Value, out RefereeWithTimeOptions ar1TimeOptions))
                     {
-                        Console.WriteLine("Adding zapasar " + match.Match.MatchId + " to referee " + ar1TimeOptions.Referee.RefereeId);
-                        RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(matchStart, matchEnd, "zapasar", matchId: match.Match.MatchId);
+                        timeRange.RangeType = "zapasar";
                         ar1TimeOptions.SortedRanges.Add(timeRange);
                         SetTimeFlags(timeFlags, ar1TimeOptions);
                     }
 
                     if (match.Match.Ar2Id.HasValue && refereeDict.TryGetValue(match.Match.Ar2Id.Value, out RefereeWithTimeOptions ar2TimeOptions))
                     {
-                        Console.WriteLine("Adding zapasar " + match.Match.MatchId + " to referee " + ar2TimeOptions.Referee.RefereeId);
-                        RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(matchStart, matchEnd, "zapasar", matchId: match.Match.MatchId);
+                        timeRange.RangeType = "zapasar";
                         ar2TimeOptions.SortedRanges.Add(timeRange);
                         SetTimeFlags(timeFlags, ar2TimeOptions);
                     }
@@ -400,12 +397,9 @@ namespace AdminPartDevelop.Services.RefereeServices
                             var timeFlags = GetExcuseTimeFlags(excuseStart, excuseEnd, firstGameDay, saturdayStart, saturdayNoon, sundayStart, sundayNoon, sundayEnd);
 
                             //check if it is the ongoing excuse or start is in two weeks
-                            /*if ((excuseStart >= now && excuseStart <= twoWeeksFromNow) || (excuseStart <= now && excuseEnd >= now))
-                            {*/
+                            if ((excuseStart >= now && excuseStart <= twoWeeksFromNow) || (excuseStart <= now && excuseEnd >= now))
+                            {
 
-                                //check if it is the ongoing excuse or start is in two weeks production
-                                /*if ((excuseStart >= now && excuseStart <= twoWeeksFromNow) || (excuseStart <= now && excuseEnd >= now))
-                                {*/
                                 RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(excuseStart, excuseEnd, "omluva", excuseId: excuse.ExcuseId);
 
 
@@ -418,8 +412,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                                     }
                                     SetTimeFlags(timeFlags, refTimeOptions);
                                 }
-                                //}
-                            //}
+                            }
                         }
                     }
                 }
@@ -459,8 +452,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 }
                 return ServiceResult<List<RefereeWithTimeOptions>>.Success(refereesWithSortedLists);
 
-            }
-            catch (Exception ex)
+            } catch (Exception ex)
             {
                 _logger.LogError(ex, "[AddTimeOptionsAsync] Error getting time options of referees");
                 return ServiceResult<List<RefereeWithTimeOptions>>.Failure("Nepodařilo se získat časové možnosti rozhodčích!");
@@ -603,7 +595,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 return ServiceResult<Tuple<float, float>>.Failure("Chyba při získavání lokace nasledujícího zápasu");
             }
         }
-        public ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary)
+        public ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds, Dictionary<int, bool> isFreeDuringTheMatch, Dictionary<int,int> ratingOfReferees, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary)
         {
             // Constants for penalty calculations
             const int STARTING_POINTS = 100;
@@ -621,10 +613,10 @@ namespace AdminPartDevelop.Services.RefereeServices
 
             const int WEEKEND_PENALTY_PER_MATCH_AR = -2;
             const int WEEKEND_PENALTY_PER_MATCH_R = -3;
-
+	    
             try
             {
-                // Convert match data into dictionaries for fast lookup by refereeId
+		// Convert match data into dictionaries for fast lookup by refereeId
                 var homeMatchesByReferee = homeMatches.ToDictionary(x => x.RefereeId);
                 var awayMatchesByReferee = awayMatches.ToDictionary(x => x.RefereeId);
                 var totalMatchesByReferee = totalMatches.ToDictionary(x => x.RefereeId);
@@ -633,46 +625,61 @@ namespace AdminPartDevelop.Services.RefereeServices
 
                 foreach (var refereeId in refereeIds)
                 {
-                    int totalPoints = STARTING_POINTS;
-                    var homeMatchData = homeMatchesByReferee.GetValueOrDefault(refereeId, new RefereesTeamsMatchesResponseDto { RefereeId = refereeId, HomeCount = 0, AwayCount = 0 });
-                    var awayMatchData = awayMatchesByReferee.GetValueOrDefault(refereeId, new RefereesTeamsMatchesResponseDto { RefereeId = refereeId, HomeCount = 0, AwayCount = 0 });
-                    var matchTotals = totalMatchesByReferee.GetValueOrDefault(refereeId, new RefereesMatchesResponseDto { RefereeId = refereeId, asAssistantReferee = 0, asReferee = 0 });
+                        var reasonBuilder = new System.Text.StringBuilder();
 
-                    var distance = distanceDictionary.GetValueOrDefault(refereeId, 0);
+                        var isFree = isFreeDuringTheMatch[refereeId];
+                        if (!isFree)
+                        {
+                            reasonBuilder.AppendLine($"Rozhodčí nění dostupný během zápasu");
+                            result.Add(refereeId, new Tuple<int, string>(1, reasonBuilder.ToString()));
+                            continue;
+                        }
+                        int totalPoints = STARTING_POINTS;
+                        var homeMatchData = homeMatchesByReferee.GetValueOrDefault(refereeId, new RefereesTeamsMatchesResponseDto { RefereeId = refereeId, HomeCount = 0, AwayCount = 0 });
+                        var awayMatchData = awayMatchesByReferee.GetValueOrDefault(refereeId, new RefereesTeamsMatchesResponseDto { RefereeId = refereeId, HomeCount = 0, AwayCount = 0 });
+                        var matchTotals = totalMatchesByReferee.GetValueOrDefault(refereeId, new RefereesMatchesResponseDto { RefereeId = refereeId, asAssistantReferee = 0, asReferee = 0 });
 
-                    var reasonBuilder = new System.Text.StringBuilder();
+                        var distance = distanceDictionary.GetValueOrDefault(refereeId,0);
+			            var rating = ratingOfReferees[refereeId];
 
-                    reasonBuilder.AppendLine($"Domácí tým");
-                    totalPoints += CalculateTeamMatchesPenalty(homeMatchData, reasonBuilder);
-                    reasonBuilder.AppendLine($"Hostující tým");
-                    totalPoints += CalculateTeamMatchesPenalty(awayMatchData, reasonBuilder);
-                    totalPoints += (distance / 5) * DISTANCE_PENALTY_PER_5KM;
-                    reasonBuilder.AppendLine($"Body za lokaci :{distance} km,    =>body: {(distance / 5) * DISTANCE_PENALTY_PER_5KM}");
-                    int minusPointsTotals = matchTotals.asReferee * WEEKEND_PENALTY_PER_MATCH_R + matchTotals.asAssistantReferee * WEEKEND_PENALTY_PER_MATCH_AR;
-                    totalPoints += minusPointsTotals;
-                    reasonBuilder.AppendLine($"Jako rozhodčí :{matchTotals.asReferee} zápasů");
-                    reasonBuilder.AppendLine($"Jako asistent :{matchTotals.asAssistantReferee} zápasů");
-                    reasonBuilder.AppendLine($" =>body: {minusPointsTotals}");
 
-                    // Ensure score does not go below zero
-                    int finalScore = totalPoints < 0 ? 0 : totalPoints;
-                    reasonBuilder.AppendLine($"Konečné skóre: {finalScore}");
+                        reasonBuilder.AppendLine($"Domácí tým");
+                        totalPoints += CalculateTeamMatchesPenalty(homeMatchData, reasonBuilder);
+                        reasonBuilder.AppendLine($"Hostující tým");
+                        totalPoints += CalculateTeamMatchesPenalty(awayMatchData, reasonBuilder);
+                        totalPoints += (distance / 5) * DISTANCE_PENALTY_PER_5KM;
+                        reasonBuilder.AppendLine($"Body za lokaci :{distance} km,    =>body: {(distance / 5) * DISTANCE_PENALTY_PER_5KM}");
+                        int minusPointsTotals = matchTotals.asReferee * WEEKEND_PENALTY_PER_MATCH_R + matchTotals.asAssistantReferee * WEEKEND_PENALTY_PER_MATCH_AR;
+                        totalPoints += minusPointsTotals;
+                        reasonBuilder.AppendLine($"Jako rozhodčí :{matchTotals.asReferee} zápasů");
+                        reasonBuilder.AppendLine($"Jako asistent :{matchTotals.asAssistantReferee} zápasů");
+			                totalPoints -= (10 - rating);
+                        reasonBuilder.AppendLine($" =>body: {minusPointsTotals}");
+			            reasonBuilder.AppendLine($"Rating : -{10 - rating}");
 
-                    result.Add(refereeId, new Tuple<int, string>(finalScore, reasonBuilder.ToString()));
+                        // Ensure score does not go below zero
+                        int finalScore = totalPoints < 0 ? 0 : totalPoints;
+                        reasonBuilder.AppendLine($"Konečné skóre: {finalScore}");                    
+
+                        result.Add(refereeId, new Tuple<int, string>(finalScore, reasonBuilder.ToString()));
+                    }
+
+                foreach (var kvp in result)
+                {
+                    _logger.LogInformation($"{kvp.Key} w> {kvp.Value}");
                 }
-
                 return ServiceResult<Dictionary<int, Tuple<int, string>>>.Success(result);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 _logger.LogError(ex, "[CalculatePointsForReferees] Error finding out the points for referees ");
-                return ServiceResult<Dictionary<int, Tuple<int, string>>>.Failure("Nepodařilo se získat body rozhodčích!");
+                return ServiceResult< Dictionary<int, Tuple<int, string>>>.Failure("Nepodařilo se získat body rozhodčích!");
             }
             // Helper method for team matches penalty
             int CalculateTeamMatchesPenalty(
                 RefereesTeamsMatchesResponseDto matches,
                 System.Text.StringBuilder reasonBuilder)
-            {
+            {               
                 int teamsPenaltyHome = 0;
 
                 if (matches.HomeCount <= 2)
@@ -687,8 +694,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 {
                     teamsPenaltyHome = 2 * TEAM_PENALTY_FIRST_TWO_AT_HOME + TEAM_PENALTY_THIRD_AT_HOME +
                                   ((matches.HomeCount - 3) * TEAM_PENALTY_ADDITIONAL_AT_HOME);
-                }
-                else
+                }else
                 {
                     teamsPenaltyHome = VETO_PENALTY;
                 }
@@ -715,7 +721,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 int finalPenalty = teamsPenaltyHome + teamsPenaltyAway;
                 reasonBuilder.AppendLine($"zápasy doma: {matches.HomeCount} ,vonku:{matches.AwayCount} ,body => {finalPenalty}");
                 return finalPenalty;
-            }
+            }                 
         }
 
         public ServiceResult<bool> CheckTimeAvailabilityOfReferee(RefereeWithTimeOptions referee, Models.Match matchToCheck)
@@ -725,7 +731,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 DateTime matchStart = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch); // 1 hour before match
                 DateTime matchEnd = matchStart.AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches); // Match duration + halftime + reserve 
 
-                foreach (var existingRange in referee.SortedRanges.Where(s => s.RangeType != "vozidlo" && s.RangeType != "transfer"))
+                foreach (var existingRange in referee.SortedRanges.Where(s => s.RangeType != "vozidlo" && s.RangeType !="transfer"))
                 {
                     if (matchStart <= existingRange.End && matchEnd >= existingRange.Start)
                     {
@@ -741,7 +747,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 return ServiceResult<bool>.Failure("Nepodařilo se získat zda je rozhodčí dostupný v danej zápas!");
             }
         }
-        public ServiceResult<bool?> CheckCarAvailabilityOfReferee(RefereeWithTimeOptions referee, Models.Match matchToCheck)
+        public ServiceResult<bool?> CheckCarAvailabilityOfReferee(RefereeWithTimeOptions referee,Models.Match matchToCheck)
         {
             try
             {
@@ -753,7 +759,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                     if (matchStart <= existingRange.End && matchEnd >= existingRange.Start)
                     {
                         var vehicleSlot = referee.Referee.VehicleSlots.FirstOrDefault(v => v.SlotId == existingRange.SlotId);
-                        if (vehicleSlot != null)
+                        if(vehicleSlot!=null)
                             return ServiceResult<bool?>.Success(vehicleSlot.HasCarInTheSlot);
                     }
                 }
@@ -766,7 +772,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 return ServiceResult<bool?>.Failure("Nepodařilo se získat informaci zda je rozhodčího dostupný s autem v průbehu daného zápasu!");
             }
         }
-        public ServiceResult<Tuple<bool, double, Transfer>> CheckTimeAvailabilityWithTransferOfReferee(DateTime startOrEndOfConnectedMatch, string connectedMatchId, Models.Match matchToCheck, int transferLength, int refereeId, bool isPreMatch, bool hasCar)
+        public ServiceResult<Tuple<bool,double,Transfer>> CheckTimeAvailabilityWithTransferOfReferee(DateTime startOrEndOfConnectedMatch, string connectedMatchId, Models.Match matchToCheck, int transferLength,int refereeId,bool isPreMatch,bool hasCar)
         {
             try
             {
@@ -787,18 +793,18 @@ namespace AdminPartDevelop.Services.RefereeServices
                         PreviousMatchId = connectedMatchId,
                         FutureMatchId = matchToCheck.MatchId,
                         ExpectedDeparture = matchStart.AddMinutes(-transferLength),
-                        ExpectedArrival = matchStart,
+                        ExpectedArrival = matchStart,                      
                         FromHome = false,
                         Car = hasCar
                     };
 
                     if (matchStart < endOfPreviousWithTransfer)
-                    {
-                        return ServiceResult<Tuple<bool, double, Transfer>>.Success(new Tuple<bool, double, Transfer>(false, minutesDifference, transfer));
+                    {                      
+                        return ServiceResult<Tuple<bool, double,Transfer>>.Success(new Tuple<bool, double,Transfer>(false,minutesDifference,transfer));
                     }
                     else
                     {
-                        return ServiceResult<Tuple<bool, double, Transfer>>.Success(new Tuple<bool, double, Transfer>(true, minutesDifference, transfer));
+                        return ServiceResult<Tuple<bool, double,Transfer>>.Success(new Tuple<bool, double,Transfer>(true, minutesDifference,transfer));
                     }
                 }
                 else
@@ -819,32 +825,31 @@ namespace AdminPartDevelop.Services.RefereeServices
 
                     if (matchEnd > startOfNextWithTransfer)
                     {
-                        return ServiceResult<Tuple<bool, double, Transfer>>.Success(new Tuple<bool, double, Transfer>(false, minutesDifference, transfer));
+                        return ServiceResult<Tuple<bool, double,Transfer>>.Success(new Tuple<bool, double,Transfer>(false, minutesDifference,transfer));
                     }
                     else
                     {
-                        return ServiceResult<Tuple<bool, double, Transfer>>.Success(new Tuple<bool, double, Transfer>(true, minutesDifference, transfer));
+                        return ServiceResult<Tuple<bool, double,Transfer>>.Success(new Tuple<bool, double,Transfer>(true, minutesDifference,transfer));
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[CheckTimeAvailabilityWithTransferOfReferee] Error finding out the availability of referee in specific match time with transfer");
-                return ServiceResult<Tuple<bool, double, Transfer>>.Failure("Nepodařilo se získat zda je rozhodčí dostupný v danej zápas s transferom!");
+                return ServiceResult<Tuple<bool,double,Transfer>>.Failure("Nepodařilo se získat zda je rozhodčí dostupný v danej zápas s transferom!");
             }
 
         }
         public ServiceResult<Dictionary<int, string>> GetRefereeDictionary(List<Referee> listOfReferees)
-        {
+         {
             try
-            {
+            {               
                 var dict = listOfReferees.ToDictionary(
                         referee => referee.RefereeId,
                         referee => $"{referee.Name.Substring(0, 1)}. {referee.Surname}"
                     );
                 return ServiceResult<Dictionary<int, string>>.Success(dict);
-            }
-            catch (Exception ex)
+            }catch(Exception ex)
             {
                 _logger.LogError(ex, "[GetRefereeDictionary] Error getting names of referees");
                 return ServiceResult<Dictionary<int, string>>.Failure("Nepodařilo se získat jména a id rozhodčích!");
@@ -858,7 +863,7 @@ namespace AdminPartDevelop.Services.RefereeServices
             bool SundayAfternoon
         );
         private TimeFlags GetMatchTimeFlags(DateTime matchStart, DateOnly firstGameDay, DateTime saturdayStart, DateTime saturdayNoon, DateTime sundayStart, DateTime sundayNoon, DateTime sundayEnd)
-        {
+        { 
             return new TimeFlags(
                 SaturdayMorning: matchStart >= saturdayStart && matchStart < saturdayNoon,
                 SaturdayAfternoon: matchStart >= saturdayNoon && matchStart < sundayStart,
@@ -881,14 +886,14 @@ namespace AdminPartDevelop.Services.RefereeServices
         }
         private void SetTimeFlags(TimeFlags TimeFlags, RefereeWithTimeOptions referee)
         {
-            if (TimeFlags.SaturdayMorning)
+            if(TimeFlags.SaturdayMorning)
                 referee.isFreeSaturdayMorning = false;
             if (TimeFlags.SaturdayAfternoon)
                 referee.isFreeSaturdayAfternoon = false;
             if (TimeFlags.SundayMorning)
                 referee.isFreeSundayMorning = false;
             if (TimeFlags.SundayAfternoon)
-                referee.isFreeSundayAfternoon = false;
+                referee.isFreeSundayAfternoon = false;           
         }
 
     }

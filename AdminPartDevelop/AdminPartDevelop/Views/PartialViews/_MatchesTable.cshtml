@@ -1,4 +1,4 @@
-﻿﻿@* Match Panel Partial View *@
+﻿@* Match Panel Partial View *@
 @using AdminPartDevelop
 @using AdminPartDevelop.Models
 @using AdminPartDevelop.Views.ViewModels
@@ -22,10 +22,10 @@
         height: 120px;
     }
 </style>
-<ul class="list-group" style="height:45vh; overflow-y:auto;">
+<ul class="list-group" style="height:45vh; overflow-y:auto;width=125%;">
     @foreach (var match in Model)
     {
-        <li id="list_matches" class="list-group-item p-1" style="height:120px;width:160%">
+        <li id="list_matches" class="list-group-item p-1" style="height:120px;width:135%">
             <div class="match_pane d-flex" id="match_pane_@match.Match.MatchId" style="background-color: #32cd32; height:120px;" data-id="@match.Match.MatchId">
                 <div class="rectangleMatch" style="@((match.Match.AlreadyPlayed) ? $"background-color:black;" : "") width:10px;"></div>
                 <div id="match_div_prematch" class="vertical-label" style="font-size:12px;">
@@ -39,10 +39,24 @@
                     <div class="home-team-id" style="font-family:Arial; font-size:10px;">@match.Match.HomeTeamId</div>
                 </div>
 
-                <div class="p-3 text-center" style="width:107px;">
-                    <div style="font-family:Arial; font-size:28px;">@match.Match.MatchTime</div>
-                    <div style="font-family:Arial; font-size:16px;"> @match.Match.MatchDate.ToString("dd.MM.yy")</div>
-                </div>
+		<div class="p-3 text-center" style="width:107px;">
+        		<div class="datetime-input-group">
+            		<!-- Display Mode -->
+            		<div class="compact-datetime display-mode">
+                		<div  style="font-family:Arial; font-size:28px;" class="time-display">@match.Match.MatchTime</div>
+                		<div  style="font-family:Arial; font-size:16px;" class="date-display">@match.Match.MatchDate.ToString("dd.MM.yy")</div>
+                		<button class="edit-btn" onclick="enterEditMode(this)" title="Edit">✎</button>
+            		</div>
+      				      <div class="edit-mode" style="display: none; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; width: 107px; text-align: center;">
+    <input type="time" class="form-control mb-1" name="MatchTime" value="@match.Match.MatchTime.ToString("HH\\:mm")" style="font-size: 12px; padding: 4px;" />
+    <input type="date" class="form-control mb-2" name="MatchDate" value="@match.Match.MatchDate.ToString("yyyy-MM-dd")" style="font-size: 11px; padding: 4px;" />
+    			<div style="display: flex; gap: 2px;">
+        			<button class="btn btn-success change-match-date" style="font-size: 10px; padding: 2px 4px; flex: 1;" data-id="@match.Match.MatchId">✓</button>
+        			<button class="btn btn-secondary" onclick="cancelEdit(this)" style="font-size: 10px; padding: 2px 4px; flex: 1;">✕</button>
+    </div>
+</div>	
+			</div>
+    		</div>
 
                 <div class="p-4 text-center" style="width:260px;">
                     <div style="font-family:Arial;width:245px; font-size:18px;">@match.AwayTeamName</div>
@@ -105,8 +119,11 @@
                                 }
                             }
                         </div>
-                        <div class="competition_id" style="width:285px;text-align:right">@match.Match.CompetitionId</div>
+			<div class="competition-info" style="width:180px; text-align:right;">
+                        	<div class="competition_id" style="width:180px;text-align:right">@match.Match.CompetitionId</div>
+ <div class="competition_league" style="width:180px;text-align:right">@match.CompetitionLeague</div>
                     </div>
+			</div>
                 </div>
 
                 <div class="btn-group-vertical justify-content-around p-2">
@@ -133,12 +150,12 @@
                 <div id="match_div_postmatch" class="vertical-label" style="font-size:12px;">
                     <input id="match_input_postmatch_@match.Match.MatchId" style="height:120px;text-align:center;font-size:12px; cursor:pointer;" type="text" class="linkInput" value="@match.Match.PostMatch" />
                 </div>
-
-                <div class="p-4 text-center" style="width:260px;">
-                    <div id="last_changed_by_@match.Match.MatchId" style="font-family:Arial;width:245px; font-size:18px;">@match.Match.LastChangedBy</div>
-                    <div id="last_changed_@match.Match.MatchId" style="font-family:Arial; font-size:10px;">
-                        @match.Match.LastChanged.ToString("dd/MM HH:mm:ss")
-                    </div>
+		
+		 	<div class="p-4 text-center" style="width:260px;">
+                      		<div  id="last_changed_by_@match.Match.MatchId" style="font-family:Arial;width:245px; font-size:18px;">@match.Match.LastChangedBy</div>
+                      		<div id="last_changed_@match.Match.MatchId" style="font-family:Arial; font-size:10px;">
+				 @match.Match.LastChanged.ToString("dd/MM HH:mm:ss")
+			</div>
                 </div>
 
             </div>
@@ -147,20 +164,20 @@
 </ul>
 <script>
     $(document).ready(function() {
-    @foreach (var lockedMatch in Model.Where(m => m.Match.Locked || m.Match.AlreadyPlayed))
-    {
-        <text>
-                                $("#match_pane_@lockedMatch.Match.MatchId").find("input, select, button, textarea").not(".lock-button").prop("disabled", true);
-                                $("#match_pane_@lockedMatch.Match.MatchId").addClass("disabled-pane");
-        </text>
-    }
-            $("#matchesShowedCount").text(@Model.Count);
+            @foreach (var lockedMatch in Model.Where(m => m.Match.Locked || m.Match.AlreadyPlayed))
+            {
+                <text>
+                            $("#match_pane_@lockedMatch.Match.MatchId").find("input, select, button, textarea").not(".lock-button").prop("disabled", true);
+                            $("#match_pane_@lockedMatch.Match.MatchId").addClass("disabled-pane");
+                </text>
+            }
+            $("#matchesShowedCount").text(@Model.Count);          
             $('.linkInput').on('dblclick', function () {
                     const targetId = $(this).val();
                     const hash = '#match_pane_' + targetId;
                     const targetElement = $(hash);
 
-                    if (targetElement.length) {
+                    if (targetElement.length) {                       
                         if (targetElement.is(':hidden')) {
                             targetElement.closest('.tab-pane, .content-pane, .panel').show();
                         }
@@ -172,4 +189,39 @@
             });
 
     });
+function enterEditMode(button) {
+    const $container = $(button).closest('.datetime-input-group');
+    const $displayMode = $container.find('.display-mode');
+    const $editMode = $container.find('.edit-mode');
+    
+    // Get current values from display and set them in inputs
+    const timeDisplay = $displayMode.find('.time-display').text();
+    const dateDisplay = $displayMode.find('.date-display').text();
+    
+    const $timeInput = $editMode.find('input[name="MatchTime"]');
+    const $dateInput = $editMode.find('input[name="MatchDate"]');
+    
+    // Set time input (should already be in HH:mm format)
+    $timeInput.val(timeDisplay);
+    
+    // Convert date from dd.MM.yy to yyyy-MM-dd for date input
+    if (dateDisplay && dateDisplay.includes('.')) {
+        const [day, month, year] = dateDisplay.split('.');
+        const fullYear = year.length === 2 ? '20' + year : year;
+        $dateInput.val(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+    }
+    
+    $displayMode.hide();
+    $editMode.show();
+}
+
+function cancelEdit(button) {
+    const $container = $(button).closest('.datetime-input-group');
+    const $displayMode = $container.find('.display-mode');
+    const $editMode = $container.find('.edit-mode');
+    
+    // Switch back to display mode without saving
+    $editMode.hide();
+    $displayMode.show();
+}
 </script>

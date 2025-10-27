@@ -39,17 +39,17 @@ namespace AdminPartDevelop.Services.FileParsers
                     var m = matches[i];
                     var refereeId = m.Match.RefereeId;
                     var ar1Id = m.Match.Ar1Id;
-                    var ar2Id = m.Match.Ar2Id;
-                    Tuple<string, string>? tupleReferee = refereeId.HasValue ? infoReferees[refereeId.Value] : null;
-                    Tuple<string, string>? tupleAr1 = ar1Id.HasValue ? infoReferees[ar1Id.Value] : null;
-                    Tuple<string, string>? tupleAr2 = ar2Id.HasValue ? infoReferees[ar2Id.Value] : null;
+                    var ar2Id = m.Match.Ar2Id ;
+                    Tuple<string,string> ? tupleReferee = refereeId.HasValue ? infoReferees[refereeId.Value] : null;
+                    Tuple<string, string> ? tupleAr1 = ar1Id.HasValue ? infoReferees[ar1Id.Value] : null;
+                    Tuple<string, string> ? tupleAr2 = ar2Id.HasValue ? infoReferees[ar2Id.Value] : null;
 
                     var row = new object[]
 
                     {
                     m.Match.MatchId,
-                    m.Match.HomeTeamId+" - "+m.HomeTeamName.Trim(),
-                    m.Match.AwayTeamId+" - "+m.AwayTeamName.Trim(),
+                    m.Match.HomeTeamId+" - "+m.HomeTeamName,
+                    m.Match.AwayTeamId+" - "+m.AwayTeamName,
                     m.Match.MatchDate.ToString("dd.MM.yyyy") + " " + m.Match.MatchTime.ToString("HH:mm"),
                     tupleReferee != null
                     ? tupleReferee.Item1 + (string.IsNullOrEmpty(tupleReferee.Item2) ? " ()" : $" ({tupleReferee.Item2})")
@@ -67,7 +67,7 @@ namespace AdminPartDevelop.Services.FileParsers
                     "",
                     "",
                     "",
-                    m.FieldName.Trim(),
+                    m.FieldName,
                     m.CompetitionName,
                     m.Match.AlreadyPlayed,
                     m.Match.Locked,
@@ -83,8 +83,7 @@ namespace AdminPartDevelop.Services.FileParsers
                 workbook.Save(stream, SaveFormat.Xlsx);
                 return ServiceResult<byte[]>.Success(stream.ToArray());
 
-            }
-            catch (Exception ex)
+            }catch(Exception ex)
             {
                 _logger.LogError(ex, "[GenerateMatchExcel] Error creating file with matches");
                 return ServiceResult<byte[]>.Failure("Nepodařilo se vytvořit soubor");

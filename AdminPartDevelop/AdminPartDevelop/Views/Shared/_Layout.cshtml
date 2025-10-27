@@ -1,5 +1,4 @@
-﻿﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -14,35 +13,32 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AdminPart</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#" id="showExcusesBtn">Omluvy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#" id="showPreviousMatchesBtn">Přehled nahraných zápasů</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#" id="showFootballFieldsBtn">Přehled hřišť</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#" id="addNewRefereeBtn">Přidat nového rozhodčího</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#" id="printAllMatchesBtn">Stáhnout soubor s zápasy</a>
-                        </li>
-                        @if (ViewData["Username"] != null && ViewData["UserRole"] != null)
-                        {
-                            <div class="ms-auto d-flex align-items-center">
-                                <span class="me-2">Přihlášen:</span>
-                                <span id="usernameLogged" class="me-2"><strong>@ViewData["Username"]</strong></span>
-                                <span class="badge bg-secondary">@ViewData["UserRole"]</span>
-                            </div>
-                        }
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" 
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+        <li class="nav-item"><a class="nav-link" href="#" id="showExcusesBtn">Omluvy</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="showPreviousMatchesBtn">Nahrané zápasy</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="showFootballFieldsBtn">Hřiště</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="showCompetitionsBtn">Soutěže</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="addNewRefereeBtn">Přidat nového rozhodčího</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="printAllMatchesBtn">Export zápasů do Excelu</a></li>
+        <li class="nav-item"><a class="nav-link" href="https://youtu.be/t5FwxgmmmFs" target="_blank" id="showTutorial">Zobrazit pokyny</a></li>
+      </ul>		
+		@if (ViewData["Username"] != null && ViewData["UserRole"] != null)
+		{
+                        		<div class="ms-auto d-flex align-items-center">
+					<span class="me-2">Přihlášen:</span>
+                            		<span id="usernameLogged" class="me-2"><strong>@ViewData["Username"]</strong></span>
+                            		<span class="badge bg-secondary">@ViewData["UserRole"]</span>
+                        		</div>
+					<button id="logOutTheUser" class="btn btn-primar log-out" style="background-color:white">
+		   	 			<i class="fa fa-sign-out"></i>
+					</button>
+                    		}
                     </ul>
                 </div>
             </div>

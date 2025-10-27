@@ -3,11 +3,16 @@ using AdminPartDevelop.Hubs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Services.FileParsers;
 using AdminPartDevelop.Views.ViewModels;
-using AdminPartDevelop.Services.AdminServices;
+using Aspose.Cells;
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using AdminPartDevelop.Data;
-using AdminPartDevelop.Services.RefereeServices;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Maui.Authentication;
+using Nest;
+using System.Device.Location;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace AdminPartDevelop.Controllers
 {
@@ -18,24 +23,18 @@ namespace AdminPartDevelop.Controllers
         private readonly Services.FileParsers.IExcelParser _excelParser;
         private readonly Services.FileParsers.IExcelExporter _excelExporter;
         private readonly Services.RefereeServices.IRefereeService _refereeService;
-        private readonly IAdminService _adminService;
+        private readonly Services.CacheServices.IMatchesCacheService _matchesCacheService;
+        private readonly Services.AdminServices.IAdminService _adminService;
 
         private readonly Data.IRefereeRepo _refereeRepo;
         private readonly Data.IAdminRepo _adminRepo;
 
         private readonly IHubContext<HubForReendering> _hubContext;
 
-        public RefereeRepo RefereeRepo { get; }
-        public AdminRepo AdminRepo { get; }
-        public IExcelParser ExcelParser { get; }
-        public IExcelExporter ExcelExporter { get; }
-        public IRefereeService RefereeService { get; }
-        public IAdminService AdminService { get; }
-        public IHubContext<HubForReendering> Object1 { get; }
-        public object Value { get; }
-        public ILogger<MatchController> Object2 { get; }
-
-        public MatchController(Data.IRefereeRepo refereeRepo, Data.IAdminRepo adminRepo, Services.FileParsers.IExcelParser excelParser, Services.FileParsers.IExcelExporter excelExporter, Services.RefereeServices.IRefereeService refereeService, IAdminService adminService, IHubContext<HubForReendering> hubContext, ILogger<MatchController> logger)
+        public MatchController(Data.IRefereeRepo refereeRepo, Services.CacheServices.IMatchesCacheService matchesCacheService,
+            Data.IAdminRepo adminRepo, Services.FileParsers.IExcelParser excelParser, Services.FileParsers.IExcelExporter excelExporter,
+            Services.RefereeServices.IRefereeService refereeService, Services.AdminServices.IAdminService adminService,
+            IHubContext<HubForReendering> hubContext, ILogger<MatchController> logger)
         {
             _logger = logger;
             _excelParser = excelParser;
@@ -44,9 +43,27 @@ namespace AdminPartDevelop.Controllers
             _adminService = adminService;
             _refereeRepo = refereeRepo;
             _adminRepo = adminRepo;
+            _matchesCacheService = matchesCacheService;
             _hubContext = hubContext;
         }
+	 [HttpPost("SendFocus")]
+        public async Task<IActionResult> SendFocus([FromQuery] string elementId, [FromQuery] string username,[FromQuery] string connectionId)
+        {
+            if (string.IsNullOrEmpty(elementId) || string.IsNullOrEmpty(username))
+                return BadRequest("Invalid data");
 
+	    await _hubContext.Clients.AllExcept(connectionId).SendAsync("ElementFocused", elementId,username);
+	    return Ok();
+        }
+
+        [HttpPost("SendRelease")]
+        public async Task<IActionResult> SendRelease([FromQuery] string elementId,[FromQuery] string connectionId)
+        {
+            if (string.IsNullOrEmpty(elementId))
+                return BadRequest("Invalid data");
+            await _hubContext.Clients.AllExcept(connectionId).SendAsync("ElementReleased", elementId);
+	    return Ok();
+        }
         [HttpPost("GetRefereeMatchCounts")]
         public async Task<IActionResult> GetRefereeMatchCounts([FromBody] RefereeMatchCountViewModel request)
         {
@@ -64,6 +81,7 @@ namespace AdminPartDevelop.Controllers
                     IsReferee = isReferee,
                     TeamId = teamId
                 })).GetDataOrThrow();
+		
 
                 return Ok(result);
 
@@ -101,6 +119,33 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, "Nastala chyba při získavání zápasů dle data z databáze.");
             }
         }
+	[HttpGet("GetMatchesByCompetition")]
+        public async Task<IActionResult> GetMatchesByCompetition(string competitionId)
+        {
+            try
+            {
+                //load the referees from the database
+                var listOfReferees = (await _refereeRepo.GetRefereesAsync()).GetDataOrThrow();
+                //extract only ids (keys) name surname (value) for generating buttons
+                var dictWithNamesIds = _refereeService.GetRefereeDictionary(listOfReferees).GetDataOrThrow();
+
+                var listOfMatches = (await _adminRepo.GetMatchesByCompetitionAsync(dictWithNamesIds, competitionId)).GetDataOrThrow();
+                var listOfMatchesSortedByGameTime = _adminService.SortMatches("sortByGameTimeAsc", listOfMatches).GetDataOrThrow();
+
+                return PartialView("~/Views/PartialViews/_MatchesTable.cshtml", listOfMatchesSortedByGameTime);
+            }
+            catch (InvalidOperationException inEx)
+            {
+		_logger.LogError(inEx, "[GetMatchesByCompetition] Error home controller");
+                return StatusCode(500, inEx.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GetMatchesByCompetition] Error home controller");
+                return StatusCode(500, "Nastala chyba při získavání zápasů dle soutěže z databáze.");
+            }
+        }
+
         [HttpGet("GetSortedMatchesAsync")]
         public async Task<IActionResult> GetSortedMatchesAsync(string selector)
         {
@@ -132,16 +177,42 @@ namespace AdminPartDevelop.Controllers
             try
             {
                 List<int> refereeIds = request.RefereeIds;
-
-                List<Referee> refereeList = refereeIds
-                    .Select(id => new Referee { RefereeId = id })
-                    .ToList();
+                //load the referees from the database
+                var listOfReferees = (await _refereeRepo.GetRefereesAsync()).GetDataOrThrow();
+                //extract only ids (keys) name surname (value) for generating buttons
+                var dictWithNamesIds = _refereeService.GetRefereeDictionary(listOfReferees).GetDataOrThrow();
+                //load the matches from the database
+                var listOfMatches = (await _matchesCacheService.GetMatchesFromCacheAsync()).GetDataOrThrow();
+                var convertedToMatchViewModel = (await _adminRepo.ConvertMatchesToViewModels(listOfMatches, dictWithNamesIds)).GetDataOrThrow();
+                DateOnly firstGameDay = _adminRepo.GetStartGameDate().GetDataOrThrow();
+                //get transfers of all referees within this game weekend
+                var listOfTransfers = (await _adminRepo.GetTransfersWithinGameWeekend(firstGameDay.ToDateTime(new TimeOnly(0, 1)))).GetDataOrThrow();
+                var listOfRefereesWithTimeOptions = (await _refereeService.AddRefereesTimeOptionsAsync(listOfReferees, convertedToMatchViewModel, listOfTransfers, firstGameDay)).GetDataOrThrow();
 
                 string matchId = request.MatchId;
 
                 var match = (await _adminRepo.GetMatchByIdAsync(matchId)).GetDataOrThrow();
 
+                Dictionary<int, bool> isFreeDuringMatch = new Dictionary<int, bool>();
+                Dictionary<int, int> refereeRatings = new Dictionary<int, int>();
+                List<Referee> refereeList = refereeIds
+                    .Select(id => new Referee { RefereeId = id })
+                    .ToList();
 
+
+                foreach (var refereeWithTimeOptions in listOfRefereesWithTimeOptions){
+                    var isFree = _refereeService.CheckTimeAvailabilityOfReferee(refereeWithTimeOptions, match).GetDataOrThrow();
+                    if (!isFree)
+                    {
+                        isFreeDuringMatch[refereeWithTimeOptions.Referee.RefereeId] = false;
+                        refereeList.RemoveAll(r => r.RefereeId == refereeWithTimeOptions.Referee.RefereeId);
+                    }
+                    else
+                    {
+                        isFreeDuringMatch[refereeWithTimeOptions.Referee.RefereeId] = true;
+                    }
+                }
+          
                 List<RefereesTeamsMatchesResponseDto> resultHomeTeam = (await _adminService.GetRefereeMatchStatsAsync(new RefereesTeamsMatchesRequestDto
                 {
                     RefereeIds = refereeIds,
@@ -161,7 +232,6 @@ namespace AdminPartDevelop.Controllers
 
                 Dictionary<int, int> distanceDictionary = new();
 
-                List<Models.Match> listOfMatches = (await _adminRepo.GetPureMatchesAsync()).GetDataOrThrow();
                 List<RefereesMatchesResponseDto> resultTotal = refereeIds
                     .Select(id =>
                     {
@@ -176,32 +246,44 @@ namespace AdminPartDevelop.Controllers
                         };
                     })
                     .ToList();
-                const float epsilon = 1e-6f;
-                bool matchFieldNotSet = false;
+		        const float epsilon = 1e-6f;
+		        bool matchFieldNotSet = false;
                 if (Math.Abs(match.Field.Latitude) < epsilon || Math.Abs(match.Field.Longitude) < epsilon)
                 {
-                    matchFieldNotSet = true;
+                                matchFieldNotSet=true;
+		        }
+            	foreach (var refereeId in refereeIds)
+		        {
+    			        if (matchFieldNotSet)
+    			        {
+        			        distanceDictionary[refereeId] = 0;
+    			        }
+    			        else
+    			        {
+        			        var matchesForReferee = listOfMatches
+        			        .Where(match => match.RefereeId == refereeId)
+        			        .ToList();
+
+			                var locationBefore = _refereeService.GetLocationBeforeMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
+        			        var locationAfter = _refereeService.GetLocationAfterMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
+
+    				        distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
+    			        }
+                        //RATINGS
+                        var resultOfObtainingRatings = await _refereeRepo.GetRefereeByIdAsync(refereeId);
+
+                        if (resultOfObtainingRatings.IsSuccess && resultOfObtainingRatings.Data != null)
+                        {
+                            refereeRatings[refereeId] = resultOfObtainingRatings.Data.Rating;
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"Referee {refereeId} not found, skipping...");
+                        }
                 }
-                foreach (var refereeId in refereeIds)
-                {
-                    if (matchFieldNotSet)
-                    {
-                        distanceDictionary[refereeId] = 0;
-                    }
-                    else
-                    {
-                        var matchesForReferee = listOfMatches
-                        .Where(match => match.RefereeId == refereeId)
-                        .ToList();
+	    
 
-                        var locationBefore = _refereeService.GetLocationBeforeMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
-                        var locationAfter = _refereeService.GetLocationAfterMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
-
-                        distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
-                    }
-                }
-
-                var result = _refereeService.CalculatePointsForReferees(refereeIds, resultHomeTeam, resultAwayTeam, resultTotal, distanceDictionary).GetDataOrThrow();
+                var result = _refereeService.CalculatePointsForReferees(refereeIds, isFreeDuringMatch,refereeRatings, resultHomeTeam, resultAwayTeam, resultTotal, distanceDictionary).GetDataOrThrow();
                 return Ok(result);
             }
             catch (Exception ex)
@@ -283,13 +365,13 @@ namespace AdminPartDevelop.Controllers
         }
 
         [HttpPost("LockOrUnlockMatch")]
-        public async Task<IActionResult> LockOrUnlockMatch(string matchId, string user)
+        public async Task<IActionResult> LockOrUnlockMatch(string matchId,string user)
         {
             try
             {
-                bool isLockedNow = (await _adminRepo.UpdateMatchLockAsync(matchId, user)).GetDataOrThrow();
-                DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
-                await _hubContext.Clients.All.SendAsync("AcceptMatchLockUpdate", matchId, isLockedNow, user, timestampChangeHub);
+                bool isLockedNow = (await _adminRepo.UpdateMatchLockAsync(matchId,user)).GetDataOrThrow();
+		DateTime timestampChangeHub = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+                await _hubContext.Clients.All.SendAsync("AcceptMatchLockUpdate", matchId, isLockedNow,user,timestampChangeHub);
                 return Ok();
 
             }
@@ -299,12 +381,33 @@ namespace AdminPartDevelop.Controllers
                 return StatusCode(500, "Nastala chyba při získávaní stavu zamčení zápasů.");
             }
         }
+	[HttpPost("UpdateMatchDate")]
+	public async Task<IActionResult> UpdateMatchDate(string matchId,DateOnly newDate,TimeOnly newTime,string user)
+	{
+	    try
+            {
+                var result = (await _adminRepo.UpdateMatchDateAsync(newDate,newTime,matchId,user));
+                if (result.Success)
+                {
+                    return Ok("Datum zápasu úspěšně změněný!");
+                }
+                else
+                {
+                    return StatusCode(500, "Nastala chyba při měnení datumu zápasů.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[UpdateMatchDate] Error home controller");
+                return StatusCode(500, "Nastala chyba aplikace při měnení datumu zápasů.");
+            }
+	}
         [HttpPost("MakeMatchPlayed")]
-        public async Task<IActionResult> MakeMatchPlayed(string matchId, string user)
+        public async Task<IActionResult> MakeMatchPlayed(string matchId,string user)
         {
             try
             {
-                var result = (await _adminRepo.UpdateMatchPlayedAsync(matchId, user));
+                var result = (await _adminRepo.UpdateMatchPlayedAsync(matchId,user));
                 if (result.Success)
                 {
                     return Ok("Zápas úspěšně změněn na odehraný!");
@@ -330,7 +433,7 @@ namespace AdminPartDevelop.Controllers
                 if (existingMatch == null)
                     return StatusCode(500, "Zápas nebyl nalezen.");
                 // First Check if the teams exists
-                if ((!string.IsNullOrWhiteSpace(preMatch) && !_adminRepo.DoesMatchExists(preMatch).Success) || (!string.IsNullOrWhiteSpace(postMatch) && !_adminRepo.DoesMatchExists(postMatch).Success))
+                if((!string.IsNullOrWhiteSpace(preMatch) && ! _adminRepo.DoesMatchExists(preMatch).Success) || (!string.IsNullOrWhiteSpace(postMatch) && ! _adminRepo.DoesMatchExists(postMatch).Success))
                 {
                     return StatusCode(500, "jeden z zadaných zápasů neexistuje, nic se nezměnilo!");
                 }
@@ -353,14 +456,14 @@ namespace AdminPartDevelop.Controllers
             }
         }
         [HttpPost("UploadMatchesFromFileAsync")]
-        public async Task<IActionResult> UploadMatchesFromFileAsync(IFormFile file, string user)
+        public async Task<IActionResult> UploadMatchesFromFileAsync(IFormFile file,string user)
         {
             try
             {
                 var filePath = (await _excelParser.SaveAndValidateFileAsync(file)).GetDataOrThrow();
                 var listOfMatches = (await _excelParser.GetMatchesDataAsync(filePath)).GetDataOrThrow();
 
-                var responseOfService = _adminService.ProccessDtosToMatches(listOfMatches, user).GetDataOrThrow();
+                var responseOfService = _adminService.ProccessDtosToMatches(listOfMatches,user).GetDataOrThrow();
                 var reponseOfAdminTran = (await _adminRepo.AddMatchesAsync(responseOfService));
 
                 if (reponseOfAdminTran.Success)
@@ -380,7 +483,7 @@ namespace AdminPartDevelop.Controllers
             }
         }
         [HttpPost("UploadPlayedMatchesFromFileAsync")]
-        public async Task<IActionResult> UploadPlayedMatchesFromFileAsync(IFormFile file, string user)
+        public async Task<IActionResult> UploadPlayedMatchesFromFileAsync(IFormFile file,string user)
         {
             try
             {
@@ -388,7 +491,7 @@ namespace AdminPartDevelop.Controllers
                 var listOfMatches = (await _excelParser.GetPlayedMatchesDataAsync(filePath)).GetDataOrThrow();
 
                 var dictOfReferees = (await _refereeRepo.GetRefereeIdsFromFacrIdOrNameAsync(listOfMatches)).GetDataOrThrow();
-                var reponseOfAdminTran = (await _adminRepo.TieAndUpdateTheMatchesAsync(listOfMatches, dictOfReferees, filePath, user));
+                var reponseOfAdminTran = (await _adminRepo.TieAndUpdateTheMatchesAsync(listOfMatches, dictOfReferees, filePath,user));
 
                 if (reponseOfAdminTran.Success)
                     return Ok(reponseOfAdminTran.Message);
@@ -446,7 +549,7 @@ namespace AdminPartDevelop.Controllers
 
                 if (responseOfTransaction.Success)
                 {
-                    //TempData["SuccessMessage"] = "Spájení úspěšně provedeno!";
+                    TempData["SuccessMessage"] = "Spájení úspěšně provedeno!";
                     return PartialView("~/Views/PartialViews/_MatchesTable.cshtml", listOfMatchesWithConnections);
                 }
                 else
@@ -483,7 +586,7 @@ namespace AdminPartDevelop.Controllers
 
                 return File(fileContent,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "matches_" + DateTime.Today.ToString("dd.MM.yyyy") + ".xlsx");
+                    "matches_"+DateTime.Today.ToString("dd.MM.yyyy") +".xlsx");
             }
             catch (InvalidOperationException inEx)
             {
