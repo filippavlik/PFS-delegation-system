@@ -5,10 +5,12 @@ namespace AdminPartDevelop.Views.ViewModels
     public class MatchViewModel
     {
         public required Match Match { get; set; }
-	public required string CompetitionName { get; set; }
-	public required string CompetitionLeague {get;set;}
+	    public required string CompetitionName { get; set; }
+	    public required string CompetitionLeague {get;set;}
+        //new and references
+        public required int CompetitionPrefereedReferees { get; set; }
         //public string? CompetitionId {get;set;}
-	public required string FieldName { get; set; }
+	    public required string FieldName { get; set; }
         public required string HomeTeamName { get; set; }
         public required string AwayTeamName { get; set; }
         

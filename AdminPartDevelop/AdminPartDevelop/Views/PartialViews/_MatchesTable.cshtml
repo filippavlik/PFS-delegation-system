@@ -21,6 +21,11 @@
         width: 15px;
         height: 120px;
     }
+
+    .highlight-red {
+        background: #ffcaca !important;
+        color: white !important;
+    }
 </style>
 <ul class="list-group" style="height:45vh; overflow-y:auto;width=125%;">
     @foreach (var match in Model)
@@ -66,65 +71,75 @@
                 <div class="p-3 text-center" style="width:150px;">
                     <div style="font-family:Arial;width:130px;font-size:18px;">@match.FieldName</div>
                 </div>
-
-                <!-- Delegation Pane -->
-                <div class="p-2 justify-content-center" style=" height:100px;width:400px;">
+                <!-- New-->
+                @{
+                    int pref = match.CompetitionPrefereedReferees;
+                }
+                <div class="p-2 justify-content-center" style="height:100px;width:400px;">
                     <div class="d-flex justify-content-start">
 
-                        <div class="position-relative mx-2" style="cursor: pointer; width:117px; height:38px; background:white;border:2px solid black;">
-                            <div id="referee_delegation_pane_@match.Match.MatchId" class="referee-place" style="cursor: pointer;position:absolute; width:24px; height:35px; background:#87b18e; text-align:center; line-height:37px; font-weight:bold;font-size:10px;" data-role="0" data-id="@match.Match.MatchId">R</div>
+                        <!-- Referee -->
+                        <div class="position-relative mx-2"
+                             style="cursor: pointer; width:117px; height:38px; background:white; border:2px solid black;">
+                            <div id="referee_delegation_pane_@match.Match.MatchId"
+                                 class="referee-place"
+                                 style="cursor: pointer; position:absolute; width:24px; height:35px; background:#87b18e; text-align:center; line-height:37px; font-weight:bold; font-size:10px;"
+                                 data-role="0" data-id="@match.Match.MatchId">
+                                R
+                            </div>
                             @if (match.RefereeName != null)
                             {
                                 <button class="btn btn-secondary referee-button" data-id="@match.Match.RefereeId"
-                                        style="position: absolute;height:25px;width:80px;padding:0;display:flex;align-items: center;justify-content: center;flex-direction: row;margin-left: 30px;margin-top: 5px;">
+                                        style="position:absolute;height:25px;width:80px;padding:0;display:flex;align-items:center;justify-content:center;flex-direction:row;margin-left:30px;margin-top:5px;">
                                     <strong>@match.RefereeName</strong>
                                 </button>
                             }
                         </div>
-                        <div class="position-relative mx-2" style="width:118px; height:38px; background:white;border:2px solid black;">
-                            <div id="ar1_delegation_pane_@match.Match.MatchId" class="referee-place" style="cursor: pointer;position:absolute; width:28px; height:35px; background:#87b18e; left:0; text-align:center; line-height:37px; font-weight:bold;font-size:10px;" data-role="1" data-id="@match.Match.MatchId">
+
+                        <!-- AR1 -->
+                        <div class="position-relative mx-2 @(pref ==1 ? "highlight-red" : "")"
+                             style="width:118px; height:38px; background:white; border:2px solid black;">
+                            <div id="ar1_delegation_pane_@match.Match.MatchId"
+                                 class="referee-place"
+                                 style="cursor: pointer; position:absolute; width:28px; height:35px; background:#87b18e; left:0; text-align:center; line-height:37px; font-weight:bold; font-size:10px;"
+                                 data-role="1" data-id="@match.Match.MatchId">
                                 AR1
                             </div>
                             @if (match.Ar1Name != null)
                             {
                                 <button class="btn btn-secondary referee-button" data-id="@match.Match.Ar1Id"
-                                        style="position: absolute;height:25px;width:80px;padding:0;display:flex;align-items: center;justify-content: center;flex-direction: row;margin-left: 30px;margin-top: 5px;">
+                                        style="position:absolute;height:25px;width:80px;padding:0;display:flex;align-items:center;justify-content:center;flex-direction:row;margin-left:30px;margin-top:5px;">
                                     <strong>@match.Ar1Name</strong>
                                 </button>
                             }
                         </div>
-                        <div class="position-relative mx-2" style="width:117px; height:38px; background:white;border:2px solid black;">
-                            <div id="ar2_delegation_pane_@match.Match.MatchId" class="referee-place" style="cursor: pointer;position:absolute; width:28px; height:35px; background:#87b18e; left:0; text-align:center; line-height:37px; font-weight:bold;font-size:10px;" data-role="2" data-id="@match.Match.MatchId">AR2</div>
+
+                        <!-- AR2 -->
+                        <div class="position-relative mx-2 @(pref <=2 ? "highlight-red" : "")"
+                             style="width:117px; height:38px; background:white; border:2px solid black;">
+                            <div id="ar2_delegation_pane_@match.Match.MatchId"
+                                 class="referee-place"
+                                 style="cursor: pointer; position:absolute; width:28px; height:35px; background:#87b18e; left:0; text-align:center; line-height:37px; font-weight:bold; font-size:10px;"
+                                 data-role="2" data-id="@match.Match.MatchId">
+                                AR2
+                            </div>
                             @if (match.Ar2Name != null)
                             {
                                 <button class="btn btn-secondary referee-button" data-id="@match.Match.Ar2Id"
-                                        style="position: absolute;height:25px;width:80px;padding:0;display:flex;align-items: center;justify-content: center;flex-direction: row;margin-left: 30px;margin-top: 5px;">
+                                        style="position:absolute;height:25px;width:80px;padding:0;display:flex;align-items:center;justify-content:center;flex-direction:row;margin-left:30px;margin-top:5px;">
                                     <strong>@match.Ar2Name</strong>
                                 </button>
                             }
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-1">
-                        <div style="width:310px;">
-                            @{
-                                var competitionName = @match.CompetitionName;
-                                var index = competitionName.IndexOf("&");
-                                if (index >= 0)
-                                {
-                                    @competitionName.Substring(index + 1)
-                                }
-                                else
-                                {
-                                    @competitionName
-                                }
-                            }
-                        </div>
-			<div class="competition-info" style="width:180px; text-align:right;">
-                        	<div class="competition_id" style="width:180px;text-align:right">@match.Match.CompetitionId</div>
- <div class="competition_league" style="width:180px;text-align:right">@match.CompetitionLeague</div>
-                    </div>
-			</div>
                 </div>
+
+                <style>
+                    .highlight-red {
+                        background-color: #f38a8a !important;
+                    }
+                </style>
+
 
                 <div class="btn-group-vertical justify-content-around p-2">
                     <div class="btn-group" role="group">

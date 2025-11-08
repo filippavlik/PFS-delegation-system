@@ -14,43 +14,47 @@
 <style>
     /* Base styles for all events */
     .event {
-    position: absolute;
-    height: 75%;
-    top: 12.5%;
-    border-radius: 4px;
-    padding: 3px 6px;
-    box-sizing: border-box;
-    font-size: 0.85em;
-    overflow: hidden;
-    transition: all 0.2s ease;
+        position: absolute;
+        height: 75%;
+        top: 12.5%;
+        border-radius: 4px;
+        padding: 3px 6px;
+        box-sizing: border-box;
+        font-size: 0.85em;
+        overflow: hidden;
+        transition: all 0.2s ease;
+        z-index: 0; /* Default base */
     }
 
-    .event:hover {
-    height: 85%;
-    top: 7.5%;
-    z-index: 100;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
+        /* Hover or simulated hover */
+        .event:hover,
+        .event.hover-simulated {
+            height: 85%;
+            top: 7.5%;
+            z-index: 100; /* Bring to front temporarily */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05); /* Optional: smooth grow effect */
+        }
 
     /* Styles for match events ("zapas") */
-    .zapasref{
+    .zapasref {
         background-color: #ff7675;
         border: 1px solid #d63031;
         color: #2d3436;
         z-index: 30;
     }
 
-    .zapasar{
+    .zapasar {
         background-color: #55efc4;
         border: 1px solid #00b894;
         color: #2d3436;
         z-index: 30;
     }
 
-    .zapasar:hover {
-        background-color: #a3f7e0;
-        border-color: #66d5b4;
-    }
+        .zapasar:hover {
+            background-color: #a3f7e0;
+            border-color: #66d5b4;
+        }
 
     .zapasref:hover {
         background-color: #fab1a0;
@@ -64,31 +68,75 @@
         z-index: 20;
     }
 
-    .omluva:hover {
-        background-color: #ffeaa7;
-    }
+        .omluva:hover {
+            background-color: #ffeaa7;
+        }
 
     /* Styles for vehicle events ("vozidlo") with less opacity */
-    .vozidlo {
+    .vozidlocar,
+    vozidlobus {
         background-color: #74b9ff;
         border: 1px solid #0984e3;
         color: #2d3436;
         z-index: 10;
     }
 
+    .vozidlocar:hover,
+        .vozidlobus:hover {
+            background-color: rgba(116, 185, 255, 0.8);
+        }
 
-    .vozidlo:hover {
-    background-color: rgba(116, 185, 255, 0.8);
-    }
-
-    .transfer {
+    .transferhome {
         background-color: #ff33fb;
         border: 1px solid #940096;
         color: #2d3436;
         z-index: 10;
     }
-    .transfer:hover{
+
+        .transferhome:hover {
             background-color: #ff33fb7a;
+        }
+
+    /* Unique colors for transfermatch */
+    .transfermatch {
+        background-color: #ff9f43; /* orange */
+        border: 1px solid #ff6f00;
+        color: #2d3436;
+        z-index: 10;
+    }
+
+        .transfermatch:hover,
+        .transfermatch.hover-simulated {
+            background-color: #ffc66d; /* lighter orange on hover */
+        }
+
+  
+
+    /* Apply same color changes as your :hover states */
+    .zapasref.hover-simulated {
+        background-color: #fab1a0;
+    }
+
+    .zapasar.hover-simulated {
+        background-color: #a3f7e0;
+        border-color: #66d5b4;
+    }
+
+    .omluva.hover-simulated {
+        background-color: #ffeaa7;
+    }
+
+    .vozidlocar.hover-simulated,
+    .vozidlobus.hover-simulated {
+        background-color: rgba(116, 185, 255, 0.8);
+    }
+
+    .transferhome.hover-simulated {
+        background-color: #ff33fb7a;
+    }
+
+    .transfermatch.hover-simulated {
+        background-color: #ffc66d; /* lighter orange on hover */
     }
 
     /* Styles for the event contents */
@@ -101,232 +149,246 @@
 
     /* Custom styles for the schedule */
     .schedule-container {
-    max-width: 100%;
-    position: relative;
-    overflow-x: auto; /* Add this to enable horizontal scrolling */
+        max-width: 100%;
+        position: relative;
     }
 
     .time-header, .day-row {
-    display: flex;
-    height: 50px;
-    max-width: 100%;
+        display: flex;
+        height: 50px;
+        max-width: 100%;
     }
 
     .list-group-excuses {
-    max-height: 250px; /* This constrains the overall height */
-    overflow-y: auto; /* Enables vertical scrolling */
-    overflow-x: hidden; /* Prevents horizontal scrolling */
-    padding: 0; /* Removes default padding */
-    margin: 0; /* Removes default margin */
+        max-height: 250px; /* This constrains the overall height */
+        overflow-y: auto; /* Enables vertical scrolling */
+        overflow-x: hidden; /* Prevents horizontal scrolling */
+        padding: 0; /* Removes default padding */
+        margin: 0; /* Removes default margin */
     }
 
     .list-group-excuses-item {
-    padding: 10px 15px;
-    border-bottom: 1px solid #ddd;
+        padding: 10px 15px;
+        border-bottom: 1px solid #ddd;
     }
 
-    .list-group-excuses-item:last-child {
-    border-bottom: none;
-    }
+        .list-group-excuses-item:last-child {
+            border-bottom: none;
+        }
 
     .time-header {
-    border-bottom: 1px solid #ddd;
-    background-color: #f8f9fa;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+        border-bottom: 1px solid #ddd;
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
     .day-label {
-    width: 130px;
-    min-width: 130px;
-    padding: 5px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f8f9fa;
-    border-right: 1px solid #ddd;
+        width: 120px;
+        min-width: 120px;
+        height:50px;
+        padding: 5px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-right: 1px solid #ddd;
     }
 
     .time-slot {
-    width: 60px;
-    min-width: 60px;
-    text-align: center;
-    padding: 5px 0;
-    border-right: 1px dashed #ddd;
-    font-size: 0.8rem;
+        width: 60px;
+        min-width: 60px;
+        text-align: center;
+        padding: 5px 0;
+        border-right: 1px dashed #ddd;
+        font-size: 0.8rem;
     }
 
     .day-timeline {
-    flex: 1;
-    position: relative;
-    min-width: 900px; /* 17 hours * 80px */
-    border-bottom: 1px solid #ddd;
+        flex: 1;
+        position: relative;
+        min-width: 900px; /* 17 hours * 80px */
+        border-bottom: 1px solid #ddd;
+        height:50px;
     }
 
+        .day-timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient( to right, transparent, transparent calc(100% / 16 - 1px), #ddd calc(100% / 16 - 1px), #ddd calc(100% / 16) );
+            pointer-events: none;
+            z-index: 1;
+        }
+
     .event {
-    position: absolute;
-    height: 40px;
-    top: 10px;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.85rem;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: white;
-    cursor: pointer;
+        position: absolute;
+        height: 40px;
+        top: 10px;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.85rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        color: white;
+        cursor: pointer;
     }
 
     .match-event {
-    background-color: #007bff;
+        background-color: #007bff;
     }
 
     .excuse-event {
-    background-color: #dc3545;
+        background-color: #dc3545;
     }
 
     .transfer-event {
-    background-color: #6c757d;
+        background-color: #6c757d;
     }
 
     .initials {
-    font-size: 50px;
-    color: white;
-    font-weight: bold;
+        font-size: 50px;
+        color: white;
+        font-weight: bold;
     }
 
     /* Custom Context Menu Styles */
     .custom-context-menu {
-    position: absolute;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 1000;
     }
 
     .context-menu-items {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+        list-style: none;
+        padding: 0;
+        margin: 0;
     }
 
-    .context-menu-items li {
-    padding: 8px 12px;
-    cursor: pointer;
+        .context-menu-items li {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+            .context-menu-items li:hover {
+                background-color: #f5f5f5;
+            }
+
+    .overlay-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
     }
 
-    .context-menu-items li:hover {
-    background-color: #f5f5f5;
-    }
-.overlay-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
-#cardForm {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-
-.flatpickr-wrapper {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 8px 10px;
-    background-color: #f9f9f9;
-    margin-bottom: 10px;
-}
-
-    .flatpickr-wrapper input {
-        flex: 1;
-        border: none;
-        padding: 8px;
-        background: transparent;
-        font-size: 16px;
-        outline: none;
-    }
-
-
-.excuses-list-container {
-    margin-top: 15px;
-}
-
-#excusesList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-    #excusesList li {
-        background-color: #f5f5f5;
-        border-radius: 4px;
-        padding: 12px;
-        margin-bottom: 8px;
+    #cardForm {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        gap: 15px;
     }
 
 
-.excuse-info {
-    flex: 1;
-}
+    .flatpickr-wrapper {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px 10px;
+        background-color: #f9f9f9;
+        margin-bottom: 10px;
+    }
 
-.excuse-time {
-    font-weight: bold;
-}
+        .flatpickr-wrapper input {
+            flex: 1;
+            border: none;
+            padding: 8px;
+            background: transparent;
+            font-size: 16px;
+            outline: none;
+        }
 
-.excuse-reason {
-    color: #555;
-    margin-top: 5px;
-}
 
-.delete-excuse {
-    color: #ea4335;
-    cursor: pointer;
-    padding: 5px;
-    font-size: 1.2rem;
-}
+    .excuses-list-container {
+        margin-top: 15px;
+    }
 
-#noExcusesMessage {
-    text-align: center;
-    color: #777;
-    font-style: italic;
-    padding: 15px;
-}
+    #excusesList {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
 
-.slot-info {
-    flex: 1;
-}
+        #excusesList li {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.slot-time {
-    font-weight: bold;
-}
 
-.delete-slot {
-    color: #ea4335;
-    cursor: pointer;
-    padding: 5px;
-    font-size: 1.2rem;
-}
+    .excuse-info {
+        flex: 1;
+    }
+
+    .excuse-time {
+        font-weight: bold;
+    }
+
+    .excuse-reason {
+        color: #555;
+        margin-top: 5px;
+    }
+
+    .delete-excuse {
+        color: #ea4335;
+        cursor: pointer;
+        padding: 5px;
+        font-size: 1.2rem;
+    }
+
+    #noExcusesMessage {
+        text-align: center;
+        color: #777;
+        font-style: italic;
+        padding: 15px;
+    }
+
+    .slot-info {
+        flex: 1;
+    }
+
+    .slot-time {
+        font-weight: bold;
+    }
+
+    .delete-slot {
+        color: #ea4335;
+        cursor: pointer;
+        padding: 5px;
+        font-size: 1.2rem;
+    }
 </style>
 <head>
     <meta charset="utf-8" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
     <!-- flatpickr plugin-->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-           
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -340,7 +402,7 @@
         public double Width { get; set; }
     }
 
-    private PositionData CalculatePosition(DateTime startTime, DateTime endTime,DateOnly gameDay)
+    private PositionData CalculatePosition(DateTime startTime, DateTime endTime, DateOnly gameDay)
     {
         var startTimeOfDay = startTime.TimeOfDay;
         var endTimeOfDay = endTime.TimeOfDay;
@@ -352,7 +414,8 @@
         {
             startDecimal = 7;
         }
-        else{
+        else
+        {
             if (startDecimal < 7)
                 startDecimal = 7;
         }
@@ -404,7 +467,7 @@
             <ul id="excusesList"></ul>
             <p id="noExcusesMessage">Zatím nebyly přidány žádné omluvy</p>
             <button id="sendNewExcuse">
-               Poslat
+                Poslat
             </button>
             <button id="cancelSendingExcuse">
                 Zrušit
@@ -422,10 +485,10 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Informace o rozhodčím @referee.Name @referee.Surname</h5>
                 </div>
-                    <div class="card-body">
+                <div class="card-body">
                     <div class="row">
                         <!-- Left column -->
-                        <div class="col-md-6 text-left">                       
+                        <div class="col-md-6 text-left">
                             <div class="form-group">
                                 <label for="refereeId">ID:</label>
                                 <input type="text" class="form-control" id="refereeId" value="@referee.FacrId" />
@@ -435,19 +498,19 @@
                                 <label for="refereeEmail">Email:</label>
                                 <input type="email" class="form-control" id="refereeEmail" value="@referee.Email" />
                             </div>
-			     <div class="row">
+                            <div class="row">
                                 <div class="col-md-6">
-                            		<div class="form-group">
-                                		<label for="refereeAge">Ročník:</label>
-                                		<input type="number" class="form-control" id="refereeAge" name="Age" value="@referee.Age" min="1930" max="2050" />
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="refereeRating">Rating:</label>                                                                                 <input type="number" class="form-control" id="refereeRating" name="Rating" value="@referee.Rating" min="1" max="10" />
-                            		</div>
-				</div>
-			</div>
+                                    <div class="form-group">
+                                        <label for="refereeAge">Ročník:</label>
+                                        <input type="number" class="form-control" id="refereeAge" name="Age" value="@referee.Age" min="1930" max="2050" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="refereeRating">Rating:</label>                                                                                 <input type="number" class="form-control" id="refereeRating" name="Rating" value="@referee.Rating" min="1" max="10" />
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="form-group">
                                 <label for="refereeLeague">Soutěž:</label>
@@ -459,6 +522,9 @@
                                     <option value="4">M</option>
                                     <option value="5">N</option>
                                 </select>
+                            </div>
+                            <div class="text-right mt-2">
+                                <button data-id="@referee.RefereeId" data-name="@referee.Name" data-surname="@referee.Surname" id="updateReferee" class="btn btn-outline-secondary btn-sm me-1">Aktualizuj</button>
                             </div>
                         </div>
 
@@ -485,20 +551,38 @@
                                 </div>
                             </div>
 
+                            <!--New whole file-->
+                            <div class="form-group position-relative">
+                                <label for="refereeLiving">Adresa rozhodčího:</label>
+                                <input type="text" class="form-control" id="refereePlace" value="@referee.RefereeAddress" />
+                                <!-- Suggestion dropdown container -->
+                                <div id="addressSuggestions"
+                                     class="list-group position-absolute w-100"
+                                     style="z-index: 1000; display:none;">
+                                 </div>
 
-                            <div class="form-group">
-                                <label for="refereeLiving">Bydlí v:</label>
-                                <input type="text" class="form-control" id="refereePlace" value="@referee.PragueZone" />
+                            </div>
+
+                            <!-- Right column -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="refereeLatitude">Z. délka (latitude, bez N):</label>
+                                        <input type="number" step="any" class="form-control" id="refereeLatitude" value="@referee.Latitude" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="refereeLongtitude">Z. šírka (longtitude, bez E):</label>
+                                        <input type="number" step="any" class="form-control" id="refereeLongtitude" value="@referee.Longitude" />
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="refereeNote">Poznámka:</label>
                                 <textarea class="form-control" id="refereeNote">@referee.Note</textarea>
                             </div>
-
-                                <div class="text-right mt-2">
-                                <button data-id="@referee.RefereeId" data-name="@referee.Name" data-surname="@referee.Surname" id="updateReferee" class="btn btn-outline-secondary btn-sm me-1">Aktualizuj</button>
-                                </div>
                         </div>
                     </div>
                 </div>
@@ -506,11 +590,11 @@
         </div>
         <!-- Excuses List (Right) -->
         <div class="col-md-4">
-	       <div class="action-item">
-       <button data-id="@referee.RefereeId" id="addNewExcuse" class="action-icon" style="background-color:white">
-           Zadat novou omluvu
-       </button>
-   </div>
+            <div class="action-item">
+                <button data-id="@referee.RefereeId" id="addNewExcuse" class="action-icon" style="background-color:white">
+                    Zadat novou omluvu
+                </button>
+            </div>
             <div class="card mb-1">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Seznam omluvenek</h5>
@@ -532,9 +616,19 @@
     <div class="row">
         <div class="col-12">
             <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap">
                     <h5 class="card-title mb-0">Rozvrh</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="px-3 py-2 rounded zapasref">Zápas R</span>
+                        <span class="px-3 py-2 rounded zapasar">Zápas AR</span>
+                        <span class="px-3 py-2 rounded omluva">Omluva</span>
+                        <span class="px-3 py-2 rounded transferhome">Transfer domů</span>
+                        <span class="px-3 py-2 rounded transfermatch">Transfer zápas</span>
+                        <span class="px-3 py-2 rounded vozidlocar vozidlobus">Vozidlo</span>
+                    </div>
                 </div>
+
+
                 <div class="card-body p-0">
                     <div class="schedule-container">
                         <!-- Time header -->
@@ -544,7 +638,7 @@
                             {
                                 <div class="time-slot">@(hour):00</div>
                             }
-                        </div>                     
+                        </div>
 
                         @{
                             var firstGameDay = (DateOnly)ViewBag.firstGameDay;
@@ -555,12 +649,12 @@
                         <!-- Friday Schedule -->
                         <div class="day-row" data-day="Friday">
                             <div class="day-label">
-                                @(firstGameDayMinusOne.ToString("dddd (d.M)", new System.Globalization.CultureInfo("cs-CZ")))
+                                @(firstGameDayMinusOne.ToString("dddd(d.M)", new System.Globalization.CultureInfo("cs-CZ")))
                             </div>
                             <div class="day-timeline">
                                 @foreach (var range in Model.RefereeWTimeOptions.SortedRanges.Where(e => DateOnly.FromDateTime(e.Start) == firstGameDayMinusOne  //it starts in this day
-                                                                                    || DateOnly.FromDateTime(e.End) == firstGameDayMinusOne     //it ends in this day
-                                                                                    || (DateOnly.FromDateTime(e.Start) < firstGameDayMinusOne && DateOnly.FromDateTime(e.End) > firstGameDayMinusOne) //if it starts before and ends later
+                                || DateOnly.FromDateTime(e.End) == firstGameDayMinusOne     //it ends in this day
+                                || (DateOnly.FromDateTime(e.Start) < firstGameDayMinusOne && DateOnly.FromDateTime(e.End) > firstGameDayMinusOne) //if it starts before and ends later
                                 ))
                                 {
                                     var positionData = CalculatePosition(range.Start, range.End, firstGameDayMinusOne);
@@ -578,13 +672,14 @@
                                                 case "omluva":
                                                     <a class="excuseHref" href="#excuseWithinPreview_@range.ExcuseId">@range.ExcuseId</a>
                                                     break;
-                                                case "vozidlo":
-                                                    @range.SlotId
+                                                case "vozidlocar":
+                                                    <a>Auto má k dispozici </a>
                                                     break;
-                                                default:
+                                                case "vozidlobus":
+                                                    <a> X Auto nemá k dispozici X</a>
                                                     break;
                                             }
-                                        </div>                                       
+                                        </div>
                                     </div>
                                 }
                             </div>
@@ -593,12 +688,12 @@
                         <!-- Saturday Schedule -->
                         <div class="day-row" data-day="Saturday">
                             <div class="day-label">
-                                @(firstGameDay.ToString("dddd (d.M)", new System.Globalization.CultureInfo("cs-CZ")))
+                                @(firstGameDay.ToString("dddd(d.M)", new System.Globalization.CultureInfo("cs-CZ")))
                             </div>
                             <div class="day-timeline">
                                 @foreach (var range in Model.RefereeWTimeOptions.SortedRanges.Where(e => DateOnly.FromDateTime(e.Start) == firstGameDay
-                                                                                    || DateOnly.FromDateTime(e.End) == firstGameDay
-                                                                                    || (DateOnly.FromDateTime(e.Start) < firstGameDay && DateOnly.FromDateTime(e.End) > firstGameDay)
+                                || DateOnly.FromDateTime(e.End) == firstGameDay
+                                || (DateOnly.FromDateTime(e.Start) < firstGameDay && DateOnly.FromDateTime(e.End) > firstGameDay)
                                 ))
                                 {
                                     var positionData = CalculatePosition(range.Start, range.End, firstGameDay);
@@ -616,9 +711,12 @@
                                                 case "omluva":
                                                     <a class="excuseHref" href="#excuseWithinPreview_@range.ExcuseId">@range.ExcuseId</a>
                                                     break;
-                                                case "vozidlo":
-                                                    @range.SlotId
-                                                    break;                                               
+                                                case "vozidlocar":
+                                                    <a>Auto má k dispozici </a>
+                                                    break;
+                                                case "vozidlobus":
+                                                    <a> X Auto nemá k dispozici X</a>
+                                                    break;
                                                 default:
                                                     break;
                                             }
@@ -631,13 +729,13 @@
                         <!-- Sunday Schedule -->
                         <div class="day-row" data-day="Sunday">
                             <div class="day-label">
-                                @(firstGameDayPlusOne.ToString("dddd (d.M)", new System.Globalization.CultureInfo("cs-CZ")))
+                                @(firstGameDayPlusOne.ToString("dddd(d.M)", new System.Globalization.CultureInfo("cs-CZ")))
                             </div>
                             <div class="day-timeline">
                                 @foreach (var range in Model.RefereeWTimeOptions.SortedRanges.Where(e => DateOnly.FromDateTime(e.Start) == firstGameDayPlusOne
-                                                                                    || DateOnly.FromDateTime(e.End) == firstGameDayPlusOne
-                                                                                    || (DateOnly.FromDateTime(e.Start) < firstGameDayPlusOne && DateOnly.FromDateTime(e.End) > firstGameDayPlusOne)
-                              ))
+                                || DateOnly.FromDateTime(e.End) == firstGameDayPlusOne
+                                || (DateOnly.FromDateTime(e.Start) < firstGameDayPlusOne && DateOnly.FromDateTime(e.End) > firstGameDayPlusOne)
+                                ))
                                 {
                                     var positionData = CalculatePosition(range.Start, range.End, firstGameDayPlusOne);
                                     <div class="event @range.RangeType.ToLower()" style="left: @(positionData.Left)%; width: @(positionData.Width)%;">
@@ -654,10 +752,13 @@
                                                 case "omluva":
                                                     <a class="excuseHref" href="#excuseWithinPreview_@range.ExcuseId">@range.ExcuseId</a>
                                                     break;
-                                                case "vozidlo":
-                                                    @range.SlotId
+                                                case "vozidlocar":
+                                                    <a>Auto nemá k dispozici</a>
                                                     break;
-                                                default:                                                    
+                                                case "vozidlobus":
+                                                    <a> X Auto nemá k dispozici X</a>
+                                                    break;
+                                                default:
                                                     break;
                                             }
                                         </div>
@@ -692,7 +793,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <input type="text" id="vetoTeamName" placeholder="Zadejte název týmu" style="width:200px;"/>
+                                <input type="text" id="vetoTeamName" placeholder="Zadejte název týmu" style="width:200px;" />
                             </td>
                             <td>
                                 <input type="text" id="vetoTeamId" placeholder="Zadejte id týmu" style="width:100px;" />
@@ -732,7 +833,7 @@
                                     <input type="text" value="@veto.Competition.CompetitionId" readonly style="width:100px;" />
                                 </td>
                                 <td>
-                                    <input id="noteOfVeto" type="text" value="@veto.Note" style="width:280px;"/>
+                                    <input id="noteOfVeto" type="text" value="@veto.Note" style="width:280px;" />
                                 </td>
                                 <td>
                                     <button id="updateVeto" type="submit" data-id="@veto.VetoId" class="btn btn-success">
@@ -740,7 +841,7 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <button id="deleteVeto"  data-id="@veto.VetoId" class="btn">
+                                    <button id="deleteVeto" data-id="@veto.VetoId" class="btn">
                                         <i class="fa fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </td>

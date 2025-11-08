@@ -2,6 +2,7 @@
 
 namespace AdminPartDevelop.DTOs
 {
+    //New
     public class RefereeAddRequest : IRefereeDto
     {
         public string? FacrId { get; set; }
@@ -20,7 +21,11 @@ namespace AdminPartDevelop.DTOs
         [Range(0, 10, ErrorMessage = "League must be between 0 and 10")]
         public int League { get; set; }
 
-	public int Rating {get;set;}
+	    public int Rating {get;set;}
+        //New
+        public float? Latitude { get; set; } = null!;
+        public float? Longtitude { get; set; } = null!;
+
         [Required(ErrorMessage = "Age is required")]
         public int Age { get; set; }
 

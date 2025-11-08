@@ -18,7 +18,7 @@ namespace AdminPartDevelop.Tests
     {
         private readonly AdminPartDevelop.Models.AdminDbContext _adminContext;
         private readonly AdminPartDevelop.Models.RefereeDbContext _refereeContext;
-        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IGeocodingService> _mockCar;
         private readonly Mock<IRouteBusPlanner> _mockBus;
         private readonly HomeController _controller;
 
@@ -45,7 +45,7 @@ namespace AdminPartDevelop.Tests
             var mockAdminServiceLogger = new Mock<ILogger<AdminService>>();
             var mockExcelParser = new Mock<AdminPartDevelop.Services.FileParsers.IExcelParser>();
 
-            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockCar = new Mock<IGeocodingService>();
             _mockBus = new Mock<IRouteBusPlanner>();
 
 

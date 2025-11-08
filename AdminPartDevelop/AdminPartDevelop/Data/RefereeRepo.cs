@@ -279,7 +279,10 @@ namespace AdminPartDevelop.Data
                     existing.Email = referee.Email;
                     existing.Age = referee.Age;
 		    existing.Rating = referee.Rating;
-                    existing.PragueZone = referee.Place;
+                    //New
+                    existing.RefereeAddress = referee.Place;
+                    existing.Latitude = referee.Latitude;
+                    existing.Longitude = referee.Longtitude;
                     existing.FacrId = referee.FacrId;
                     existing.Note = referee.Note;
                     existing.League = referee.League;

@@ -310,6 +310,13 @@
                                 <label for="facrId" class="form-label">FAČR ID</label>
                                 <input type="text" class="form-control" id="facrId" name="facrId">
                             </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">
+                                    Prosím zadejte platný email.
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row mb-3">
@@ -330,13 +337,7 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                                <div class="invalid-feedback">
-                                    Prosím zadejte platný email.
-                                </div>
-                            </div>
+                            
                             <div class="col-md-6">
                                 <label for="age" class="form-label">Ročník narození*</label>
                                 <input type="number" class="form-control" id="age" name="age" min="1930" max="2050" required>
@@ -344,9 +345,6 @@
                                     Prosím zadejte platný ročník narození.
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="league" class="form-label">Liga *</label>
                                 <select class="form-select" id="league" name="league" required>
@@ -362,18 +360,36 @@
                                     Prosím vyberte ligu.
                                 </div>
                             </div>
-                            <div class="col mb-3">
-                                <div class="col-md-6">
-                                    <label for="place" style="font-size:12px;" class="form-label">Bydliště (pokud nevíte neměnte , pro Prahu zadejte pouze část (např. pro Prahu 5 pouze 5))</label>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                    <!--New-->
+                                    <label for="place" style="font-size:12px;" class="form-label">Adresa rozhodčího</label>
                                     <input type="text" class="form-control" id="place" name="place">
+                                <div id="placeSuggestions"
+                                     class="list-group position-absolute w-100"
+                                     style="z-index: 1000; display:none;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="latitude" style="font-size:12px;" class="form-label">Zeměpisná délka (Latitude, bez N)</label>
+                                        <input type="number" step="any" class="form-control" id="latitude" name="latitude">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="longtitude" style="font-size:12px;" class="form-label">Zeměpisná šířka (Longitude, bez E)</label>
+                                        <input type="number" step="any" class="form-control" id="longtitude" name="longitude">
+                                    </div>
                                 </div>
                             </div>
+                           
                         </div>                     
 
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="pfs" name="pfs">
+                                    <input class="form-check-input" type="checkbox" id="pfs" name="pfs" checked>
                                     <label class="form-check-label" for="pfs">PFS</label>
                                 </div>
                             </div>

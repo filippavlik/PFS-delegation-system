@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
 
 namespace AdminPartDevelop.Models;
 
@@ -23,6 +21,5 @@ public partial class VehicleSlot
 
     public bool? HasCarInTheSlot { get; set; }
 
-    [JsonIgnore]
     public virtual Referee Referee { get; set; } = null!;
 }

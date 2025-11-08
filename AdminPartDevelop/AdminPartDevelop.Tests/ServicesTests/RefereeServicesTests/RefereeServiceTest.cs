@@ -18,14 +18,14 @@ namespace AdminPartDevelop.Tests.Services.RefereeServices
         private readonly Mock<ILogger<RefereeService>> _loggerMock;
         private readonly Mock<Data.IAdminRepo> _AdminRepoMock;
         private readonly RefereeService _refereeService;
-        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IGeocodingService> _mockCar;
         private readonly Mock<IRouteBusPlanner> _mockBus;
 
         public RefereeServiceTests()
         {
             _loggerMock = new Mock<ILogger<RefereeService>>();
             _AdminRepoMock = new Mock<Data.IAdminRepo>();
-            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockCar = new Mock<IGeocodingService>();
             _mockBus = new Mock<IRouteBusPlanner>();
 
             _refereeService = new RefereeService(_AdminRepoMock.Object, _mockCar.Object, _mockBus.Object, _loggerMock.Object);

@@ -41,7 +41,9 @@ namespace AdminPartDevelop.Services.RefereeServices
         /// - Returns detailed error messages for scheduling conflicts when force=false
         /// </remarks>
         Task<ServiceResult<TransportBetweenMatchesViewModel>> CalculateTransfersWhenAssigningAsync(Match matchToCheck, RefereeWithTimeOptions refereeToAssign, bool force);
-	/// <summary>
+        //new
+        Task<ServiceResult<Tuple<Transfer?,Transfer?>>> CalculateHomeTransferWhenAssigningAsync(Match matchToCheck, RefereeWithTimeOptions referee);
+        /// <summary>
         /// Processes a single referee's availability in relation to matches,excuses and transfers,
         /// creating a RefereeWithTimeOptions object with availability data.
         /// </summary>
@@ -88,6 +90,13 @@ namespace AdminPartDevelop.Services.RefereeServices
         /// <param name="startDateTime">Start time of the match to check</param>
         /// <returns>Coordinates (latitude, longitude) of the location after the match</returns>
         ServiceResult<Tuple<float, float>> GetLocationAfterMatch(List<Models.Match> listOfMatches, DateTime startDateTime);
+        //New
+        /// <summary>
+        /// Retrieves the geographical coordinates of the referee's home location .
+        /// </summary>
+        /// <param name="refereeId">Id of the referee</param>
+        /// <returns>Coordinates (latitude, longitude) of the home location </returns>
+        Task<ServiceResult<Tuple<float, float>>> GetHomeLocation(int refereeId);
         /// <summary>
         /// Creates a dictionary mapping referee IDs to their names for easy reference.
         /// </summary>

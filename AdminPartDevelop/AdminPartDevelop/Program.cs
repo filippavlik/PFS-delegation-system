@@ -20,6 +20,7 @@ using AdminPartDevelop.Hubs;
 using AdminPartDevelop.Services.RouteServices;
 using Aspose.Cells.Charts;
 using AdminPartDevelop.Services.AdminServices;
+using AdminPartDevelop.Services.GeocodingServices;
 //TOP LEVEL STATEMENTS
 // Get access information for AzureKey Vault
 var builder = WebApplication.CreateBuilder(args);
@@ -104,6 +105,14 @@ builder.Services.AddSingleton<IRouteBusPlanner,RouteByBusPlanner>(sp =>
        sp.GetRequiredService<ILogger<RouteByBusPlanner>>(),
        sp.GetRequiredService<IHttpClientFactory>(),
        _mapsgoogleapikey
+   )
+);
+// Geocoding service
+builder.Services.AddSingleton<IGeocodingService, GeocodingService>(sp =>
+   new GeocodingService(
+       sp.GetRequiredService<ILogger<GeocodingService>>(),
+       sp.GetRequiredService<IHttpClientFactory>(),
+       _mapyczapikey
    )
 );
 

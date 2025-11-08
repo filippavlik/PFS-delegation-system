@@ -35,7 +35,7 @@ namespace AdminPartDevelop.Tests.Controllers
         private readonly RefereeRepo _refereeRepo;
         private readonly IAdminService _adminService;
         private readonly IRefereeService _refereeService;
-        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IGeocodingService> _mockCar;
         private readonly Mock<IRouteBusPlanner> _mockBus;
         private readonly IExcelParser _excelParser;
         private readonly IExcelExporter _excelExporter;
@@ -69,7 +69,7 @@ namespace AdminPartDevelop.Tests.Controllers
             var mockRefereeServiceLogger = new Mock<ILogger<RefereeService>>();
             var mockGetDataServiceLogger = new Mock<ILogger<GetData>>();
             var mockExportDataServiceLogger = new Mock<ILogger<ExportData>>();
-            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockCar = new Mock<IGeocodingService>();
             _mockBus = new Mock<IRouteBusPlanner>();
 
 

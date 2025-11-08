@@ -472,6 +472,7 @@ namespace AdminPartDevelop.Data
                     CompetitionName = match.Competition.CompetitionName,
 		            CompetitionId = match.Competition.CompetitionId ,
 		            CompetitionLeague = leagueMapping[match.Competition.League],
+                    CompetitionPrefereedReferees = match.Competition.AmountOfReferees,
                     FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
                     HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
                     AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
@@ -537,6 +538,7 @@ namespace AdminPartDevelop.Data
                         Match = match,
                         CompetitionName = match.Competition?.CompetitionName ?? "Neznámá soutěž",
                         CompetitionId = match.Competition?.CompetitionId ?? null,
+                        CompetitionPrefereedReferees = match.Competition.AmountOfReferees,
                         CompetitionLeague = leagueMapping.TryGetValue(match.Competition?.League ?? 0, out var league)
                             ? league
                             : "Neznámá liga",
@@ -595,7 +597,8 @@ namespace AdminPartDevelop.Data
                 {
                     Match = match,
                     CompetitionName = match.Competition.CompetitionName,
-		    CompetitionLeague = leagueMapping[match.Competition.League], 
+		            CompetitionLeague = leagueMapping[match.Competition.League], 
+                    CompetitionPrefereedReferees = match.Competition.AmountOfReferees,
                     FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
                     HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
                     AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
@@ -646,7 +649,8 @@ namespace AdminPartDevelop.Data
                 {
                     Match = match,
                     CompetitionName = match.Competition.CompetitionName,
-		    CompetitionLeague = leagueMapping[match.Competition.League],
+		            CompetitionLeague = leagueMapping[match.Competition.League],
+                    CompetitionPrefereedReferees = match.Competition.AmountOfReferees,
                     FieldName = _context.Fields.FirstOrDefault(t => t.FieldId == match.FieldId)?.FieldName ?? "Neznáme hřište",
                     HomeTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.HomeTeamId)?.Name ?? "Neznámy tím",
                     AwayTeamName = _context.Teams.FirstOrDefault(t => t.TeamId == match.AwayTeamId)?.Name ?? "Neznámy tím",
@@ -1466,6 +1470,40 @@ namespace AdminPartDevelop.Data
             }
 
         }
+        public async Task<RepositoryResult<Tuple<Models.Match?, Models.Match?>>> GetConnectedMatchesByTransfer(int refereeId, string matchId)
+        {
+            try
+            {
+                var preMatchTransfer = await _context.Transfers
+                    .Where(t => (!string.IsNullOrEmpty(t.PreviousMatchId) && t.FutureMatchId == matchId) && t.RefereeId == refereeId)
+                    .FirstOrDefaultAsync();
+
+                Models.Match? preMatch = null;
+                if (preMatchTransfer != null)
+                {
+                    preMatch = (await GetMatchByIdAsync(preMatchTransfer.PreviousMatchId)).GetDataOrThrow();
+
+                }
+                var postMatchTransfer = await _context.Transfers
+                    .Where(t => (!string.IsNullOrEmpty(t.FutureMatchId) && t.PreviousMatchId == matchId) && t.RefereeId == refereeId)
+                    .FirstOrDefaultAsync();
+
+                Models.Match? postMatch = null;
+                if (postMatchTransfer != null)
+                {
+                    postMatch = (await GetMatchByIdAsync(postMatchTransfer.FutureMatchId)).GetDataOrThrow();
+
+                }
+
+
+                return RepositoryResult<Tuple< Models.Match?, Models.Match?>>.Success(new Tuple<Models.Match?, Models.Match?>(preMatch , postMatch));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GetConnectedMatchesByTransfer] Error getting transfers of match.");
+                return RepositoryResult<Tuple<Models.Match?, Models.Match?>>.Failure("Nepodarilo se získat zápasy spojené transferom");
+            }
+        }
         public async Task<RepositoryResponse> RemoveRefereeFromTheMatch(int refereeId, string matchId,string user)
         {
             try
@@ -1556,7 +1594,97 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
+        public async Task<RepositoryResponse> RemoveInGoingTransfers(int refereeId, string matchId)
+        {
+            try
+            {
+                if (matchId == null)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = $"Žádne transfery nenajdeny."
+                    };
+                }
+                var transfers = await _context.Transfers
+                    .Where(t => (t.FutureMatchId == matchId) && t.RefereeId == refereeId)
+                    .ToListAsync();
 
+                if (transfers.Count == 0)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = $"Žádne transfery nenajdeny."
+                    };
+                }
+
+                _context.RemoveRange(transfers);
+                await _context.SaveChangesAsync();
+
+                return new RepositoryResponse
+                {
+                    Success = true,
+                    Message = $"Transfery do úspěšně vymazány :{matchId}."
+                };
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[RemoveInGoingTransfers] Error erasing ingoing transfer of match.");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Chyba při mazání transferů."
+                };
+            }
+        }
+        public async Task<RepositoryResponse> RemoveOutGoingTransfers(int refereeId, string matchId)
+        {
+            try
+            {
+                if (matchId == null)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = $"Žádne transfery nenajdeny."
+                    };
+                }
+
+                var transfers = await _context.Transfers
+                    .Where(t => (t.PreviousMatchId == matchId ) && t.RefereeId == refereeId)
+                    .ToListAsync();
+                _logger.LogWarning(transfers.First().TransferId.ToString());
+                if (transfers.Count == 0)
+                {
+                    return new RepositoryResponse
+                    {
+                        Success = true,
+                        Message = $"Žádne transfery nenajdeny."
+                    };
+                }
+
+                _context.RemoveRange(transfers);
+                await _context.SaveChangesAsync();
+
+                return new RepositoryResponse
+                {
+                    Success = true,
+                    Message = $"Transfer po úspěšně vymazány :{matchId}."
+                };
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[RemoveOutGoingTransfers] Error erasing outgoing transfer of match.");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Chyba při mazání transferů."
+                };
+            }
+        }
 
         public async Task<RepositoryResult<List<Field>>> GetFields()
         {

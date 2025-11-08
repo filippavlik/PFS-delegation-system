@@ -115,10 +115,12 @@ namespace AdminPartDevelop.Services.AdminServices
                     Math.Abs(locationBefore.Item2) > epsilon)
                 {
                     count++;
+                  
                     var sCoord = new System.Device.Location.GeoCoordinate(locationBefore.Item1, locationBefore.Item2);
                     var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
 
                     kmCalculationBefore = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
+                    _logger.LogInformation("Before distance>" + kmCalculationBefore);
                     kmTogether += kmCalculationBefore;
                 }
 
@@ -130,6 +132,8 @@ namespace AdminPartDevelop.Services.AdminServices
                     var eCoord = new System.Device.Location.GeoCoordinate(match.Field.Latitude, match.Field.Longitude);
 
                     kmCalculationAfter = (int)(sCoord.GetDistanceTo(eCoord) / 1000);
+                    _logger.LogInformation("After distance>" + kmCalculationAfter);
+
                     kmTogether += kmCalculationAfter;
 
                 }

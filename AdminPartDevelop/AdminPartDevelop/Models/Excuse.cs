@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace AdminPartDevelop.Models;
 
@@ -24,6 +23,5 @@ public partial class Excuse
 
     public string? Reason { get; set; }
 
-    [JsonIgnore]
     public virtual Referee Referee { get; set; } = null!;
 }

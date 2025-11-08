@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AdminPartDevelop.Models;
 
+//NEW
 public partial class RefereeDbContext : DbContext
 {
     public RefereeDbContext()
@@ -61,7 +62,6 @@ public partial class RefereeDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("actuall_prague_zone");
             entity.Property(e => e.Age).HasColumnName("age");
-            entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.CarAvailability).HasColumnName("car_availability");
             entity.Property(e => e.Email)
                 .HasMaxLength(320)
@@ -69,7 +69,9 @@ public partial class RefereeDbContext : DbContext
             entity.Property(e => e.FacrId)
                 .HasMaxLength(25)
                 .HasColumnName("facr_id");
+            entity.Property(e => e.Latitude).HasColumnName("latitude");
             entity.Property(e => e.League).HasColumnName("league");
+            entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -80,6 +82,12 @@ public partial class RefereeDbContext : DbContext
             entity.Property(e => e.PragueZone)
                 .HasMaxLength(100)
                 .HasColumnName("prague_zone");
+            entity.Property(e => e.Rating)
+                .HasDefaultValue(7)
+                .HasColumnName("rating");
+            entity.Property(e => e.RefereeAddress)
+                .HasMaxLength(200)
+                .HasColumnName("referee_address");
             entity.Property(e => e.Surname)
                 .HasMaxLength(100)
                 .HasColumnName("surname");

@@ -267,7 +267,16 @@ namespace AdminPartDevelop.Controllers
 			                var locationBefore = _refereeService.GetLocationBeforeMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
         			        var locationAfter = _refereeService.GetLocationAfterMatch(matchesForReferee, match.MatchDate.ToDateTime(match.MatchTime)).GetDataOrThrow();
 
-    				        distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
+                        //New
+                        //SUPPORT FOR TRAVEL FROM HOME
+                        var homeLocation = (await _refereeService.GetHomeLocation(refereeId)).GetDataOrThrow();
+                        if (homeLocation != null)
+                        {
+                            locationBefore ??= homeLocation;
+                            locationAfter ??= homeLocation;
+                        }
+                        _logger.LogWarning($"Referee {refereeId} calculating distances...");
+                        distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
     			        }
                         //RATINGS
                         var resultOfObtainingRatings = await _refereeRepo.GetRefereeByIdAsync(refereeId);

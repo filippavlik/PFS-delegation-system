@@ -4,6 +4,8 @@ var searchedRefereeId = null;
 var searchedNameSurname = null;
 var searchedCompetitionName = null;
 let searchTimeout;
+let typingTimer;
+const debounceDelay = 400;
 
 // REFEREE AND COMPETITION SEARCH
 var competitionSearchMethods = {
@@ -179,6 +181,95 @@ var refereeSearchMethods = {
         $("#searchResults").hide();
     }
 };
+var addressSearchMethods = {
+    init: function (inputId, latId, lonId) {
+        // Remove old suggestions linked to this input
+        $("#" + inputId + "Suggestions").remove();
+
+        const $input = $("#" + inputId);
+        if ($input.length === 0) return;
+
+        const $suggestions = $("<div>")
+            .attr("id", inputId + "Suggestions")
+            .addClass("list-group position-absolute w-100")
+            .css({ "z-index": 1050, "display": "none" });
+
+        // Make parent relative
+        $input.parent().css('position', 'relative').append($suggestions);
+
+        // Debounce input
+        $input.off("input.addressSearch").on("input.addressSearch", function () {
+            clearTimeout(typingTimer);
+            const query = $(this).val().trim();
+            typingTimer = setTimeout(() => {
+                if (query.length > 2) {
+                    addressSearchMethods.fetchSuggestions(query, inputId, latId, lonId);
+                } else {
+                    $suggestions.hide().empty();
+                }
+            }, debounceDelay);
+        });
+
+        // Selecting a suggestion
+        $suggestions.on("mousedown", ".list-group-item", function (e) {
+            e.preventDefault();
+            const name = $(this).text();
+            const lat = $(this).data("lat");
+            const lon = $(this).data("lon");
+
+            $("#" + inputId).val(name);
+            $("#" + latId).val(lat);
+            $("#" + lonId).val(lon);
+
+            $suggestions.hide().empty();
+        });
+
+        // Hide when clicking outside
+        $(document).on("mousedown.addressSearch." + inputId, function (e) {
+            if (!$(e.target).closest("#" + inputId + ", #" + inputId + "Suggestions").length) {
+                $suggestions.hide().empty();
+            }
+        });
+    },
+
+    fetchSuggestions: function (query, inputId, latId, lonId) {
+        $.ajax({
+            url: "Admin/Referee/GetAddressesByInput",
+            type: "GET",
+            data: { query: query },
+            success: function (response) {
+                addressSearchMethods.renderSuggestions(response, inputId);
+            },
+            error: function () {
+                $("#" + inputId + "Suggestions").hide().empty();
+            }
+        });
+    },
+
+    renderSuggestions: function (addresses, inputId) {
+        const $suggestions = $("#" + inputId + "Suggestions");
+        $suggestions.empty();
+
+        if (!addresses || addresses.length === 0) {
+            $suggestions.hide();
+            return;
+        }
+
+        addresses.forEach(addr => {
+            $("<a>")
+                .attr("href", "javascript:void(0)")
+                .addClass("list-group-item list-group-item-action")
+                .text(addr.name + " " + addr.location)
+                .data("lat", addr.latitude)
+                .data("lon", addr.longtitude)
+                .appendTo($suggestions);
+        });
+
+        $suggestions.show();
+    }
+};
+
+
 
 $(function () {
     refereeSearchMethods.init();
@@ -199,7 +290,33 @@ $(function () {
             minuteIncrement: 1,      // Increment minutes by 1
             plugins: [new rangePlugin({ input: "#filterEndDateTime" })], // Adding the rangePlugin
     });
+    //HOVER WHEN MAIN LABEL IS FOCUSED
+    const types = ["zapasref", "zapasar", "omluva", "transferhome", "transfermatch", "vozidlocar", "vozidlobus"];
+
+    $.each(types, function (_, type) {
+        const headerSelector = `.card-header .${type}`;
+        const eventSelector = `.event.${type}`;
+
+        // Hover or focus header → highlight all same-class events
+        $(document).on("mouseenter focus", headerSelector, function () {
+            $(eventSelector).addClass("hover-simulated");
+        });
+
+        // Leave or blur header → remove highlight
+        $(document).on("mouseleave blur", headerSelector, function () {
+            $(eventSelector).removeClass("hover-simulated");
+        });
+
+        // Optional: hovering event highlights header label too
+        $(document).on("mouseenter", eventSelector, function () {
+            $(headerSelector).addClass("hover-simulated");
+        });
+        $(document).on("mouseleave", eventSelector, function () {
+            $(headerSelector).removeClass("hover-simulated");
+        });
+    });
 });
+
 $(document).on("click", "#logOutTheUser", function () {
 	 logout();
 });
@@ -276,6 +393,7 @@ $(document).on("mousedown", ".referee-button", function (e) {
             data: { id:refereeId },
             success: function (response) {
                 $("#showCardOfRefereeModalBody").html(response);
+                addressSearchMethods.init("refereePlace", "refereeLatitude", "refereeLongtitude");
                 let $suggestionsContainer = $('<div>', {
                     id: 'teamSuggestions',
                     css: {
@@ -751,6 +869,9 @@ $(document).on("click", "#updateReferee", function (e) {
     const carVal = $("#refereeCar").val();
     const pfsVal = $("#refereePfs").val();
     const placeVal = $("#refereePlace").val();
+    //New
+    const refereeLatitude = $("#refereeLatitude").val();
+    const refereeLongtitude = $("#refereeLongtitude").val();
     const noteVal = $("#refereeNote").val();
 
     var form = new FormData;
@@ -763,6 +884,9 @@ $(document).on("click", "#updateReferee", function (e) {
     form.append("rating",parseInt(ratingVal));
     form.append("age", parseInt(ageVal));
     form.append("league", parseInt(leagueVal));
+    //New
+    form.append("latitude", parseFloat(refereeLatitude));
+    form.append("longtitude", parseFloat(refereeLongtitude));
     form.append("car", carVal);
     form.append("pfs", pfsVal);
     form.append("place", placeVal);
@@ -821,6 +945,8 @@ $(document).on("click", "#addNewRefereeBtn", function (e) {
     e.preventDefault();
 
     $("#addNewRefereeModal").modal("show");
+    addressSearchMethods.init("place", "latitude", "longtitude");
+
 });
 $(document).on("submit", "#newRefereeForm", function (e) {
     e.preventDefault();
@@ -838,6 +964,7 @@ $(document).on("submit", "#newRefereeForm", function (e) {
     submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Ukládám...');
     submitBtn.prop('disabled', true);
 
+    //New
     const refereeData = {
         facrId: $('#facrId').val() || null,
         name: $('#name').val(),
@@ -847,6 +974,8 @@ $(document).on("submit", "#newRefereeForm", function (e) {
         age: parseInt($('#age').val()),
         ofs: $('#ofs').prop('checked'),
         note: $('#note').val() || null,
+        latitude: parseFloat($('#latitude').val()) || null,
+        longtitude: parseFloat($('#longtitude').val()) || null,
         carAvailability: $('#carAvailability').prop('checked')
     };
 
@@ -1137,7 +1266,8 @@ $(document).on("click", ".points_button_r", function () {
 
 
                     const color = getColorForValue(points);
-
+                  
+                    
                     const buttonId = refereeId + "_referee-offer-pure-button";
                     $("#" + buttonId).css('background', color);
 
@@ -1147,7 +1277,13 @@ $(document).on("click", ".points_button_r", function () {
                             .attr('data-bs-original-title', htmlMessage)
                             .attr('data-bs-html', 'true')
                             .tooltip('dispose')
-                            .tooltip({ html: true });
+                            .tooltip({
+                                html: true,
+                                container: 'body',  // <- This appends tooltip to body, outside scrollable containers
+                                boundary: 'viewport',
+                                placement: 'top',  // Add explicit placement
+                                sanitize: false    // Since you're controlling the HTML content
+                            });
                     }
                 }
             });
@@ -1732,26 +1868,6 @@ function showAlert(message, type = "info", confirmCallback = null) {
         toastEl.remove();
     });
 }
-
-/*
-function showAlert(message, type = "warning", confirmCallback = null) {
-    $("#customAlertText").text(message);
-    $("#customAlert")
-        .removeClass("d-none alert-warning alert-success alert-danger alert-info")
-        .addClass(`alert-${type} show`);
-
-    $("#customConfirmButton").remove();
-
-    if (confirmCallback) {
-        const confirmButton = $('<button id="customConfirmButton" class="btn btn-sm btn-danger ms-2">Přidělit rozhodčího i přes to</button>');
-        $("#customAlertText").append(confirmButton);
-
-        $(document).off('click', '#customConfirmButton').on('click', '#customConfirmButton', function () {
-            confirmCallback();
-            $("#customAlert").addClass("d-none");
-        });
-    }
-}*/
 function extractDateTime(timeRange) {
     if (!timeRange) return [null, null, null, null];
 

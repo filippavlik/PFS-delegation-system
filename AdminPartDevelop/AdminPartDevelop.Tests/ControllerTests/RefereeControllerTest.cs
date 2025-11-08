@@ -41,7 +41,7 @@ namespace AdminPartDevelop.Tests.Controllers
         private readonly IRefereeService _refereeService;
         private readonly IExcelParser _excelParser;
         private readonly Mock<IHubContext<HubForReendering>> _mockHubContext;
-        private readonly Mock<IRouteCarPlanner> _mockCar;
+        private readonly Mock<IGeocodingService> _mockCar;
         private readonly Mock<IRouteBusPlanner> _mockBus;
         private readonly Mock<IEmailsToLoginDbSender> _emailsSender;
         private readonly IMemoryCache _memoryCache;
@@ -78,7 +78,7 @@ namespace AdminPartDevelop.Tests.Controllers
             var mockGetDataServiceLogger = new Mock<ILogger<GetData>>();
 
 
-            _mockCar = new Mock<IRouteCarPlanner>();
+            _mockCar = new Mock<IGeocodingService>();
             _mockBus = new Mock<IRouteBusPlanner>();
             _emailsSender = new Mock<IEmailsToLoginDbSender>();
     

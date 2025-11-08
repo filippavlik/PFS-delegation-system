@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace AdminPartDevelop.Models;
 
+//NEW
 public partial class Referee
 {
     public int RefereeId { get; set; }
@@ -30,9 +31,16 @@ public partial class Referee
     public string? ActuallPragueZone { get; set; }
 
     public bool CarAvailability { get; set; }
-    public int Rating { get; set; }
 
     public DateTime TimestampChange { get; set; }
+
+    public int Rating { get; set; }
+
+    public string? RefereeAddress { get; set; }
+
+    public float? Latitude { get; set; }
+
+    public float? Longitude { get; set; }
 
     public virtual ICollection<Excuse> Excuses { get; set; } = new List<Excuse>();
 
