@@ -13,9 +13,10 @@ namespace AdminPartDevelop.Views.ViewModels
             public int? ExcuseId { get; set; }
             public int? SlotId { get; set; }
             public int? TransferId { get; set; }
+            public string? ActuallLocation { get; set; }
 
 
-            public TimeRange(DateTime matchStart, DateTime matchEnd, string typeOfRange, string? matchId = null,    int? excuseId = null,    int? slotId = null, int? transferId = null)
+            public TimeRange(DateTime matchStart, DateTime matchEnd, string typeOfRange, string? matchId = null,    int? excuseId = null,    int? slotId = null, int? transferId = null, string? actuallLocation = null)
             {
                 this.Start = matchStart;
                 this.End = matchEnd;
@@ -24,6 +25,7 @@ namespace AdminPartDevelop.Views.ViewModels
                 this.ExcuseId = excuseId;
                 this.SlotId = slotId;
                 this.TransferId = transferId;
+                this.ActuallLocation = actuallLocation;
             }            
         }
 

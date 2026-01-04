@@ -45,4 +45,7 @@ public partial class Referee
     public virtual ICollection<Excuse> Excuses { get; set; } = new List<Excuse>();
 
     public virtual ICollection<VehicleSlot> VehicleSlots { get; set; } = new List<VehicleSlot>();
+    public virtual ICollection<MaximumAmount> MaximumAmounts { get; set; } = new List<MaximumAmount>();
+    public virtual ICollection<ActuallLocation> ActuallLocations { get; set; } = new List<ActuallLocation>();
+
 }

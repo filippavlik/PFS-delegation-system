@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Maui.ApplicationModel.Communication;
 using Microsoft.AspNet.SignalR;
 using AdminPartDevelop.Services.RouteServices;
+using Nest;
 
 namespace AdminPartDevelop.Controllers
 {
@@ -184,10 +185,23 @@ namespace AdminPartDevelop.Controllers
                         return StatusCode(400, "Rozhodčí " + refereeFromId.Name + refereeFromId.Surname + " má veto na jeden z tímu (zkontrolujte v okně rozhodčího)!");
                     }
                     bool isFree = _refereeService.CheckTimeAvailabilityOfReferee(referee, matchToCheck).GetDataOrThrow();
-
                     if (!isFree)
                     {
                         return StatusCode(400, "Rozhodčí " + refereeFromId.Name + refereeFromId.Surname + " je v daný čas zápasu nedostupný (zkontrolujte v okně rozhodčího)!");
+                    }
+
+                    bool canRefereeTheCompetition = referee.Referee.League <= matchToCheck.Competition.League;
+                    bool isOverridedByCustomRule = (await _adminRepo.DoesCustomCompetitionRuleAlreadyExists(refereeId,refereeFromId.League,matchToCheck.CompetitionId,true)).GetDataOrThrow();
+                    if (!canRefereeTheCompetition && !isOverridedByCustomRule)
+                    {
+                        return StatusCode(400, "Rozhodčí " + refereeFromId.Name + " " + refereeFromId.Surname +
+                                           " nemůže rozhodovat danou soutěž (jeho úroveň je nižší — zkontrolujte ji v okně rozhodčího)!");
+                    }
+                    Tuple<bool,string> theAssigmentDoesExceedLimitByReferee = ( _refereeService.DoesExceedTheMaximumMatchLimit(referee,matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime))).GetDataOrThrow();
+                    if (theAssigmentDoesExceedLimitByReferee!=null && theAssigmentDoesExceedLimitByReferee.Item1)
+                    {
+                        return StatusCode(400, "Rozhodčí " + refereeFromId.Name + " " + refereeFromId.Surname +
+                                           " si nastavil maximální limit zápasů a tahle delegace by ho porušovala! \n "+theAssigmentDoesExceedLimitByReferee.Item2);
                     }
                 }
 
@@ -201,9 +215,6 @@ namespace AdminPartDevelop.Controllers
 
                 if (resultOfTransaction.Success)
                 {
-                    // New
-                    // If these two add fails, it is not that important to have transfers stored
-
                     int? amountOfMinutesOfHomeTransfer = null;
 
                     if (calculatedTransfers.PreMatch != null)
@@ -359,11 +370,15 @@ namespace AdminPartDevelop.Controllers
                 ViewBag.FirstGameDay = firstGameDay;
 
                 var vetoesOfReferee = (await _adminRepo.GetRefereesVetoesAsync(id)).GetDataOrThrow();
+                var competitionsOfReferee = (await _adminRepo.GetCustomCompetitionsRulesForReferee(id,referee.League)).GetDataOrThrow();
+                var sortedCompetitionsOfReferee = competitionsOfReferee.OrderBy(c => c.Item1.CompetitionName).ToList();
+
 
                 RefereeCardViewModel refereeCardViewModel = new RefereeCardViewModel
                 {
                     RefereeWTimeOptions = refereeWithTimeOptions,
-                    Vetoes = vetoesOfReferee
+                    Vetoes = vetoesOfReferee,
+                    CustomCompetitionsRules = sortedCompetitionsOfReferee
                 };
 
                 return PartialView("~/Views/PartialViews/_RefereeCard.cshtml", refereeCardViewModel);
@@ -373,6 +388,42 @@ namespace AdminPartDevelop.Controllers
             {
                 _logger.LogError(ex, "[GetCardInfo] Error referee controller");
                 return StatusCode(500, "Nastala chyba při zobrazování rozhodčího.");
+
+            }
+        }
+        [HttpPost("UploadCustomCompetitionRule")]
+        public async Task<IActionResult> UploadCustomCompetitionRule(int refereeId, string competitionId,bool wantsToAdd)
+        {
+            try
+            {
+                var refereeDefaultCompetitionLevel = (await _refereeRepo.GetRefereeByIdAsync(refereeId)).GetDataOrThrow().League;
+                var isCorrectRequest = (await _adminRepo.DoesCustomCompetitionRuleAlreadyExists(refereeId, refereeDefaultCompetitionLevel, competitionId,wantsToAdd)).GetDataOrThrow();
+                if (isCorrectRequest)
+                {
+                    if (wantsToAdd)
+                    {
+                        return StatusCode(400, "Pravidlo soutěže s id:" + competitionId + "pro danýho rozhodčího s id:" + refereeId + "již existuje (buď obecně nebo někdo zadal zvláštní pravidlo)");
+                    }
+                    else
+                    {
+                        return StatusCode(400, "Pravidlo soutěže s id:" + competitionId + "pro danýho rozhodčího s id:" + refereeId + "již existuje (buď obecně nebo někdo zadal zvláštní pravidlo)");
+                    }
+                }
+
+                var result = (await _adminRepo.AddRemoveCustomRule(refereeId,competitionId,wantsToAdd));
+                if (result.Success)
+                {
+                    return Ok(result.Message);
+                }
+                else
+                {
+                    return StatusCode(500, result.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[UploadCustomCompetitionRule] Error referee controller");
+                return StatusCode(500, "Nastala chyba při pridávaní alebo odoberaní pravidla soutěže.");
 
             }
         }

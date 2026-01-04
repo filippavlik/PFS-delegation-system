@@ -2,6 +2,7 @@
 using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Models;
 using AdminPartDevelop.Views.ViewModels;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace AdminPartDevelop.Data
@@ -122,6 +123,10 @@ namespace AdminPartDevelop.Data
         /// <param name="refereeId">The ID of the referee.</param>
         /// <returns>A repository result containing a list of veto entities if successful, or an error message if the operation fails.</returns>
         Task<RepositoryResult<List<Models.Veto>>> GetRefereesVetoesAsync(int refereeId);
+        Task<RepositoryResult<List<(Competition,bool)>>> GetCustomCompetitionsRulesForReferee(int refereeId,int refereeLeague);
+        Task<RepositoryResult<bool>> DoesCustomCompetitionRuleAlreadyExists(int refereeId,int refereeLevel, string competitionId, bool wantsToAdd);
+        Task<RepositoryResponse> AddRemoveCustomRule(int refereeId, string competitionId, bool wantsToAdd);
+
 
         /// <summary>
         /// Retrieves all transfers for a specific referee.

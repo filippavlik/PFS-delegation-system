@@ -22,6 +22,10 @@
             </td>
             <td>
                 <input type="text" id="newFieldAddress" />
+                <div id="newFieldAddressSuggestions"
+                     class="list-group position-absolute w-100"
+                     style="z-index: 1000; display:none;">
+                </div>
             </td>
             <td>
                 <input type="number" id="newFieldLatitude" step="any" />
@@ -51,7 +55,15 @@
                     <input type="text" id="fieldName_@field.FieldId" value="@field.FieldName" readonly/>
                 </td>
                 <td>
-                    <input type="text" id="fieldAddress_@field.FieldId" value="@field.FieldAddress" />
+                    @*NEW ACTUALL*@
+                    <input class="fieldAddressInput" type="text"
+                           id="fieldAddress_@field.FieldId"
+                           value="@field.FieldAddress" />
+
+                    <div id="fieldAddress_@(field.FieldId)Suggestions"
+                         class="list-group position-absolute w-100"
+                         style="z-index: 1000; display:none;">
+                    </div>
                 </td>
                 <td>
                     <input type="number" id="latitude_@field.FieldId" value="@field.Latitude" step="any" />

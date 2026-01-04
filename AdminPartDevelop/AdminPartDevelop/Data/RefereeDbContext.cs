@@ -21,9 +21,102 @@ public partial class RefereeDbContext : DbContext
     public virtual DbSet<Referee> Referees { get; set; }
 
     public virtual DbSet<VehicleSlot> VehicleSlots { get; set; }
+    public virtual DbSet<MaximumAmount> MaximumAmounts { get; set; }
+    public virtual DbSet<ActuallLocation> ActuallLocations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<MaximumAmount>(entity =>
+        {
+            entity.ToTable("MaximumAmounts");
+
+            entity.HasKey(e => new { e.MaximumAmountId, e.RefereeId })
+                  .HasName("pk_maximum_amounts");
+
+            entity.Property(e => e.MaximumAmountId)
+                  .ValueGeneratedOnAdd()
+                  .HasColumnName("maximum_amount_id");
+
+            entity.Property(e => e.RefereeId)
+                  .HasColumnName("referee_id");
+
+            entity.Property(e => e.DateFrom)
+                  .HasColumnName("date_from");
+
+            entity.Property(e => e.TimeFrom)
+                  .HasColumnName("time_from");
+
+            entity.Property(e => e.DateTo)
+                  .HasColumnName("date_to");
+
+            entity.Property(e => e.TimeTo)
+                  .HasColumnName("time_to");
+
+            entity.Property(e => e.DatetimeAdded)
+                  .HasColumnType("timestamp without time zone")
+                  .HasColumnName("datetime_added");
+
+            entity.Property(e => e.Note)
+                  .HasMaxLength(256)
+                  .HasColumnName("note");
+
+            entity.Property(e => e.MaximumValue)
+                  .HasColumnName("maximum_value");
+
+            entity.HasOne(d => d.Referee)
+                  .WithMany(p => p.MaximumAmounts)
+                  .HasForeignKey(d => d.RefereeId)
+                  .HasConstraintName("fk_maximumamounts_referees");
+        });
+        modelBuilder.Entity<ActuallLocation>(entity =>
+        {
+            entity.ToTable("ActuallLocations");
+
+            entity.HasKey(e => new { e.ActuallLocationId, e.RefereeId })
+                  .HasName("pk_actuall_locations");
+
+            entity.Property(e => e.ActuallLocationId)
+                  .ValueGeneratedOnAdd()
+                  .HasColumnName("actuall_location_id");
+
+            entity.Property(e => e.RefereeId)
+                  .HasColumnName("referee_id");
+
+            entity.Property(e => e.DateFrom)
+                  .HasColumnName("date_from");
+
+            entity.Property(e => e.TimeFrom)
+                  .HasColumnName("time_from");
+
+            entity.Property(e => e.DateTo)
+                  .HasColumnName("date_to");
+
+            entity.Property(e => e.TimeTo)
+                  .HasColumnName("time_to");
+
+            entity.Property(e => e.DatetimeAdded)
+                  .HasColumnType("timestamp without time zone")
+                  .HasColumnName("datetime_added");
+
+            entity.Property(e => e.Note)
+                  .HasMaxLength(256)
+                  .HasColumnName("note");
+
+            entity.Property(e => e.Address)
+                  .HasMaxLength(256)
+                  .HasColumnName("address");
+
+            entity.Property(e => e.Latitude)
+                  .HasColumnName("latitude");
+
+            entity.Property(e => e.Longitude)
+                  .HasColumnName("longitude");
+
+            entity.HasOne(d => d.Referee)
+                  .WithMany(p => p.ActuallLocations)
+                  .HasForeignKey(d => d.RefereeId)
+                  .HasConstraintName("fk_actualllocations_referees");
+        });
         modelBuilder.Entity<Excuse>(entity =>
         {
             entity.HasKey(e => new { e.ExcuseId, e.RefereeId }).HasName("pk_excuses");

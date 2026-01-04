@@ -20,4 +20,6 @@ public partial class Competition
 
     [JsonIgnore]
     public virtual ICollection<Veto> Vetoes { get; set; } = new List<Veto>();
+    [JsonIgnore]
+    public virtual ICollection<CustomCompetitionRules> CustomCompetitionRules { get; set; } = new List<CustomCompetitionRules>();
 }

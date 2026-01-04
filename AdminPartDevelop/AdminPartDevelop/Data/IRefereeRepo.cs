@@ -1,6 +1,7 @@
 ﻿using AdminPartDevelop.Common;
 using AdminPartDevelop.DTOs;
 using AdminPartDevelop.Models;
+using AdminPartDevelop.Views.ViewModels;
 
 namespace AdminPartDevelop.Data
 {
@@ -69,6 +70,9 @@ namespace AdminPartDevelop.Data
         /// <returns>A status message indicating whether the excuses were successfully saved or if there was an error</returns>
         /// <returns>A repository response indicating success or failure with an appropriate message.</returns>
         Task<RepositoryResponse> AddManualExcuses(List<Excuse> excuses);
+        Task<RepositoryResult<ActuallLocation?>> DoesExistActuallLocationBeforeMatch(RefereeWithTimeOptions referee, Models.Match matchToCheck);
+        Task<RepositoryResult<ActuallLocation?>> DoesExistActuallLocationAfterMatch(RefereeWithTimeOptions referee, Models.Match matchToCheck);
+
         /// <summary>
         /// Updates an existing referee's information in the database.
         /// </summary>

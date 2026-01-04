@@ -30,6 +30,8 @@ public partial class AdminDbContext : DbContext
     public virtual DbSet<Transfer> Transfers { get; set; }
 
     public virtual DbSet<Veto> Vetoes { get; set; }
+    public virtual DbSet<CustomCompetitionRules> CustomCompetitionRules { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -223,6 +225,29 @@ public partial class AdminDbContext : DbContext
             entity.HasOne(d => d.Team).WithMany(p => p.Vetoes)
                 .HasForeignKey(d => d.TeamId)
                 .HasConstraintName("fk_vetoes_teams");
+        });
+        modelBuilder.Entity<CustomCompetitionRules>(entity =>
+        {
+            entity.HasKey(e => e.CustomCompetitionRuleId)
+                  .HasName("pk_custom_competition_rules");
+
+            entity.Property(e => e.CustomCompetitionRuleId)
+                  .HasColumnName("custom_competition_rule_id");
+
+            entity.Property(e => e.RefereeId)
+                  .HasColumnName("referee_id");
+
+            entity.Property(e => e.CompetitionId)
+                  .HasColumnName("competition_id");
+
+            entity.Property(e => e.isAdded)
+                  .HasColumnName("is_added");
+
+            // FK → Competition
+            entity.HasOne(d => d.Competition)
+                  .WithMany(p => p.CustomCompetitionRules)
+                  .HasForeignKey(d => d.CompetitionId)
+                  .HasConstraintName("fk_custom_rules_competition");
         });
 
         OnModelCreatingPartial(modelBuilder);

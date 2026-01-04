@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Maui.Authentication;
 using Nest;
+using System;
 using System.Device.Location;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -194,6 +195,8 @@ namespace AdminPartDevelop.Controllers
                 var match = (await _adminRepo.GetMatchByIdAsync(matchId)).GetDataOrThrow();
 
                 Dictionary<int, bool> isFreeDuringMatch = new Dictionary<int, bool>();
+                Dictionary<int, bool> canRefereeCompetition = new Dictionary<int, bool>();
+
                 Dictionary<int, int> refereeRatings = new Dictionary<int, int>();
                 List<Referee> refereeList = refereeIds
                     .Select(id => new Referee { RefereeId = id })
@@ -210,6 +213,16 @@ namespace AdminPartDevelop.Controllers
                     else
                     {
                         isFreeDuringMatch[refereeWithTimeOptions.Referee.RefereeId] = true;
+                    }
+                    bool canRefereeTheCompetition = refereeWithTimeOptions.Referee.League <= match.Competition.League;
+                    bool isOverridedByCustomRule = (await _adminRepo.DoesCustomCompetitionRuleAlreadyExists(refereeWithTimeOptions.Referee.RefereeId, refereeWithTimeOptions.Referee.League, match.CompetitionId, true)).GetDataOrThrow();
+                    if (!canRefereeTheCompetition && !isOverridedByCustomRule)
+                    {
+                        canRefereeCompetition[refereeWithTimeOptions.Referee.RefereeId] = true;
+                    }
+                    else
+                    {
+                        canRefereeCompetition[refereeWithTimeOptions.Referee.RefereeId] = true;
                     }
                 }
           
@@ -269,12 +282,43 @@ namespace AdminPartDevelop.Controllers
 
                         //New
                         //SUPPORT FOR TRAVEL FROM HOME
-                        var homeLocation = (await _refereeService.GetHomeLocation(refereeId)).GetDataOrThrow();
-                        if (homeLocation != null)
+
+                        var actuallLocationBefore = (await _refereeRepo.DoesExistActuallLocationBeforeMatch(listOfRefereesWithTimeOptions.Where(r => r.Referee.RefereeId == refereeId).FirstOrDefault(),match)).GetDataOrThrow();
+                        var actuallLocationAfter = (await _refereeRepo.DoesExistActuallLocationAfterMatch(listOfRefereesWithTimeOptions.Where(r => r.Referee.RefereeId == refereeId).FirstOrDefault(), match)).GetDataOrThrow();
+                        if (actuallLocationBefore != null && actuallLocationBefore.Latitude.HasValue && actuallLocationBefore.Longitude.HasValue)
                         {
-                            locationBefore ??= homeLocation;
-                            locationAfter ??= homeLocation;
+                            locationBefore =
+                                Tuple.Create(
+                                    actuallLocationBefore.Latitude.Value,
+                                    actuallLocationBefore.Longitude.Value
+                                );
                         }
+                        else
+                        {
+                            var homeLocation = (await _refereeService.GetHomeLocation(refereeId)).GetDataOrThrow();
+                            if (homeLocation != null)
+                            {
+                                locationBefore ??= homeLocation;
+                            }
+                        }
+
+                        if (actuallLocationAfter != null && actuallLocationAfter.Latitude.HasValue && actuallLocationAfter.Longitude.HasValue)
+                        {
+                            locationAfter =
+                                Tuple.Create(
+                                    actuallLocationAfter.Latitude.Value,
+                                    actuallLocationAfter.Longitude.Value
+                                );
+                        }
+                        else
+                        {
+                            var homeLocation = (await _refereeService.GetHomeLocation(refereeId)).GetDataOrThrow();
+                            if (homeLocation != null)
+                            {
+                                locationAfter ??= homeLocation;
+                            }
+                        }
+
                         _logger.LogWarning($"Referee {refereeId} calculating distances...");
                         distanceDictionary[refereeId] = _adminService.CalculateAverageDistance(locationBefore, locationAfter, match).GetDataOrThrow();
     			        }
@@ -292,7 +336,7 @@ namespace AdminPartDevelop.Controllers
                 }
 	    
 
-                var result = _refereeService.CalculatePointsForReferees(refereeIds, isFreeDuringMatch,refereeRatings, resultHomeTeam, resultAwayTeam, resultTotal, distanceDictionary).GetDataOrThrow();
+                var result = _refereeService.CalculatePointsForReferees(refereeIds,canRefereeCompetition, isFreeDuringMatch,refereeRatings, resultHomeTeam, resultAwayTeam, resultTotal, distanceDictionary).GetDataOrThrow();
                 return Ok(result);
             }
             catch (Exception ex)

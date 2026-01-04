@@ -109,24 +109,26 @@ namespace AdminPartDevelop.Services.RefereeServices
         /// <param name="listOfReferees">The list with all referees.</param>
         /// <returns>6 lists of refeerees sorted by their league level.</returns>
         ServiceResult<Dictionary<int, List<RefereeWithTimeOptions>>> SortRefereesByLeague(List<RefereeWithTimeOptions> listOfReferees);
+        ServiceResult<Tuple<bool,string>> DoesExceedTheMaximumMatchLimit(RefereeWithTimeOptions referee, DateTime matchTime);
+
         /// <summary>
         /// Calculates points for referees based on previous and current match delegations and travel distances.
         /// </summary>
-	/// <remarks>
-	/// <br/> check veto for both teams , if only one of these exists -80 points for referee (max -80)
-	/// <br/> the number of matches delegated as a referee/assistant for the teams where team is as a home team 
-	/// to 2 matches -3 for each, third match is for -5 , four and more are for additional -10 (max -31)
-	/// <br/> the number of matches delegated as a referee/assistant for the teams where team is as a away team             /// to 2 matches -2 for each, third match is for -3 , four and more are for additional -5 (max -17)
-	/// <br/> the distance of field in order to previous match or residence, we consider max air distance 35 km in Prague competitions so for every 5 km -3 points (max -21)
-	/// <br/> the number of matches this gaming weekend , for every match -2 points as assistant -3 as referee (max -18)
-	/// </remarks>
+        /// <remarks>
+        /// <br/> check veto for both teams , if only one of these exists -80 points for referee (max -80)
+        /// <br/> the number of matches delegated as a referee/assistant for the teams where team is as a home team 
+        /// to 2 matches -3 for each, third match is for -5 , four and more are for additional -10 (max -31)
+        /// <br/> the number of matches delegated as a referee/assistant for the teams where team is as a away team             /// to 2 matches -2 for each, third match is for -3 , four and more are for additional -5 (max -17)
+        /// <br/> the distance of field in order to previous match or residence, we consider max air distance 35 km in Prague competitions so for every 5 km -3 points (max -21)
+        /// <br/> the number of matches this gaming weekend , for every match -2 points as assistant -3 as referee (max -18)
+        /// </remarks>
         /// <param name="refereeIds">List of referee IDs to calculate points for</param>
         /// <param name="homeMatches">Result of previous method with counter of home matches with referee delegation for every referee</param>
         /// <param name="awayMatches">Result of previous method with counter of away matches with referee delegation for every referee</param>
         /// <param name="totalMatches">Result of previous method with counter of matches currently delegated in this playing weekend</param>
         /// <param name="distanceDictionary">Dictionary of distance in average between previous/next field and actuall match field for every referee</param>
         /// <returns>Dictionary mapping referee IDs to tuples containing points and additional text info about penalties for admins</returns>
-        ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds, Dictionary<int, bool> isFreeDuringMatch,Dictionary<int,int> ratingOfReferees, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary);
+        ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds, Dictionary<int, bool> canRefereeTheCompetition, Dictionary<int, bool> isFreeDuringMatch,Dictionary<int,int> ratingOfReferees, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary);
         /// <summary>
         /// Checks if a referee is available at the time of a specified match. We takes into consideration excuses and already delegated matches
         /// </summary>

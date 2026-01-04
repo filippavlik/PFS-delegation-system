@@ -10,6 +10,7 @@ using Microsoft.Extensions.FileSystemGlobbing;
 using SkiaSharp;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using static AdminPartDevelop.Services.RefereeServices.RefereeService;
@@ -19,27 +20,22 @@ namespace AdminPartDevelop.Data
 {
     public class AdminRepo : IAdminRepo
     {
-
         private readonly AdminDbContext _context;
         private readonly ILogger<AdminRepo> _logger;
-
-
         public AdminRepo(ILogger<AdminRepo> logger, AdminDbContext context)
         {
             _logger = logger;
             _context = context;
         }
-	Dictionary<int, string> leagueMapping = new Dictionary<int, string>
-	{
-    		{ 0, "PŘEBOR" },
-    		{ 1, "1.A TŘÍDA" },
-    		{ 2, "1.B TŘÍDA" },
-    		{ 3, "2.-3.TŘÍDA" },
-    		{ 4, "M" },
-    		{ 5, "N" }
-	};
-
-
+	    Dictionary<int, string> leagueMapping = new Dictionary<int, string>
+	    {
+    		    { 0, "PŘEBOR" },
+    		    { 1, "1.A TŘÍDA" },
+    		    { 2, "1.B TŘÍDA" },
+    		    { 3, "2.-3.TŘÍDA" },
+    		    { 4, "M" },
+    		    { 5, "N" }
+	    };
         public RepositoryResult<Field> GetOrSaveTheField(string fieldName)
         {
             try
@@ -196,7 +192,6 @@ namespace AdminPartDevelop.Data
 
             }
         }
-
         public RepositoryResult<bool> DoesVetoExistForTeam(string teamId,string competitionId, int refereeId)
         {
             try
@@ -214,7 +209,7 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<bool>.Failure("Nepodařilo se získat zda rozhodčí má nahráne veto pro tento tímy!");
             }
         }
-
+       
         public RepositoryResponse UploadStartGameDate(DateOnly date)
         {
             try
@@ -282,7 +277,6 @@ namespace AdminPartDevelop.Data
 
             }
         }
-
         public async Task<RepositoryResult<Models.Match>> GetMatchByIdAsync(string id)
         {
             try
@@ -383,7 +377,6 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Models.Team>>.Failure("Nepodařilo se získat tímy podle zadaného vstupu.");
             }
         }
-
         public async Task<RepositoryResult<List<Models.Veto>>> GetRefereesVetoesAsync(int refereeId)
         {
             try
@@ -442,9 +435,6 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Models.Transfer>>.Failure("Nepodařilo se získat transfery dle data z serveru.");
             }
         }
-
-
-
         public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesAsync(Dictionary<int,string> dictNameOfReferees)
         {
             try
@@ -572,7 +562,6 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<MatchViewModel>>.Failure("Nepodařilo se převést zápasy na serveru.");
             }
         }
-
         public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesByCompetitionAsync(Dictionary<int, string> dictNameOfReferees,string competitionId)
         {
             try
@@ -622,7 +611,6 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<MatchViewModel>>.Failure("Nepodařilo se získat zápasy dle soutěže z serveru.");
             }
         }
-
         public async Task<RepositoryResult<List<MatchViewModel>>> GetMatchesByDateAsync(Dictionary<int, string> dictNameOfReferees,DateTime startDate,DateTime endDate)
         {
             try
@@ -852,7 +840,6 @@ namespace AdminPartDevelop.Data
             }
 
         }
-
         public async Task<RepositoryResponse> TieAndUpdateTheMatchesAsync(List<FilledMatchDto> listOfMatches, Dictionary<string, int> refereeDict, string filePath,string user)
         {
             try
@@ -1175,8 +1162,7 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-
-   	public async Task<RepositoryResponse> AddVeto(Veto vetoToAdd)
+   	    public async Task<RepositoryResponse> AddVeto(Veto vetoToAdd)
         {
             try
             {
@@ -1254,7 +1240,6 @@ namespace AdminPartDevelop.Data
 
             }
         }
-
         public RepositoryResponse DeleteVeto(int id)
         {
             try
@@ -1290,7 +1275,6 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-
         public RepositoryResponse UpdateExistingVeto(int id, string note) {
             try
             {
@@ -1322,8 +1306,6 @@ namespace AdminPartDevelop.Data
             }
 
         }
-
-
         public async Task<RepositoryResult<List<FilesPreviousDelegation>>> GetFilesWithPreviousMatchesAsync()
         {
             try
@@ -1728,7 +1710,128 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Competition>>.Failure("Nepodařilo se získat soutěže z databáze");
             }
         }
+        public async Task<RepositoryResult<List<(Competition, bool)>>> GetCustomCompetitionsRulesForReferee(int refereeId, int refereeLeague)
+        {
+            try
+            {
+                var competitionsWithFlag = await (
+                    from c in _context.Competitions
 
+                        // Left join custom rules for this referee
+                    join r in _context.CustomCompetitionRules
+                    .Where(x => x.RefereeId == refereeId)
+                    on c.CompetitionId equals r.CompetitionId into rules
+                    from rule in rules.DefaultIfEmpty()
+
+                    where
+                    // Include all competitions at or below referee league
+                    c.League >= refereeLeague
+                    ||
+                    (rule != null)
+
+                    select new
+                    {
+                        Competition = c,
+                        // false only if in custom rules AND isAdded is false
+                        IsNew = !(rule != null && rule.isAdded == false)
+                    }
+            )
+            .Distinct()
+            .ToListAsync();
+
+                var result = competitionsWithFlag
+                    .Select(x => (x.Competition, x.IsNew))
+                    .ToList();
+
+                return RepositoryResult<List<(Competition, bool)>>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GetCustomCompetitionsRulesForReferee] Error getting competitions rules");
+                return RepositoryResult<List<(Competition, bool)>>.Failure("Nepodařilo se získat soutěže pro rozhodčího");
+            }
+        }
+        public async Task<RepositoryResult<bool>> DoesCustomCompetitionRuleAlreadyExists(
+            int refereeId,
+            int refereeLevel,
+            string competitionId,
+            bool wantsToAdd)
+        {
+            try
+            {
+                var customRules = _context.CustomCompetitionRules
+                    .Where(c => c.RefereeId == refereeId && c.CompetitionId == competitionId);
+
+                bool hasForbidden = await customRules.AnyAsync(c => !c.isAdded);
+                bool hasAllowed = await customRules.AnyAsync(c => c.isAdded);
+
+                // If rule is already explicitly set, return based on what exists
+                if (hasForbidden && !wantsToAdd) return RepositoryResult<bool>.Success(true);
+                if (hasAllowed && wantsToAdd) return RepositoryResult<bool>.Success(true);
+
+                if (!hasForbidden && !hasAllowed)
+                {
+                    bool defaultAllows = await _context.Competitions
+                        .AnyAsync(c => c.League >= refereeLevel && c.CompetitionId == competitionId);
+
+                    //If the admin wants to add , it cannot exist , othercase it must exist
+                    bool result = wantsToAdd ? defaultAllows : !defaultAllows;
+                    return RepositoryResult<bool>.Success(result);
+
+                }
+                return RepositoryResult<bool>.Success(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[DoesCustomCompetitionRuleAlreadyExists] Error checking rule existence");
+                return RepositoryResult<bool>.Failure("Nepodařilo se zjistit, zda pravidlo soutěže existuje.");
+            }
+        }
+
+        public async Task<RepositoryResponse> AddRemoveCustomRule(int refereeId, string competitionId, bool wantsToAdd)
+        {
+            try
+            {
+                var existingRule = await _context.CustomCompetitionRules
+                    .FirstOrDefaultAsync(c =>
+                        c.RefereeId == refereeId &&
+                        c.CompetitionId == competitionId &&
+                        c.isAdded != wantsToAdd);
+
+                if (existingRule != null)
+                {
+                    _context.CustomCompetitionRules.Remove(existingRule);
+                }
+                else
+                {
+                    await _context.CustomCompetitionRules.AddAsync(new CustomCompetitionRules
+                    {
+                        CompetitionId = competitionId,
+                        RefereeId = refereeId,
+                        isAdded = wantsToAdd
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                return new RepositoryResponse
+                {
+                    Success = true,
+                    Message = wantsToAdd
+                        ? "Pravidlo soutěže nahráno úspěšně!"
+                        : "Pravidlo soutěže odebráno úspěšně!"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[AddRemoveCustomRule] Error uploading custom rule.");
+                return new RepositoryResponse
+                {
+                    Success = false,
+                    Message = "Nastala chyba při upravování pravidla soutěže!"
+                };
+            }
+        }
 
         public async Task<RepositoryResponse> UpdateMatchAsync(Models.Match match)
         {
@@ -1762,9 +1865,6 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-
-
-
         public async Task<RepositoryResponse> UpdatePreMatchRelationship(Models.Match existingMatch, string newPreMatchId)
         {
             // Start a transaction to ensure atomicity of changes to multiple related matches
@@ -1841,7 +1941,6 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-
         public async Task<RepositoryResponse> UpdatePostMatchRelationship(Models.Match existingMatch, string newPostMatchId)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -1913,7 +2012,6 @@ namespace AdminPartDevelop.Data
                 };
             }
         }
-
         private static string? GetMatchTimeColor(DateTime matchStart, DateTime saturdayStart, DateTime saturdayNoon, DateTime sundayStart, DateTime sundayNoon, DateTime sundayEnd)
         {
                return matchStart switch

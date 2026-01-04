@@ -79,7 +79,6 @@ var competitionSearchMethods = {
         });
     }
 };
-
 var refereeSearchMethods = {
     init: function () {
         const $searchInput = $("#refereeSearch");
@@ -182,6 +181,20 @@ var refereeSearchMethods = {
     }
 };
 var addressSearchMethods = {
+    initAllFields: function () {
+        $(".fieldAddressInput").each(function () {
+            const id = $(this).attr("id");
+            const parts = id.split("_");
+            const fieldId = parts[1];
+
+            addressSearchMethods.init(
+                "fieldAddress_" + fieldId,
+                "latitude_" + fieldId,
+                "longitude_" + fieldId
+            );
+           
+        });
+    },
     init: function (inputId, latId, lonId) {
         // Remove old suggestions linked to this input
         $("#" + inputId + "Suggestions").remove();
@@ -269,8 +282,6 @@ var addressSearchMethods = {
     }
 };
 
-
-
 $(function () {
     refereeSearchMethods.init();
     competitionSearchMethods.init();
@@ -291,7 +302,7 @@ $(function () {
             plugins: [new rangePlugin({ input: "#filterEndDateTime" })], // Adding the rangePlugin
     });
     //HOVER WHEN MAIN LABEL IS FOCUSED
-    const types = ["zapasref", "zapasar", "omluva", "transferhome", "transfermatch", "vozidlocar", "vozidlobus"];
+    const types = ["zapasref", "zapasar", "omluva", "transferhome", "transfermatch", "vozidlocar", "vozidlobus","actualllocation"];
 
     $.each(types, function (_, type) {
         const headerSelector = `.card-header .${type}`;
@@ -360,9 +371,12 @@ $(document).on("click", "#showFootballFieldsBtn", function (e) {
 
     $.get("Admin/Field/GetPreviewOfFields", function (data) {
         $("#footbalfieldsModalBody").html(data);
+        addressSearchMethods.init("newFieldAddress", "newFieldLatitude", "newFieldLongitude");
+        addressSearchMethods.initAllFields();
     }).fail(function () {
         $("#footbalfieldsModalBody").html("<div class='alert alert-danger'>Nepodařilo se načíst přehled hřišť.</div>");
     });
+  
 });
 $(document).on("click", "#showCompetitionsBtn", function (e) {
     e.preventDefault();
@@ -376,6 +390,76 @@ $(document).on("click", "#showCompetitionsBtn", function (e) {
         $("#competitionsModalBody").html("<div class='alert alert-danger'>Nepodařilo se načíst přehled soutěží.</div>");
     });
 });
+$(document).on("click", ".add-competition-rule-btn", function (e) {
+    e.preventDefault();
+
+    const selectedCompetitions = $("#competitionSelect").val();
+    const refereeId = $(this).data("id");
+
+    if (!selectedCompetitions || selectedCompetitions.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Upozornění',
+            text: 'Vyberte alespoň jednu soutěž'
+        });
+        return;
+    }
+
+    selectedCompetitions.forEach(id => {
+        const fd = new FormData();
+        fd.append("refereeId", refereeId);
+        fd.append("wantsToAdd", true);
+        fd.append("competitionId", id);
+
+        $.ajax({
+            url: "Admin/Referee/UploadCustomCompetitionRule",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: fd,
+            success: function (response) {
+                showAlert("Úspěch: " + response, "success");
+            },
+            error: function (xhr) {
+                if (xhr.status === 400) {
+                    showAlert("Warning: " + xhr.responseText, "warning");
+                } else if (xhr.status === 500) {
+                    showAlert("Error: " + xhr.responseText, "danger");
+                }
+            }
+        });
+        $('#competitionSelect').val(null).trigger('change');
+    });
+
+});
+$(document).on("click", ".remove-btn", function () {
+    const refereeId = $(this).data("referee-id");
+    const competitionId = $(this).data("competition-id");
+    const fd = new FormData();
+    fd.append("refereeId", refereeId);
+    fd.append("competitionId", competitionId);
+    fd.append("wantsToAdd", false);
+
+    $.ajax({
+        url: "Admin/Referee/UploadCustomCompetitionRule",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: fd,
+        success: function (response) {
+            showAlert("Úspěch: " + response, "success");
+
+        },
+        error: function (xhr, status, error) {
+            if (xhr.status === 400) {
+                showAlert("Warning: " + xhr.responseText, "warning");
+            }
+            else if (xhr.status === 500) {
+                showAlert("Error: " + xhr.responseText, "danger");
+            }
+        }
+    });
+});
 $(document).on("mousedown", ".referee-button", function (e) {
     if (e.which === 3)
     {
@@ -386,7 +470,7 @@ $(document).on("mousedown", ".referee-button", function (e) {
         $("#showCardOfRefereeModalBody").html('<div class="text-center"><span class="spinner-border"></span></div>');
 
         const refereeId = $(this).data("id");
-
+        
         $.ajax({
             url: "Admin/Referee/GetCardInfo",
             type: "POST",
@@ -409,6 +493,40 @@ $(document).on("mousedown", ".referee-button", function (e) {
                 });
                 $('#vetoTeamName').parent().css('position', 'relative').append($suggestionsContainer);
                 loadAllCompetitions();
+                $.ajax({
+                    url: "Admin/Match/GetCompetitions",
+                    type: "GET",
+                    success: function (response) {
+
+                        const $select = $('#competitionSelect');
+                        $select.empty(); 
+
+                        const existingIds = new Set(
+                            $("#competitionsBubbles .competition-bubble:not(.deleted-default) .remove-btn")
+                                .map(function () {
+                                    return $(this).data("competition-id");
+                                })
+                                .get()
+                        );
+                        
+
+                        response.forEach(c => {
+                            if (!existingIds.has(c.competitionId)) {
+                                $select.append(
+                                    $('<option>', {
+                                        value: c.competitionId,
+                                        text: c.competitionName
+                                    })
+                                );
+                            }
+                        });
+                    },
+                    error: function (xhr) {
+                        $("#showCardOfRefereeModalBody").html(
+                            "<div class='alert alert-danger'>Nepodařilo se načíst soutěže.</div>"
+                        );
+                    }
+                });
             },
             error: function (xhr) {
                 $("#showCardOfRefereeModalBody").html("<div class='alert alert-danger'>Nepodařilo se načíst informace o rozhodčím.</div>");
@@ -940,12 +1058,17 @@ $(document).on("click", "#printAllMatchesBtn", function (e) {
 
 
 });
-
 $(document).on("click", "#addNewRefereeBtn", function (e) {
     e.preventDefault();
 
     $("#addNewRefereeModal").modal("show");
     addressSearchMethods.init("place", "latitude", "longtitude");
+
+});
+$(document).on("click", "#generateDelegationBtn", function (e) {
+    e.preventDefault();
+
+    $("#generateDelegationModal").modal("show");
 
 });
 $(document).on("submit", "#newRefereeForm", function (e) {
@@ -1384,7 +1507,6 @@ $(document).on("click", ".points_button_ar", function () {
 
 
 });
-
 $(document).on("click", ".referee-place", function () {
     var $refereePlace = $(this);
     var $parentDiv = $refereePlace.closest('.position-relative');
@@ -1575,8 +1697,6 @@ $(document).on("click", ".save-match-button", function () {
         }
     });
 });
-
-
 $(document).on("click", "#importAllReferees", function (event) {
     $("#fileInputReferees").trigger("click");
 
@@ -1855,11 +1975,14 @@ function showAlert(message, type = "info", confirmCallback = null) {
         });
     }
 
-    // Append and show toast
     container.append(toastEl);
+    let delay = 3000;
+    if (type === "warning") delay = 5000;
+    if (type === "danger") delay = 8000;
+
     const toast = new bootstrap.Toast(toastEl[0], {
-        autohide: type === "success",
-        delay: 3000
+        autohide: true,
+        delay: delay
     });
     toast.show();
 
@@ -1958,7 +2081,6 @@ const colorStops = [
     { value: 75, color: '#9ACD32' }, // yellowgreen
     { value: 100, color: '#008000' } // green
 ];
-
 function getColorForValue(value) {
     value = Math.max(0, Math.min(100, value));
 
@@ -2022,7 +2144,6 @@ function deleteAllCookies() {
             }
         });
     }
-
 function logout() {
         deleteAllCookies();
         window.location.href = "https://rozhodcipraha.cz"; 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using AdminPartDevelop.Services.FileParsers;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.Internal;
+using AdminPartDevelop.Views.ViewModels;
 
 namespace AdminPartDevelop.Data
 {
@@ -89,6 +90,8 @@ namespace AdminPartDevelop.Data
                 var referee = await _context.Referees
                     .Include(r => r.Excuses)
                     .Include(r => r.VehicleSlots)
+                    .Include(r => r.ActuallLocations)
+                    .Include(r => r.MaximumAmounts)
                     .FirstOrDefaultAsync(r => r.RefereeId == id);
 
                 if (referee == null)
@@ -112,6 +115,8 @@ namespace AdminPartDevelop.Data
                 var listOfReferees = await _context.Referees
                     .Include(r => r.VehicleSlots)
                     .Include(r => r.Excuses)
+                    .Include(r => r.ActuallLocations)
+                    .Include(r => r.MaximumAmounts)
                     .ToListAsync();
                 if (listOfReferees != null)
                 {
@@ -158,7 +163,36 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<List<Excuse>>.Failure("Nepodařilo se získat omluvy z databáze");
             }
         }
+        public async Task<RepositoryResult<ActuallLocation?>> DoesExistActuallLocationBeforeMatch(RefereeWithTimeOptions referee, Models.Match matchToCheck)
+        {
+            try
+            {
+                DateTime matchTime = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime);
+                var locationExists = await _context.ActuallLocations.Where(ac => ac.RefereeId == referee.Referee.RefereeId && (matchTime.AddMinutes(-90) <= ac.DateTo.ToDateTime(ac.TimeTo)) && matchTime >= ac.DateFrom.ToDateTime(ac.TimeFrom)).FirstOrDefaultAsync();
 
+                return RepositoryResult<ActuallLocation?>.Success(locationExists);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[DoesExistActuallLocationBeforeMatch] Error finding out if the actuall location before match exists");
+                return RepositoryResult<ActuallLocation?>.Failure("Nepodařilo se získat zda rozhodčí má zadanou aktuální polohu před týmhle zápasem!");
+            }
+        }
+        public async Task<RepositoryResult<ActuallLocation?>> DoesExistActuallLocationAfterMatch(RefereeWithTimeOptions referee, Models.Match matchToCheck)
+        {
+            try
+            {
+                DateTime matchTime = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime);
+                var locationExists = await _context.ActuallLocations.Where(ac => ac.RefereeId == referee.Referee.RefereeId && (matchTime.AddMinutes(180) >= ac.DateFrom.ToDateTime(ac.TimeFrom)) && matchTime.AddMinutes(90) <= ac.DateTo.ToDateTime(ac.TimeTo)).FirstOrDefaultAsync();
+
+                return RepositoryResult<ActuallLocation?>.Success(locationExists);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[DoesExistActuallLocationAfterMatch] Error finding out if the actuall location after match exists");
+                return RepositoryResult<ActuallLocation?>.Failure("Nepodařilo se získat zda rozhodčí má zadanou aktuální polohu po tomhle zápase!");
+            }
+        }
 
         public async Task<RepositoryResult<Dictionary<string, int>>> GetRefereeIdsFromFacrIdOrNameAsync(List<FilledMatchDto> listOfMatches)
         {
@@ -267,7 +301,6 @@ namespace AdminPartDevelop.Data
                 return RepositoryResult<Dictionary<int, Tuple<string, string>>>.Failure("Chyba při získávání informací o rozhodčích.");
             }
         }
-
 
         public async Task<RepositoryResponse> UpdateRefereeAsync(int id,RefereeAddRequest referee)
         {

@@ -16,17 +16,104 @@
     
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.15/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.15/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css" />
     
     <script src="~/js/Custom/MainAdminActions.js" defer></script>
 </head>
 <style>
+    .rotate {
+        transition: transform 0.3s;
+    }
+
+        .rotate.open {
+            transform: rotate(180deg);
+        }
+
+    .list-group-item > .d-flex {
+        cursor: grab;
+    }
+
+        .list-group-item > .d-flex:active {
+            cursor: grabbing;
+        }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background-color: #f8f9fa;
+        border: 2px dashed #ccc;
+    }
+
+    .sortable-chosen {
+        background-color: #e9ecef;
+    }
+
+    .sortable-drag {
+        opacity: 0.8;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .list-group-item {
+        cursor: move;
+    }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background-color: #f8f9fa;
+    }
+
+    .sortable-chosen {
+        background-color: #e9ecef;
+    }
+
+    .sortable-drag {
+        opacity: 1;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    /* Scrollbar for main competitions list */
+    #categoriesList {
+        max-height: 70vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Scrollbar for individual match lists within each competition */
+    .collapse .list-group {
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+        /* Custom scrollbar styling (optional, for better look) */
+        #categoriesList::-webkit-scrollbar,
+        .collapse .list-group::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #categoriesList::-webkit-scrollbar-track,
+        .collapse .list-group::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #categoriesList::-webkit-scrollbar-thumb,
+        .collapse .list-group::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+            #categoriesList::-webkit-scrollbar-thumb:hover,
+            .collapse .list-group::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
     .gradient-bar {
         height: 40px;
         width: 100%;
@@ -441,6 +528,126 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="generateDelegationModal" tabindex="-1" aria-labelledby="generateDelegationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateDelegationModalLabel">Generování obsazení</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavřít"></button>
+            </div>
+            <div class="modal-body" id="generateDelegationModalBody">
+                <div class="container">
+
+                    <div class="list-group" id="categoriesList">
+                        @{
+                            var groupedMatches = Model.Matches
+                            .GroupBy(m => new { m.CompetitionId, m.CompetitionName, m.CompetitionLeague })
+                            .OrderBy(g => g.Key.CompetitionName);
+
+                            int categoryIndex = 1;
+                        }
+
+                        @foreach (var competition in groupedMatches)
+                        {
+                            var collapseId = $"cat{categoryIndex}";
+                            var itemsId = $"{collapseId}-items";
+
+                            <!-- CATEGORY -->
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center"
+                                     data-bs-toggle="collapse" data-bs-target="#@collapseId">
+
+                                    <!-- LEFT SIDE -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong>@competition.Key.CompetitionName - @competition.Key.CompetitionLeague</strong>
+                                        <span class="badge bg-primary selected-count" data-target="@itemsId">0/@competition.Count()</span>
+                                    </div>
+
+                                    <!-- RIGHT SIDE -->
+                                    <div class="d-flex align-items-center gap-3">
+
+                                        <!-- READ-ONLY indicator -->
+                                        <input type="checkbox"
+                                               class="form-check-input category-indicator"
+                                               disabled>
+
+                                        <!-- Priority -->
+                                        <input type="number"
+                                               class="form-control form-control-sm"
+                                               style="width:80px;"
+                                               value="@categoryIndex"
+                                               data-competition-id="@competition.Key.CompetitionId">
+
+                                        <!-- FA arrow -->
+                                        <i class="fa-solid fa-chevron-down rotate"></i>
+                                    </div>
+                                </div>
+
+                                <!-- COLLAPSED CONTENT -->
+                                <div class="collapse mt-2" id="@collapseId">
+                                    <div class="list-group ms-3 mt-2">
+
+                                        <!-- REAL SELECT ALL -->
+                                        <label class="list-group-item">
+                                            <input class="form-check-input me-2 select-all"
+                                                   type="checkbox"
+                                                   data-target="@itemsId">
+                                            Vybrať všetky
+                                        </label>
+
+                                        <div id="@itemsId">
+                                            @foreach (var matchVm in competition.OrderBy(m => m.Match.MatchDate.ToDateTime(m.Match.MatchTime)))
+                                            {
+                                                <label class="list-group-item">
+                                                    <input class="form-check-input me-2 item-checkbox"
+                                                           type="checkbox"
+                                                           data-match-id="@matchVm.Match.MatchId"
+                                                           value="@matchVm.Match.MatchId">
+                                                    <div class="d-flex flex-column">
+                                                        <div class="fw-bold">
+                                                            @matchVm.HomeTeamName vs @matchVm.AwayTeamName
+                                                        </div>
+                                                        <div class="small text-muted">
+                                                            <i class="fa-solid fa-calendar me-1"></i>
+                                                            @matchVm.Match.MatchDate.ToDateTime(matchVm.Match.MatchTime).ToString("dd.MM.yyyy HH:mm")
+                                                            <i class="fa-solid fa-location-dot ms-2 me-1"></i>
+                                                            @matchVm.FieldName
+                                                        </div>
+                                                        @if (!string.IsNullOrEmpty(matchVm.RefereeName))
+                                                        {
+                                                            <div class="small">
+                                                                <i class="fa-solid fa-whistle me-1"></i>
+                                                                R: @matchVm.RefereeName
+                                                                @if (!string.IsNullOrEmpty(matchVm.Ar1Name) || !string.IsNullOrEmpty(matchVm.Ar2Name))
+                                                                {
+                                                                    <span class="ms-2">
+                                                                        AR1: @(matchVm.Ar1Name ?? "-"), AR2: @(matchVm.Ar2Name ?? "-")
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </label>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            categoryIndex++;
+                        }
+                    </div>
+
+
+                </div>
+                <div class="text-end mt-4">
+                    <button id="generateBtn" class="btn btn-primary btn-md">Generuj obsadzení</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -1227,48 +1434,180 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-	// Log environment information for debugging
-        	console.log("Page loaded. Environment info:");
-        	console.log("URL:", window.location.href);
-        	console.log("Protocol:", window.location.protocol);
-        	console.log("Host:", window.location.host);
-        	console.log("Path:", window.location.pathname);
-        
-        	// Check if WebSockets are supported
-        	if ("WebSocket" in window) {
-            		console.log("WebSockets are supported by this browser");
-        	} else {
-            		console.error("WebSockets are NOT supported by this browser");
-        	}
-	     	// Dynamically set max year for birth year input
-            	const currentYear = new Date().getFullYear();
-            	$('#age').attr('max', currentYear);
+            console.log("Page loaded. Environment info:");
+            console.log("URL:", window.location.href);
+            console.log("Protocol:", window.location.protocol);
+            console.log("Host:", window.location.host);
+            console.log("Path:", window.location.pathname);
+            if ("WebSocket" in window) {
+                console.log("WebSockets are supported by this browser");
+            } else {
+                console.error("WebSockets are NOT supported by this browser");
+            }
+
+            // Set max year dynamically
+            const currentYear = new Date().getFullYear();
+            $('#age').attr('max', currentYear);
 
             $('#refereesTabs .nav-link').on('click', function() {
                 $('#refereesTabs .nav-link').removeClass('active');
                 $('.tab-pane').removeClass('show active');
-
                 $(this).addClass('active');
                 var targetPane = $(this).data('bs-target');
                 $(targetPane).addClass('show active');
-                $('#undelegated-content').addClass('show active');             
+                $('#undelegated-content').addClass('show active');
             });
+
             $('#showCardOfRefereeModal').on('click', 'a', function() {
                 $('#showCardOfRefereeModal').modal('hide');
             });
+
             $('#showCardOfRefereeModal').on('click', 'a.excuseHref', function() {
                 $('#showCardOfRefereeModal').modal('hide');
-
                 const targetHref = $(this).attr('href');
-
                 $('#showExcusesBtn').click();
-
                 setTimeout(function () {
                     window.location.hash = targetHref;
                 }, 1000);
+            });
+
+            // Rotate arrow
+            $('[data-bs-toggle="collapse"]').each(function () {
+                const $trigger = $(this);
+                const $icon = $trigger.find('.rotate');
+                const targetSelector = $trigger.data('bs-target');
+                const $target = $(targetSelector);
+
+                $target.on('show.bs.collapse', function () {
+                    $icon.addClass('open');
+                });
+
+                $target.on('hide.bs.collapse', function () {
+                    $icon.removeClass('open');
+                });
+            });
+
+                    // Synchronize select all + category indicator + counter
+        function updateCategoryIndicator($selectAll) {
+            const targetId = $selectAll.data('target');
+            const $items = $('#' + targetId + ' .item-checkbox');
+
+            // Find the category indicator - it's in the parent list-group-item's header
+            const $indicator = $selectAll.closest('.collapse').prev('.d-flex').find('.category-indicator');
+
+            // Find the counter badge
+            const $counter = $selectAll.closest('.collapse').prev('.d-flex').find('.selected-count[data-target="' + targetId + '"]');
+
+            const totalItems = $items.length;
+            const checkedItems = $items.filter(':checked').length;
+            const allChecked = totalItems > 0 && checkedItems === totalItems;
+
+            // Update real select all
+            $selectAll.prop('checked', allChecked);
+
+            // Update category read-only checkbox
+            $indicator.prop('checked', allChecked);
+
+            // Update counter badge
+            $counter.text(checkedItems + '/' + totalItems);
+
+            // Change badge color based on selection
+            if (checkedItems === 0) {
+                $counter.removeClass('bg-success bg-warning').addClass('bg-primary');
+            } else if (checkedItems === totalItems) {
+                $counter.removeClass('bg-primary bg-warning').addClass('bg-success');
+            } else {
+                $counter.removeClass('bg-primary bg-success').addClass('bg-warning');
+            }
+        }
+
+            // When real select all is clicked
+            $('.select-all').on('change', function () {
+                const targetId = $(this).data('target');
+                const isChecked = $(this).is(':checked');
+                const $items = $('#' + targetId + ' .item-checkbox');
+
+                $items.prop('checked', isChecked);
+                updateCategoryIndicator($(this));
+            });
+
+            // When individual items change
+            $('.item-checkbox').on('change', function () {
+                const $selectAll = $(this).closest('.list-group').find('.select-all');
+                updateCategoryIndicator($selectAll);
+            });
+
+            // Initialize indicators on page load
+            $('.select-all').each(function() {
+                updateCategoryIndicator($(this));
+            });
+
+            // Update priority numbers based on order
+            function updatePriorityNumbers() {
+                $('#categoriesList > .list-group-item').each(function(index) {
+                    $(this).find('input[type="number"]').val(index + 1);
+                });
+            }
+
+            // Initialize SortableJS for drag and drop
+            const listGroupElement = document.getElementById('categoriesList');
+
+            console.log('Initializing SortableJS...');
+            console.log('Element found:', listGroupElement);
+
+            if (listGroupElement) {
+                const sortable = new Sortable(listGroupElement, {
+                    animation: 150,
+                    handle: '.d-flex',
+                    draggable: '.list-group-item',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    filter: '.list-group-item .list-group',
+                    preventOnFilter: false,
+                    onStart: function(evt) {
+                        console.log('Drag started');
+                    },
+                    onEnd: function(evt) {
+                        console.log('Drag ended, old index:', evt.oldIndex, 'new index:', evt.newIndex);
+                        updatePriorityNumbers();
+                    }
+                });
+                console.log('SortableJS initialized successfully');
+            } else {
+                console.error('categoriesList element not found!');
+            }
+
+            // When priority number is manually changed
+            $(document).on('change', 'input[type="number"].form-control-sm', function() {
+                const newPriority = parseInt($(this).val());
+                const $item = $(this).closest('.list-group-item');
+                const $container = $item.parent();
+                const totalItems = $container.children('.list-group-item').length;
+
+                // Validate priority
+                if (newPriority < 1 || newPriority > totalItems || isNaN(newPriority)) {
+                    updatePriorityNumbers();
+                    return;
+                }
+
+                // Get current position (0-based)
+                const currentIndex = $item.index();
+                const newIndex = newPriority - 1;
+
+                if (currentIndex !== newIndex) {
+                    // Move the item
+                    if (newIndex === 0) {
+                        $container.prepend($item);
+                    } else {
+                        $container.children('.list-group-item').eq(newIndex).after($item);
+                    }
+
+                    // Update all priority numbers
+                    updatePriorityNumbers();
+                }
             });
         });
     </script>
     <script src="~/js/Custom/SignalR/RerenderChangesSignal.js" defer></script>
 }
-

@@ -188,6 +188,23 @@ namespace AdminPartDevelop.Services.RefereeServices
 
                     }
                 }
+                // time options based on actuallLocations
+
+                if (referee.ActuallLocations != null && referee.ActuallLocations.Any())
+                {
+                    foreach (var location in referee.ActuallLocations)
+                    {
+                        DateTime actuallLocationStart = location.DateFrom.ToDateTime(location.TimeFrom);
+                        DateTime actuallLocationEnd = location.DateTo.ToDateTime(location.TimeTo);
+                        //check if it is the ongoing vehicleSlot or start is in two weeks production
+                        if ((actuallLocationStart >= now && actuallLocationStart <= twoWeeksFromNow) || (actuallLocationStart <= now && actuallLocationEnd >= now))
+                        {
+                            RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(actuallLocationStart, actuallLocationEnd, "actuallLocation", actuallLocation: location.Address);
+                            refereeWithTimeOptions.SortedRanges.Add(timeRange);
+                        }
+
+                    }
+                }
                 //transfers between matches (they are not affecting time availability of referee when we delegate him)
                 foreach (var transfer in listOfTransfers)
                 {
@@ -332,15 +349,65 @@ namespace AdminPartDevelop.Services.RefereeServices
                 float latitude = matchToCheck.Field.Latitude;
                 float? refereeHomeLongitude = referee.Referee.Longitude;
                 float? refereeHomeLatitude = referee.Referee.Latitude;
+
+                float? refereeHomeBeforeLongitude = null;
+                float? refereeHomeBeforeLatitude = null;
+                float? refereeHomeAfterLongitude = null;
+                float? refereeHomeAfterLatitude = null;
+
+                ActuallLocation? actuallLocationBefore = (await _refereeRepo.DoesExistActuallLocationBeforeMatch(referee,matchToCheck)).GetDataOrThrow();
+                ActuallLocation? actuallLocationAfter = ( await _refereeRepo.DoesExistActuallLocationAfterMatch(referee,matchToCheck)).GetDataOrThrow();
+                if (actuallLocationBefore != null)
+                {
+                    if (actuallLocationBefore.Latitude != null && actuallLocationBefore.Longitude !=null)
+                    {
+                        refereeHomeBeforeLongitude = actuallLocationBefore.Longitude;
+                        refereeHomeBeforeLatitude = actuallLocationBefore.Latitude;
+
+                    }
+                    else
+                    {
+                        refereeHomeBeforeLongitude = referee.Referee.Longitude;
+                        refereeHomeBeforeLatitude = referee.Referee.Latitude;
+                    }
+                }
+                else
+                {
+                    refereeHomeBeforeLongitude = referee.Referee.Longitude;
+                    refereeHomeBeforeLatitude = referee.Referee.Latitude;
+                }
+                if (actuallLocationAfter != null)
+                {
+                    if(actuallLocationAfter.Latitude != null && actuallLocationAfter.Longitude != null)
+                    {
+                        refereeHomeAfterLongitude = actuallLocationAfter.Longitude;
+                        refereeHomeAfterLatitude = actuallLocationAfter.Latitude;
+                    }
+                    else
+                    {
+                        refereeHomeAfterLongitude = referee.Referee.Longitude;
+                        refereeHomeAfterLatitude = referee.Referee.Latitude;
+                    }
+                }
+                else
+                {
+                    refereeHomeAfterLongitude = referee.Referee.Longitude;
+                    refereeHomeAfterLatitude = referee.Referee.Latitude;
+                }
+
                 const float epsilon = 0.001f;
 
                 bool isFieldLatLonZero = Math.Abs(longitude) < epsilon || Math.Abs(latitude) < epsilon;
 
                 // Check if referee has valid home coordinates
-                if (!refereeHomeLatitude.HasValue || !refereeHomeLongitude.HasValue)
+                if (!refereeHomeLongitude.HasValue || !refereeHomeLatitude.HasValue)
+                    return ServiceResult<Tuple<Transfer?, Transfer?>>.Success(Tuple.Create<Transfer?, Transfer?>(null, null));
+                // Check if referee has valid home coordinates
+                if (!refereeHomeBeforeLongitude.HasValue || !refereeHomeBeforeLatitude.HasValue || !refereeHomeAfterLongitude.HasValue || !refereeHomeAfterLatitude.HasValue)
                     return ServiceResult<Tuple<Transfer?, Transfer?>>.Success(Tuple.Create<Transfer?, Transfer?>(null, null));
 
-                bool isRefereeHomeLatLonZero = Math.Abs(refereeHomeLongitude.Value) < epsilon || Math.Abs(refereeHomeLatitude.Value) < epsilon;
+                bool isRefereeHomeLatLonZero = Math.Abs(refereeHomeBeforeLongitude.Value) < epsilon || Math.Abs(refereeHomeBeforeLatitude.Value) < epsilon 
+                    || Math.Abs(refereeHomeAfterLongitude.Value) < epsilon || Math.Abs(refereeHomeAfterLatitude.Value) < epsilon;
 
                 // Proceed only if both locations are valid
                 if (!isFieldLatLonZero && !isRefereeHomeLatLonZero)
@@ -352,42 +419,93 @@ namespace AdminPartDevelop.Services.RefereeServices
                     bool actualCarAvailability = hasCarDuring ?? hasCarOverall;
 
                     Tuple<int, int> result;
+                    Tuple<int, int> resultBefore;
+                    Tuple<int, int> resultAfter;
 
-                    if (actualCarAvailability)
+                    //no actuall locations are submitted
+                    if (actuallLocationAfter == null && actuallLocationBefore == null)
                     {
-                        result = (await _routeCarPlanner
-                            .CalculateRoute(refereeHomeLatitude.Value, refereeHomeLongitude.Value, latitude, longitude))
-                            .GetDataOrThrow();
+                        if (actualCarAvailability)
+                        {
+                            result = (await _routeCarPlanner
+                                .CalculateRoute(refereeHomeLatitude.Value, refereeHomeLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                        }
+                        else
+                        {
+                            result = (await _routeBusPlanner
+                                .CalculateRoute(refereeHomeLatitude.Value, refereeHomeLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                        }
+
+                        var transferFrom = new Transfer
+                        {
+                            RefereeId = referee.Referee.RefereeId,
+                            PreviousMatchId = matchToCheck.MatchId,
+                            FutureMatchId = null,
+                            ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches),
+                            ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches).AddMinutes(result.Item2),
+                            FromHome = true,
+                            Car = actualCarAvailability
+                        };
+                        var transferTo = new Transfer
+                        {
+                            RefereeId = referee.Referee.RefereeId,
+                            PreviousMatchId = null,
+                            FutureMatchId = matchToCheck.MatchId,
+                            ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch).AddMinutes(-result.Item2),
+                            ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch),
+                            FromHome = true,
+                            Car = actualCarAvailability
+                        };
+
+                        return ServiceResult<Tuple<Transfer?, Transfer?>>.Success(Tuple.Create<Transfer?, Transfer?>(transferFrom, transferTo));
                     }
                     else
                     {
-                        result = (await _routeBusPlanner
-                            .CalculateRoute(refereeHomeLatitude.Value, refereeHomeLongitude.Value, latitude, longitude))
-                            .GetDataOrThrow();
+                        if (actualCarAvailability)
+                        {
+                            resultBefore = (await _routeCarPlanner
+                                .CalculateRoute(refereeHomeBeforeLatitude.Value, refereeHomeBeforeLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                            resultAfter = (await _routeCarPlanner
+                                .CalculateRoute(refereeHomeAfterLatitude.Value, refereeHomeAfterLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                        }
+                        else
+                        {
+                            resultBefore = (await _routeBusPlanner
+                                .CalculateRoute(refereeHomeBeforeLatitude.Value, refereeHomeBeforeLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                            resultAfter = (await _routeBusPlanner
+                                .CalculateRoute(refereeHomeAfterLatitude.Value, refereeHomeAfterLongitude.Value, latitude, longitude))
+                                .GetDataOrThrow();
+                        }
+
+                        var transferTo = new Transfer
+                        {
+                            RefereeId = referee.Referee.RefereeId,
+                            PreviousMatchId = null,
+                            FutureMatchId = matchToCheck.MatchId,
+                            ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch).AddMinutes(-resultBefore.Item2),
+                            ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch),
+                            FromHome = true,
+                            Car = actualCarAvailability
+                        };
+                        var transferFrom = new Transfer
+                        {
+                            RefereeId = referee.Referee.RefereeId,
+                            PreviousMatchId = matchToCheck.MatchId,
+                            FutureMatchId = null,
+                            ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches),
+                            ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches).AddMinutes(resultAfter.Item2),
+                            FromHome = true,
+                            Car = actualCarAvailability
+                        };
+                        
+
+                        return ServiceResult<Tuple<Transfer?, Transfer?>>.Success(Tuple.Create<Transfer?, Transfer?>(transferFrom, transferTo));
                     }
-
-                    var transferFrom = new Transfer
-                    {
-                        RefereeId = referee.Referee.RefereeId,
-                        PreviousMatchId = matchToCheck.MatchId,
-                        FutureMatchId = null,
-                        ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches),
-                        ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches).AddMinutes(result.Item2),
-                        FromHome = true,
-                        Car = actualCarAvailability
-                    };
-                    var transferTo = new Transfer
-                    {
-                        RefereeId = referee.Referee.RefereeId,
-                        PreviousMatchId = null,
-                        FutureMatchId = matchToCheck.MatchId,
-                        ExpectedDeparture = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch).AddMinutes(-result.Item2),
-                        ExpectedArrival = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch),
-                        FromHome = true,
-                        Car = actualCarAvailability
-                    };
-
-                    return ServiceResult<Tuple<Transfer?, Transfer?>>.Success(Tuple.Create<Transfer?, Transfer?>(transferFrom, transferTo));
                 }
 
                 // Fallback if any coordinate invalid
@@ -525,6 +643,26 @@ namespace AdminPartDevelop.Services.RefereeServices
                                         ? (vehicleSlot.HasCarInTheSlot.Value ? "vozidlocar" : "vozidlobus")
                                         : "vozidlocar", slotId: vehicleSlot.SlotId);
 
+                                if (refereeDict.TryGetValue(referee.RefereeId, out RefereeWithTimeOptions refTimeOptions))
+                                {
+                                    refTimeOptions.SortedRanges.Add(timeRange);
+                                }
+                            }
+
+                        }
+                    }
+                    // time options based on actuallLocations
+
+                    if (referee.ActuallLocations != null && referee.ActuallLocations.Any())
+                    {
+                        foreach (var location in referee.ActuallLocations)
+                        {
+                            DateTime actuallLocationStart = location.DateFrom.ToDateTime(location.TimeFrom);
+                            DateTime actuallLocationEnd = location.DateTo.ToDateTime(location.TimeTo);
+                            //check if it is the ongoing vehicleSlot or start is in two weeks production
+                            if ((actuallLocationStart >= now && actuallLocationStart <= twoWeeksFromNow) || (actuallLocationStart <= now && actuallLocationEnd >= now))
+                            {
+                                RefereeWithTimeOptions.TimeRange timeRange = new RefereeWithTimeOptions.TimeRange(actuallLocationStart, actuallLocationEnd, "actuallLocation", actuallLocation: location.Address);
                                 if (refereeDict.TryGetValue(referee.RefereeId, out RefereeWithTimeOptions refTimeOptions))
                                 {
                                     refTimeOptions.SortedRanges.Add(timeRange);
@@ -715,8 +853,35 @@ namespace AdminPartDevelop.Services.RefereeServices
             }
 
         }
+        public ServiceResult<Tuple<bool,string>> DoesExceedTheMaximumMatchLimit(RefereeWithTimeOptions referee, DateTime matchTime)
+        {
+            try
+            {
+                var choosenLimits = referee.Referee.MaximumAmounts.Where(v => v.DateFrom.ToDateTime(v.TimeFrom) <= matchTime && v.DateTo.ToDateTime(v.TimeTo) >= matchTime).ToList();
 
-        public ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds, Dictionary<int, bool> isFreeDuringTheMatch, Dictionary<int, int> ratingOfReferees, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary)
+                foreach (var choosenLimit in choosenLimits)
+                {
+                    int amountAlreadyInLimit = referee.SortedRanges.Where(sr => (sr.RangeType == "zapasref" || sr.RangeType == "zapasar") &&
+                            (sr.Start >= choosenLimit.DateFrom.ToDateTime(choosenLimit.TimeFrom) && sr.End <= choosenLimit.DateTo.ToDateTime(choosenLimit.TimeTo))).Count();
+                    if (choosenLimit.MaximumValue <= amountAlreadyInLimit)
+                        return ServiceResult<Tuple<bool, string>>.Success(
+                            Tuple.Create(
+                                true,
+                                $"{choosenLimit.DateFrom.ToDateTime(choosenLimit.TimeFrom):dd.MM HH:mm} do " +
+                                $"{choosenLimit.DateTo.ToDateTime(choosenLimit.TimeTo):dd.MM HH:mm} " +
+                                $"v počtu {choosenLimit.MaximumValue} zápasů."
+                            )
+                        );
+                }
+                return ServiceResult<Tuple<bool,string>>.Success(Tuple.Create(false,"")); //Does not exceed
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[DoesExceedTheMaximumMatchLimit] Error finding out if the assigment exceed some limit");
+                return ServiceResult<Tuple<bool, string>>.Failure("Nepodařilo se zjistit jestli by delegace neprekračovala nejaký maximální limit rozhodčího!");
+            }
+        }
+        public ServiceResult<Dictionary<int, Tuple<int, string>>> CalculatePointsForReferees(List<int> refereeIds,Dictionary<int,bool> canRefereeTheCompetition, Dictionary<int, bool> isFreeDuringTheMatch, Dictionary<int, int> ratingOfReferees, List<RefereesTeamsMatchesResponseDto> homeMatches, List<RefereesTeamsMatchesResponseDto> awayMatches, List<RefereesMatchesResponseDto> totalMatches, Dictionary<int, int> distanceDictionary)
         {
             // Constants for penalty calculations
             const int STARTING_POINTS = 100;
@@ -752,6 +917,13 @@ namespace AdminPartDevelop.Services.RefereeServices
                     if (!isFree)
                     {
                         reasonBuilder.AppendLine($"Rozhodčí nění dostupný během zápasu");
+                        result.Add(refereeId, new Tuple<int, string>(1, reasonBuilder.ToString()));
+                        continue;
+                    }
+                    var canReferee = canRefereeTheCompetition[refereeId];
+                    if (!canReferee)
+                    {
+                        reasonBuilder.AppendLine("Rozhodčí nemůže rozhodovat danou soutěž (jeho úroveň je nižší)!");
                         result.Add(refereeId, new Tuple<int, string>(1, reasonBuilder.ToString()));
                         continue;
                     }
@@ -849,7 +1021,7 @@ namespace AdminPartDevelop.Services.RefereeServices
                 DateTime matchStart = matchToCheck.MatchDate.ToDateTime(matchToCheck.MatchTime).AddMinutes(-waitingTimeBeforeMatch); // 1 hour before match
                 DateTime matchEnd = matchStart.AddMinutes(matchToCheck.Competition.MatchLength * 2 + 15 + reserveAfterMatches); // Match duration + halftime + reserve 
 
-                foreach (var existingRange in referee.SortedRanges.Where(s => s.RangeType != "vozidlobus" && s.RangeType != "vozidlocar" && s.RangeType != "transferhome" && s.RangeType != "transfermatch"))
+                foreach (var existingRange in referee.SortedRanges.Where(s => s.RangeType != "vozidlobus" && s.RangeType != "vozidlocar" && s.RangeType != "transferhome" && s.RangeType != "transfermatch" && s.RangeType != "actuallLocation"))
                 {
                     if (matchStart <= existingRange.End && matchEnd >= existingRange.Start)
                     {

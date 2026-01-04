@@ -14,380 +14,524 @@
 <style>
     /* Base styles for all events */
     .event {
-        position: absolute;
-        height: 75%;
-        top: 12.5%;
-        border-radius: 4px;
-        padding: 3px 6px;
-        box-sizing: border-box;
-        font-size: 0.85em;
-        overflow: hidden;
-        transition: all 0.2s ease;
-        z-index: 0; /* Default base */
+    position: absolute;
+    height: 75%;
+    top: 12.5%;
+    border-radius: 4px;
+    padding: 3px 6px;
+    box-sizing: border-box;
+    font-size: 0.85em;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    z-index: 0; /* Default base */
     }
 
-        /* Hover or simulated hover */
-        .event:hover,
-        .event.hover-simulated {
-            height: 85%;
-            top: 7.5%;
-            z-index: 100; /* Bring to front temporarily */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transform: scale(1.05); /* Optional: smooth grow effect */
-        }
+    /* Hover or simulated hover */
+    .event:hover,
+    .event.hover-simulated {
+    height: 85%;
+    top: 7.5%;
+    z-index: 100; /* Bring to front temporarily */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05); /* Optional: smooth grow effect */
+    }
 
     /* Styles for match events ("zapas") */
     .zapasref {
-        background-color: #ff7675;
-        border: 1px solid #d63031;
-        color: #2d3436;
-        z-index: 30;
+    background-color: #ff7675;
+    border: 1px solid #d63031;
+    color: #2d3436;
+    z-index: 30;
     }
 
     .zapasar {
-        background-color: #55efc4;
-        border: 1px solid #00b894;
-        color: #2d3436;
-        z-index: 30;
+    background-color: #55efc4;
+    border: 1px solid #00b894;
+    color: #2d3436;
+    z-index: 30;
     }
 
-        .zapasar:hover {
-            background-color: #a3f7e0;
-            border-color: #66d5b4;
-        }
+    .zapasar:hover {
+    background-color: #a3f7e0;
+    border-color: #66d5b4;
+    }
 
     .zapasref:hover {
-        background-color: #fab1a0;
+    background-color: #fab1a0;
     }
 
     /* Styles for excuse events ("omluva") */
     .omluva {
-        background-color: #ffeaa7;
-        border: 1px solid #fdcb6e;
-        color: #2d3436;
-        z-index: 20;
+    background-color: #ffeaa7;
+    border: 1px solid #fdcb6e;
+    color: #2d3436;
+    z-index: 20;
     }
 
-        .omluva:hover {
-            background-color: #ffeaa7;
-        }
+    .omluva:hover {
+    background-color: #ffeaa7;
+    }
 
     /* Styles for vehicle events ("vozidlo") with less opacity */
     .vozidlocar,
     vozidlobus {
-        background-color: #74b9ff;
-        border: 1px solid #0984e3;
-        color: #2d3436;
-        z-index: 10;
+    background-color: #74b9ff;
+    border: 1px solid #0984e3;
+    color: #2d3436;
+    z-index: 5;
     }
 
     .vozidlocar:hover,
-        .vozidlobus:hover {
-            background-color: rgba(116, 185, 255, 0.8);
-        }
-
-    .transferhome {
-        background-color: #ff33fb;
-        border: 1px solid #940096;
-        color: #2d3436;
-        z-index: 10;
+    .vozidlobus:hover {
+    background-color: rgba(116, 185, 255, 0.8);
     }
 
-        .transferhome:hover {
-            background-color: #ff33fb7a;
-        }
+    .transferhome {
+    background-color: #ff33fb;
+    border: 1px solid #940096;
+    color: #2d3436;
+    z-index: 10;
+    }
+
+    .transferhome:hover {
+    background-color: #ff33fb7a;
+    }
 
     /* Unique colors for transfermatch */
     .transfermatch {
-        background-color: #ff9f43; /* orange */
-        border: 1px solid #ff6f00;
-        color: #2d3436;
-        z-index: 10;
+    background-color: #ff9f43; /* orange */
+    border: 1px solid #ff6f00;
+    color: #2d3436;
+    z-index: 10;
     }
 
-        .transfermatch:hover,
-        .transfermatch.hover-simulated {
-            background-color: #ffc66d; /* lighter orange on hover */
-        }
+    .transfermatch:hover,
+    .transfermatch.hover-simulated {
+    background-color: #ffc66d; /* lighter orange on hover */
+    }
 
-  
+    .actualllocation {
+    background-color: #ced4da; /* grey */
+    border: 1px solid #6c757d;
+    color: #2d3436;
+    z-index: 5;
+    }
+
+    .actualllocation:hover,
+    .actualllocation.hover-simulated {
+    background-color: #e9ecef; /* lighter orange on hover */
+    }
+
+
 
     /* Apply same color changes as your :hover states */
     .zapasref.hover-simulated {
-        background-color: #fab1a0;
+    background-color: #fab1a0;
     }
 
     .zapasar.hover-simulated {
-        background-color: #a3f7e0;
-        border-color: #66d5b4;
+    background-color: #a3f7e0;
+    border-color: #66d5b4;
     }
 
     .omluva.hover-simulated {
-        background-color: #ffeaa7;
+    background-color: #ffeaa7;
     }
 
     .vozidlocar.hover-simulated,
     .vozidlobus.hover-simulated {
-        background-color: rgba(116, 185, 255, 0.8);
+    background-color: rgba(116, 185, 255, 0.8);
     }
 
     .transferhome.hover-simulated {
-        background-color: #ff33fb7a;
+    background-color: #ff33fb7a;
     }
 
     .transfermatch.hover-simulated {
-        background-color: #ffc66d; /* lighter orange on hover */
+    background-color: #ffc66d; /* lighter orange on hover */
     }
 
     /* Styles for the event contents */
     .event-title {
-        font-weight: bold;
-        white-space: normal; /* allow line breaks */
-        overflow: hidden;
-        text-overflow: ellipsis;
+    font-weight: bold;
+    white-space: normal; /* allow line breaks */
+    overflow: hidden;
+    text-overflow: ellipsis;
     }
 
     /* Custom styles for the schedule */
     .schedule-container {
-        max-width: 100%;
-        position: relative;
+    max-width: 100%;
+    position: relative;
     }
 
     .time-header, .day-row {
-        display: flex;
-        height: 50px;
-        max-width: 100%;
+    display: flex;
+    height: 50px;
+    max-width: 100%;
     }
 
     .list-group-excuses {
-        max-height: 250px; /* This constrains the overall height */
-        overflow-y: auto; /* Enables vertical scrolling */
-        overflow-x: hidden; /* Prevents horizontal scrolling */
-        padding: 0; /* Removes default padding */
-        margin: 0; /* Removes default margin */
+    max-height: 250px; /* This constrains the overall height */
+    overflow-y: auto; /* Enables vertical scrolling */
+    overflow-x: hidden; /* Prevents horizontal scrolling */
+    padding: 0; /* Removes default padding */
+    margin: 0; /* Removes default margin */
     }
 
     .list-group-excuses-item {
-        padding: 10px 15px;
-        border-bottom: 1px solid #ddd;
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
     }
 
-        .list-group-excuses-item:last-child {
-            border-bottom: none;
-        }
+    .list-group-excuses-item:last-child {
+    border-bottom: none;
+    }
 
     .time-header {
-        border-bottom: 1px solid #ddd;
-        background-color: #f8f9fa;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+    border-bottom: 1px solid #ddd;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
     }
 
     .day-label {
-        width: 120px;
-        min-width: 120px;
-        height:50px;
-        padding: 5px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        border-right: 1px solid #ddd;
+    width: 120px;
+    min-width: 120px;
+    height:50px;
+    padding: 5px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-right: 1px solid #ddd;
     }
 
     .time-slot {
-        width: 60px;
-        min-width: 60px;
-        text-align: center;
-        padding: 5px 0;
-        border-right: 1px dashed #ddd;
-        font-size: 0.8rem;
+    width: 60px;
+    min-width: 60px;
+    text-align: center;
+    padding: 5px 0;
+    border-right: 1px dashed #ddd;
+    font-size: 0.8rem;
     }
 
     .day-timeline {
-        flex: 1;
-        position: relative;
-        min-width: 900px; /* 17 hours * 80px */
-        border-bottom: 1px solid #ddd;
-        height:50px;
+    flex: 1;
+    position: relative;
+    min-width: 900px; /* 17 hours * 80px */
+    border-bottom: 1px solid #ddd;
+    height:50px;
     }
 
-        .day-timeline::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: repeating-linear-gradient( to right, transparent, transparent calc(100% / 16 - 1px), #ddd calc(100% / 16 - 1px), #ddd calc(100% / 16) );
-            pointer-events: none;
-            z-index: 1;
-        }
+    .day-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: repeating-linear-gradient( to right, transparent, transparent calc(100% / 16 - 1px), #ddd calc(100% / 16 - 1px), #ddd calc(100% / 16) );
+    pointer-events: none;
+    z-index: 1;
+    }
 
     .event {
-        position: absolute;
-        height: 40px;
-        top: 10px;
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 0.85rem;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        color: white;
-        cursor: pointer;
+    position: absolute;
+    height: 40px;
+    top: 10px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: white;
+    cursor: pointer;
     }
 
     .match-event {
-        background-color: #007bff;
+    background-color: #007bff;
     }
 
     .excuse-event {
-        background-color: #dc3545;
+    background-color: #dc3545;
     }
 
     .transfer-event {
-        background-color: #6c757d;
+    background-color: #6c757d;
     }
 
     .initials {
-        font-size: 50px;
-        color: white;
-        font-weight: bold;
+    font-size: 50px;
+    color: white;
+    font-weight: bold;
     }
 
     /* Custom Context Menu Styles */
     .custom-context-menu {
-        position: absolute;
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1000;
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
     }
 
     .context-menu-items {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
     }
 
-        .context-menu-items li {
-            padding: 8px 12px;
-            cursor: pointer;
-        }
+    .context-menu-items li {
+    padding: 8px 12px;
+    cursor: pointer;
+    }
 
-            .context-menu-items li:hover {
-                background-color: #f5f5f5;
-            }
+    .context-menu-items li:hover {
+    background-color: #f5f5f5;
+    }
 
     .overlay-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
     }
 
     #cardForm {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     }
 
 
     .flatpickr-wrapper {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 8px 10px;
-        background-color: #f9f9f9;
-        margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
     }
 
-        .flatpickr-wrapper input {
-            flex: 1;
-            border: none;
-            padding: 8px;
-            background: transparent;
-            font-size: 16px;
-            outline: none;
-        }
+    .flatpickr-wrapper input {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    background: transparent;
+    font-size: 16px;
+    outline: none;
+    }
 
 
     .excuses-list-container {
-        margin-top: 15px;
+    margin-top: 15px;
     }
 
     #excusesList {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
     }
 
-        #excusesList li {
-            background-color: #f5f5f5;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    #excusesList li {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
 
 
     .excuse-info {
-        flex: 1;
+    flex: 1;
     }
 
     .excuse-time {
-        font-weight: bold;
+    font-weight: bold;
     }
 
     .excuse-reason {
-        color: #555;
-        margin-top: 5px;
+    color: #555;
+    margin-top: 5px;
     }
 
     .delete-excuse {
-        color: #ea4335;
-        cursor: pointer;
-        padding: 5px;
-        font-size: 1.2rem;
+    color: #ea4335;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
     }
 
     #noExcusesMessage {
-        text-align: center;
-        color: #777;
-        font-style: italic;
-        padding: 15px;
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    padding: 15px;
     }
 
     .slot-info {
-        flex: 1;
+    flex: 1;
     }
 
     .slot-time {
-        font-weight: bold;
+    font-weight: bold;
     }
 
     .delete-slot {
-        color: #ea4335;
-        cursor: pointer;
-        padding: 5px;
-        font-size: 1.2rem;
+    color: #ea4335;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+    }
+
+    .competitions-container {
+    margin-top: 20px;
+    }
+
+    .competition-bubble {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* slightly smaller gap */
+    padding: 4px 10px; /* smaller padding */
+    background-color: #007bff;
+    color: white;
+    border-radius: 15px; /* slightly smaller radius */
+    font-size: 0.75rem; /* smaller font */
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* smaller shadow */
+    }
+
+    .competition-bubble.default {
+    background-color: #28a745;
+    }
+
+    .competition-bubble.deleted-default {
+    background-color: lightslategrey;
+    color: #fff; 
+    opacity: 0.8; 
+    }
+
+    .competition-bubble.custom {
+    background-color: #17a2b8;
+    }
+
+    .competition-bubble:hover {
+    transform: translateY(-1px); /* smaller hover lift */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* smaller hover shadow */
+    }
+
+    .competition-bubble .remove-btn {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 16px; /* smaller button */
+    height: 16px; /* smaller button */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px; /* smaller font */
+    transition: background-color 0.2s;
+    }
+
+    .competition-bubble .remove-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    }
+
+
+    .add-competition-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 15px;
+    }
+
+    .competition-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    }
+
+    .add-competition-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    }
+
+    .add-competition-btn:hover {
+    background-color: #0056b3;
+    }
+
+    .add-competition-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    }
+
+    .empty-competitions-msg {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    }
+
+    .competition-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    }
+
+    .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    }
+
+    .legend-color {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    }
+
+    .legend-color.default {
+    background-color: #28a745;
+    }
+
+    .legend-color.deleted-default {
+    background-color: lightslategrey;
+    color: #fff;
+    opacity: 0.8;
+    }
+
+    .legend-color.custom {
+    background-color: #17a2b8;
     }
 </style>
 <head>
     <meta charset="utf-8" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
     <!-- flatpickr plugin-->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -624,6 +768,7 @@
                         <span class="px-3 py-2 rounded omluva">Omluva</span>
                         <span class="px-3 py-2 rounded transferhome">Transfer domů</span>
                         <span class="px-3 py-2 rounded transfermatch">Transfer zápas</span>
+                        <span class="px-3 py-2 rounded actualllocation">Aktuální poloha</span>
                         <span class="px-3 py-2 rounded vozidlocar vozidlobus">Vozidlo</span>
                     </div>
                 </div>
@@ -678,6 +823,9 @@
                                                 case "vozidlobus":
                                                     <a> X Auto nemá k dispozici X</a>
                                                     break;
+                                                case "actualllocation":
+                                                    <a>@range.ActuallLocation</a>
+                                                    break;
                                             }
                                         </div>
                                     </div>
@@ -716,6 +864,9 @@
                                                     break;
                                                 case "vozidlobus":
                                                     <a> X Auto nemá k dispozici X</a>
+                                                    break;
+                                                case "actualllocation":
+                                                    <a>@range.ActuallLocation</a>
                                                     break;
                                                 default:
                                                     break;
@@ -758,6 +909,9 @@
                                                 case "vozidlobus":
                                                     <a> X Auto nemá k dispozici X</a>
                                                     break;
+                                                case "actualllocation":
+                                                    <a>@range.ActuallLocation</a>
+                                                    break;
                                                 default:
                                                     break;
                                             }
@@ -783,11 +937,11 @@
                         <tr>
                             <th style="width:220px;">Název tímu</th>
                             <th style="width:120px;">Id tímu</t>
-                            <th style="width:220px;">Název soutěže</th>
-                            <th style="width:120px;">Id soutěže</th>
-                            <th style="width:300px;">Poznámka</th>
-                            <th style="width:50px;"></th>
-                            <th style="width:50px;"></th>
+                                <th style="width:220px;">Název soutěže</th>
+                                <th style="width:120px;">Id soutěže</th>
+                                <th style="width:300px;">Poznámka</th>
+                                <th style="width:50px;"></th>
+                                <th style="width:50px;"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -855,6 +1009,58 @@
         </div>
 
 
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Soutěže rozhodčího</h5>
+                </div>
+                <div class="card-body">
+                    <div class="competition-legend">
+                        <div class="legend-item">
+                            <div class="legend-color default"></div>
+                            <span>Výchozí soutěže (dle úrovně)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color custom"></div>
+                            <span>Přidané soutěže</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color deleted-default"></div>
+                            <span>Odobrané výchozí soutěže </span>
+                        </div>
+                    </div>
+
+                    <div class="competitions-bubbles" id="competitionsBubbles">
+                        
+                            @foreach (var competition in Model.CustomCompetitionsRules)
+                            {
+                                var displayName = competition.Item1.CompetitionName.Contains("&")
+                                ? competition.Item1.CompetitionName.Split('&')[0].Trim()
+                                : competition.Item1.CompetitionName.Trim();
+
+                                <div class="competition-bubble @(competition.Item2 ? (competition.Item1.League < referee.League ? "custom" : "default") : "deleted-default")">
+                                    @displayName
+                                    <span class="remove-btn" data-referee-id="@Model.RefereeWTimeOptions.Referee.RefereeId" data-competition-id="@competition.Item1.CompetitionId">
+                                        &times;
+                                    </span>
+                                </div>
+                            }
+                        
+                    </div>
+
+                    <div class="add-competition-section">
+                        <select class="competition-input" id="competitionSelect" multiple="multiple" style="width: 100%;">
+                            <option value="" disabled>Vyberte soutěž k přidání...</option>
+                        </select>
+                        <button class="add-competition-rule-btn" data-id="@Model.RefereeWTimeOptions.Referee.RefereeId">
+                            <i class="fa fa-plus"></i> Přidat soutěž
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script>
