@@ -2,6 +2,8 @@
  - system for administration the delegations for the Prague Football Association [PFS
  ](https://www.fotbalpraha.cz/)
 
+- the goal of this bachelor thesis is to design and implement web application 
+
 ## Description
 > PFS delegates **+-350** matches a week throughout the whole Prague, it is difficult to delegate and coordinate all **250** possible active referees (absences, locations, level,vetoes)
 
