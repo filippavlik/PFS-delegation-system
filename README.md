@@ -48,7 +48,7 @@ _main part ,all visual, make simpler for the administrators whose delegate, can 
 _by idos.cz api and mapy.cz api whose are free to use_
   - [x] **personal card of referee , displaying schedule of the weekend(matches, transports) and all the informations for the specific person**  
   _frontend component_
-  - [ ] **automatic generation of possible delegations based on the point system**    
+  - [x] **automatic generation of possible delegations based on the point system**    
   _algorithmically, we can adjust the points criteria, in order to their importance_
 
   So in summary this system should make this work        easier and more transparent for them.
