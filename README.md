@@ -1,8 +1,51 @@
 ## **Bachelor thesis** https://dspace.cvut.cz/entities/publication/e07c3017-aaba-4529-a8ce-10d72e4db3fc
- - system for administration the delegations for the Prague Football Association [PFS
- ](https://www.fotbalpraha.cz/)
 
-- the goal of this bachelor thesis is to design and implement web application 
+## Technology used
+.NET Core, Docker, PostgreSQL, SignalR, web application, API integration , Azure
+
+## Description
+
+A web application designed for managing and delegating football referees, specially for Prague footbal association.  
+It allows referees to submit their availability and administrators to efficiently plan referee assignments for matches.
+
+## Features
+
+### Referee
+- User registration and secure login.
+- Submission of excuses and vehicle availability.
+- Adding notes about availability.
+- Viewing personal restrictions and match schedule.
+
+### Administrator
+- Managing matches and assigned referees.
+- Importing match and referee data from Excel files.
+- Viewing referee availability.
+- Adding and editing referee information.
+- Managing club and team veto restrictions.
+
+### Referee Delegation
+- Automatic recommendation of suitable referees using a scoring algorithm.
+- Availability and conflict checking.
+- Calculation of travel time between matches.
+- Warnings about possible delays.
+- Support for automatic and manual grouping of consecutive matches.
+
+### Data Export
+- Exporting delegated matches into an Excel file compatible with the FAČR system.
+
+## Project Goal
+
+The goal of the application is to simplify and speed up the referee delegation process through automation, availability checking, travel calculations, and decision support for administrators.
+
+
+
+
+
+
+
+
+
+
 
 ## Description
 > PFS delegates **+-350** matches a week throughout the whole Prague, it is difficult to delegate and coordinate all **250** possible active referees (absences, locations, level,vetoes)
